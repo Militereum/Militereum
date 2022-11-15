@@ -1,8 +1,8 @@
+# ![image](icon_150x150.png) Militereum
+
 [![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest)
 [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
-
-# Militereum
 
 * blocks suspicious transactions
 * works with every EVM-compatible wallet, including browser-based _and_ desktop wallets
