@@ -1,0 +1,54 @@
+object FrmMain: TFrmMain
+  Left = 0
+  Top = 0
+  ActiveControl = btnCopy
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = Single
+  Caption = 'Militereum'
+  ClientHeight = 141
+  ClientWidth = 600
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object lblHeader: TLabel
+    Position.X = 8.000000000000000000
+    Position.Y = 16.000000000000000000
+    Size.Width = 584.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = 
+      'Please paste this network URL into your crypto wallet to get sta' +
+      'rted'
+    TabOrder = 0
+  end
+  object lblURL: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 8.000000000000000000
+    Position.Y = 53.000000000000000000
+    Size.Width = 584.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    Text = 'lblURL'
+    TabOrder = 1
+  end
+  object btnCopy: TButton
+    Default = True
+    Position.X = 216.000000000000000000
+    Position.Y = 103.000000000000000000
+    TabOrder = 2
+    Text = 'Copy'
+    OnClick = btnCopyClick
+  end
+  object btnDismiss: TButton
+    Cancel = True
+    Position.X = 304.000000000000000000
+    Position.Y = 103.000000000000000000
+    TabOrder = 3
+    Text = 'Dismiss'
+    OnClick = btnDismissClick
+  end
+end

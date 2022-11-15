@@ -1,0 +1,102 @@
+object FrmApprove: TFrmApprove
+  Left = 0
+  Top = 0
+  ActiveControl = btnBlock
+  BorderIcons = [biSystemMenu]
+  BorderStyle = Single
+  Caption = 'Militereum'
+  ClientHeight = 163
+  ClientWidth = 569
+  Position = ScreenCenter
+  FormStyle = StayOnTop
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnClose = FormClose
+  DesignerMasterStyle = 0
+  object imgLogo: TImage
+    MultiResBitmap = <
+      item
+      end>
+    Position.X = 64.000000000000000000
+    Position.Y = 59.000000000000000000
+    Size.Width = 40.000000000000000000
+    Size.Height = 40.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object lblTitle: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 8.000000000000000000
+    Position.Y = 16.000000000000000000
+    Size.Width = 553.000000000000000000
+    Size.Height = 27.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    Text = 'You are about to allow someone else to spend your money.'
+    TabOrder = 1
+  end
+  object lblTokenTitle: TLabel
+    Position.X = 120.000000000000000000
+    Position.Y = 59.000000000000000000
+    Size.Width = 49.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Token:'
+    TabOrder = 2
+  end
+  object lblSpenderTitle: TLabel
+    Position.X = 120.000000000000000000
+    Position.Y = 84.000000000000000000
+    Size.Width = 49.000000000000000000
+    Size.Height = 16.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Spender:'
+    TabOrder = 3
+  end
+  object btnAllow: TButton
+    Position.X = 288.000000000000000000
+    Position.Y = 125.000000000000000000
+    TabOrder = 4
+    Text = 'Allow'
+    OnClick = btnAllowClick
+  end
+  object btnBlock: TButton
+    Default = True
+    Position.X = 200.000000000000000000
+    Position.Y = 125.000000000000000000
+    TabOrder = 5
+    Text = 'Block'
+    OnClick = btnBlockClick
+  end
+  object lblSpenderText: TLabel
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 177.000000000000000000
+    Position.Y = 84.000000000000000000
+    Size.Width = 384.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    Text = '0x0000000000000000000000000000000000000000'
+    TabOrder = 6
+    OnClick = lblSpenderTextClick
+  end
+  object lblTokenText: TLabel
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 177.000000000000000000
+    Position.Y = 59.000000000000000000
+    Size.Width = 384.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    Text = '(unknown)'
+    TabOrder = 7
+    OnClick = lblTokenTextClick
+  end
+end
