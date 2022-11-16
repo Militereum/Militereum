@@ -6,7 +6,7 @@ object FrmMain: TFrmMain
   BorderStyle = Single
   Caption = 'Militereum'
   ClientHeight = 141
-  ClientWidth = 600
+  ClientWidth = 569
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
@@ -14,7 +14,7 @@ object FrmMain: TFrmMain
   object lblHeader: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 16.000000000000000000
-    Size.Width = 584.000000000000000000
+    Size.Width = 553.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
@@ -27,7 +27,7 @@ object FrmMain: TFrmMain
     StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
     Position.Y = 53.000000000000000000
-    Size.Width = 584.000000000000000000
+    Size.Width = 553.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
@@ -37,7 +37,7 @@ object FrmMain: TFrmMain
   end
   object btnCopy: TButton
     Default = True
-    Position.X = 216.000000000000000000
+    Position.X = 201.000000000000000000
     Position.Y = 103.000000000000000000
     TabOrder = 2
     Text = 'Copy'
@@ -45,10 +45,15 @@ object FrmMain: TFrmMain
   end
   object btnDismiss: TButton
     Cancel = True
-    Position.X = 304.000000000000000000
+    Position.X = 289.000000000000000000
     Position.Y = 103.000000000000000000
     TabOrder = 3
     Text = 'Dismiss'
     OnClick = btnDismissClick
+  end
+  object NC: TNotificationCenter
+    OnPermissionRequestResult = NCPermissionRequestResult
+    Left = 8
+    Top = 8
   end
 end
