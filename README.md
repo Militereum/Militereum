@@ -1,8 +1,4 @@
-# ![image](icon_150x150.png) Militereum
-
-[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest)
-[![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
-[![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
+# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
 
 * blocks suspicious transactions
 * works with every EVM-compatible wallet, including browser-based _and_ desktop wallets
@@ -13,6 +9,20 @@
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
 ## Setup
+
+1. Download Militereum for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) or [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
+2. Launch Militereum. The following window appears
+
+![image](assets/main.png)
+
+3. Click on `Copy`
+4. Unlock MetaMask in your web browser
+5. Navigate to _Settings_ > _Networks_ > [Add a network](https://github.com/svanas/add-network.html)
+6. Paste Militereum's network URL in `New RPC URL`
+
+![image](assets/MetaMask.png)
+
+7. Click on `Save`
 
 ## License
 
