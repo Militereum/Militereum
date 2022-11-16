@@ -33,7 +33,11 @@ uses
 
 function chain: TChain;
 begin
+{$IFDEF DEBUG}
+  Result := Goerli;
+{$ELSE}
   Result := Ethereum;
+{$ENDIF}
 end;
 
 function debug: Boolean;
