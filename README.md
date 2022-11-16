@@ -35,7 +35,7 @@ After your crypto wallet has prompted you for the allowance, Militereum will int
 
 ![image](assets/approve.png)
 
-Besides token allowances, Militereum will block transactions to...
+Besides token allowances, Militereum will block deposits to...
 1. a smart contract that has not been [etherscan](https://etherscan.io/)-verified, and
 2. a smart contract with an admin key that can pause the contract, and
 3. a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert funds elsewhere.
