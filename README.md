@@ -29,7 +29,7 @@ Every raw transactions passes through Militereum and if it is suspicious, Milite
 
 Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer](https://app.balancer.fi/). Initiate a swap from one of your tokens to another. Before Uniswap or Balancer can swap your token, you'll need to sign a so-called _token allowance_.
 
-Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for a token allowance and drain your tokens from your wallet.
+Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for an allowance and drain your tokens from your wallet.
 
 After your crypto wallet has prompted you for the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
 
