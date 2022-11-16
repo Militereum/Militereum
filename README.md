@@ -14,7 +14,7 @@
 2. Launch Militereum. The following window appears. Click on `Copy`
 ![image](assets/main.png)
 4. Unlock MetaMask in your web browser
-5. Navigate to _Settings_ > _Networks_ > [Add a network](https://svanas.github.io/add-network.html)
+5. Navigate to _Settings_ > _Networks_ > _Add a network manually_
 6. The following tab appears. Paste Militereum's network URL in `New RPC URL`. Click on `Save`
 <br>
 
@@ -30,7 +30,7 @@ Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer]
 
 Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for a token allowance and drain your tokens from your wallet.
 
-After MetaMask has prompted you for the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
+After your crypto wallet has prompted you for the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
 ![image](assets/approve.png)
 
 ## Middleware
