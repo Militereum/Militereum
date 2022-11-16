@@ -15,9 +15,9 @@
 
 ![image](assets/main.png)
 
-4. Unlock MetaMask in your web browser
-5. Navigate to _Settings_ > _Networks_ > _Add a network manually_
-6. The following tab appears. Paste Militereum's network URL in `New RPC URL`. Click on `Save`
+3. Unlock MetaMask in your web browser
+4. Navigate to _Settings_ > _Networks_ > _Add a network manually_
+5. The following tab appears. Paste Militereum's network URL in `New RPC URL`. Click on `Save`
 
 ![image](assets/MetaMask.png)
 
