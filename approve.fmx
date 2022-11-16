@@ -18,7 +18,7 @@ object FrmApprove: TFrmApprove
     MultiResBitmap = <
       item
       end>
-    Position.X = 64.000000000000000000
+    Position.X = 58.000000000000000000
     Position.Y = 59.000000000000000000
     Size.Width = 40.000000000000000000
     Size.Height = 40.000000000000000000
@@ -37,20 +37,22 @@ object FrmApprove: TFrmApprove
     TabOrder = 1
   end
   object lblTokenTitle: TLabel
-    Position.X = 120.000000000000000000
+    Position.X = 110.000000000000000000
     Position.Y = 59.000000000000000000
-    Size.Width = 49.000000000000000000
+    Size.Width = 56.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
     Text = 'Token:'
     TabOrder = 2
   end
   object lblSpenderTitle: TLabel
-    Position.X = 120.000000000000000000
+    Position.X = 110.000000000000000000
     Position.Y = 84.000000000000000000
-    Size.Width = 49.000000000000000000
+    Size.Width = 56.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
     Text = 'Spender:'
     TabOrder = 3
   end
@@ -73,9 +75,9 @@ object FrmApprove: TFrmApprove
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 177.000000000000000000
+    Position.X = 174.000000000000000000
     Position.Y = 84.000000000000000000
-    Size.Width = 384.000000000000000000
+    Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -88,9 +90,9 @@ object FrmApprove: TFrmApprove
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 177.000000000000000000
+    Position.X = 174.000000000000000000
     Position.Y = 59.000000000000000000
-    Size.Width = 384.000000000000000000
+    Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}

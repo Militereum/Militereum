@@ -1,3 +1,11 @@
+Entitlement.TemplateOSX.xml
+info.plist.TemplateOSX.xml
+Militereum.deployproj
+Militereum.dproj
+Militereum.res
+OSX64/
+OSXARM64/
+
 # Uncomment these types if you want even more clean repository. But be careful.
 # It can make harm to an existing project source. Read explanations below.
 #

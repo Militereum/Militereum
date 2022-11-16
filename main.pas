@@ -5,6 +5,7 @@ interface
 uses
   // Delphi
   System.Classes,
+  System.Notification,
   System.SysUtils,
   // FireMonkey
   FMX.Controls,
@@ -25,11 +26,15 @@ type
     lblURL: TLabel;
     btnCopy: TButton;
     btnDismiss: TButton;
+    NC: TNotificationCenter;
     procedure btnCopyClick(Sender: TObject);
     procedure btnDismissClick(Sender: TObject);
+    procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
   private
+    FCanNotify: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
+    procedure Dismiss;
     procedure ShowLogWindow;
   protected
     procedure DoShow; override;
@@ -89,6 +94,9 @@ begin
   FServer.OnRPC := DoRPC;
   FServer.OnLog := DoLog;
   lblURL.Text := FServer.URL;
+
+  FCanNotify := NC.AuthorizationStatus = TAuthorizationStatus.Authorized;
+  if not FCanNotify then NC.RequestPermission;
 end;
 
 destructor TFrmMain.Destroy;
@@ -100,6 +108,24 @@ begin
     FServer.Free;
   end;
   inherited Destroy;
+end;
+
+procedure TFrmMain.Dismiss;
+begin
+  thread.synchronize(procedure
+  begin
+    Self.Hide;
+    if FCanNotify then
+    begin
+      const N = NC.CreateNotification;
+      try
+        N.AlertBody := 'Securing your wallet on ' + FServer.URL;
+        NC.PresentNotification(N);
+      finally
+        N.Free;
+      end;
+    end;
+  end);
 end;
 
 procedure TFrmMain.ShowLogWindow;
@@ -114,6 +140,11 @@ begin
   if common.debug then ShowLogWindow;
 end;
 
+procedure TFrmMain.NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
+begin
+  FCanNotify := aIsGranted;
+end;
+
 procedure TFrmMain.DoRPC(
   aContext: TIdContext;
   aPayload: IPayload;
@@ -126,10 +157,7 @@ begin
     EXIT;
   end;
 
-  thread.synchronize(procedure
-  begin
-    Self.Hide;
-  end);
+  Self.Dismiss;
 
   if  SameText(aPayload.Method, 'eth_sendRawTransaction')
   and (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
@@ -200,7 +228,7 @@ end;
 
 procedure TFrmMain.btnDismissClick(Sender: TObject);
 begin
-  Self.Hide;
+  Self.Dismiss;
 end;
 
 end.
