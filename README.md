@@ -31,8 +31,20 @@ Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer]
 Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for a token allowance and drain your tokens from your wallet.
 
 After MetaMask has prompted you for the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
-
 ![image](assets/approve.png)
+
+## Middleware
+
+In addition to a firewall, Militereum provides the following custom JSON-RPC methods to supporting wallets:
+
+| method                   | description |
+|--------------------------|-------------|
+| `eth_isTaintedToken`     | Detect tainted tokens in your wallet, and report the reason why the tokens are high risk (for example: if the sender is sanctioned). 
+| `eth_previewTransaction` | Preview the expected outcome of your transactions (based upon the current state of the blockchain) before the transaction leaves your device. This should help reduce transaction anxiety and prevent unintended consequences.
+| `eth_getTokenApy`        | Return the annual percentage yield you are earning on your tokens (if any).
+| `eth_isDeprecatedToken`  | If you own LP tokens from outdated DeFi protocols that have been replaced with never versions (for example: Aave v1) or yield aggregators that aren’t boosted anymore (for example: Yearn vaults v1), this method will alert you.
+
+_more custom JSON-RPC methods are in the works._
 
 ## License
 
