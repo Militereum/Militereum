@@ -17,7 +17,7 @@
 
 3. Click on `Copy`
 4. Unlock MetaMask in your web browser
-5. Navigate to _Settings_ > _Networks_ > [Add a network](https://github.com/svanas/add-network.html)
+5. Navigate to _Settings_ > _Networks_ > [Add a network](https://svanas.github.io/add-network.html)
 6. Paste Militereum's network URL in `New RPC URL`
 
 ![image](assets/MetaMask.png)
