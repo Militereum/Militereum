@@ -25,7 +25,7 @@
 
 As soon as your wallet has connected to Militereum, the firewall gets minimized and keeps running in the background.
 
-Every raw transactions passes through Militereum and if it is suspicious, Militereum will block the transaction and prevent it from leaving your device.
+Every raw transaction passes through Militereum and if it is suspicious, Militereum will block the transaction and prevent it from leaving your device.
 
 Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer](https://app.balancer.fi/). Initiate a swap from one of your tokens to another. Before Uniswap or Balancer can swap your token, you'll need to sign a so-called _token allowance_.
 
