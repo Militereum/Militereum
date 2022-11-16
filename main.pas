@@ -74,6 +74,8 @@ uses
   thread,
   transaction;
 
+{$I Militereum.version}
+
 { TFrmMain }
 
 constructor TFrmMain.Create(aOwner: TComponent);
@@ -93,7 +95,9 @@ begin
   FServer := server.Value;
   FServer.OnRPC := DoRPC;
   FServer.OnLog := DoLog;
+
   lblURL.Text := FServer.URL;
+  Self.Caption := Self.Caption + ' ' + VERSION;
 
   FCanNotify := NC.AuthorizationStatus = TAuthorizationStatus.Authorized;
   if not FCanNotify then NC.RequestPermission;
@@ -114,15 +118,18 @@ procedure TFrmMain.Dismiss;
 begin
   thread.synchronize(procedure
   begin
-    Self.Hide;
-    if FCanNotify then
+    if Self.Visible then
     begin
-      const N = NC.CreateNotification;
-      try
-        N.AlertBody := 'Securing your wallet on ' + FServer.URL;
-        NC.PresentNotification(N);
-      finally
-        N.Free;
+      Self.Hide;
+      if FCanNotify then
+      begin
+        const N = NC.CreateNotification;
+        try
+          N.AlertBody := 'Securing your wallet on ' + FServer.URL;
+          NC.PresentNotification(N);
+        finally
+          N.Free;
+        end;
       end;
     end;
   end);
