@@ -31,7 +31,7 @@ Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer]
 
 Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for an allowance and drain your tokens from your wallet.
 
-After your crypto wallet has prompted you for the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
+After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
 
 ![image](assets/approve.png)
 
