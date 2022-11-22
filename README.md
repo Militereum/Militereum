@@ -40,7 +40,7 @@ Besides token allowances, Militereum will block...
 2. transactions to a sanctioned address, and
 3. transactions to a smart contract that has not been [etherscan](https://etherscan.io/)-verified, and
 4. deposits to a smart contract with an admin key that can pause the contract, and
-5. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert funds elsewhere.
+5. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 ## Middleware
 
