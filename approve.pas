@@ -54,6 +54,7 @@ uses
   // Delphi
   System.Net.HttpClient,
   // web3
+  web3.eth.types,
   web3.http,
   // project
   common,
@@ -103,6 +104,10 @@ end;
 procedure TFrmApprove.SetSpender(spender: TAddress);
 begin
   lblSpenderText.Text := string(spender);
+  if spender.IsEOA(TWeb3.Create(common.endpoint)).Value then
+    Self.Caption := Format(Self.Caption, ['someone'])
+  else
+    Self.Caption := Format(Self.Caption, ['something']);
 end;
 
 procedure TFrmApprove.lblTokenTextClick(Sender: TObject);

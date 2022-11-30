@@ -33,7 +33,7 @@ object FrmApprove: TFrmApprove
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
-    Text = 'You are about to allow someone else to spend your money.'
+    Text = 'You are about to allow %s else to spend your money.'
     TabOrder = 1
   end
   object lblTokenTitle: TLabel
