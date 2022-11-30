@@ -27,9 +27,9 @@ uses
   Posix.Stdlib,
 {$ENDIF POSIX}
   // web3
-  web3.eth.infura;
+  web3.eth.alchemy;
 
-{$I infura.api.key}
+{$I alchemy.api.key}
 
 function chain: TChain;
 begin
@@ -47,7 +47,13 @@ end;
 
 function endpoint: string;
 begin
-  Result := web3.eth.infura.endpoint(chain, INFURA_API_KEY).Value;
+  case chain.Id of
+    1    : Result := web3.eth.alchemy.endpoint(chain, ALCHEMY_API_KEY_ETHEREUM).Value;
+    5    : Result := web3.eth.alchemy.endpoint(chain, ALCHEMY_API_KEY_GOERLI).Value;
+    137  : Result := web3.eth.alchemy.endpoint(chain, ALCHEMY_API_KEY_POLYGON).Value;
+    42161: Result := web3.eth.alchemy.endpoint(chain, ALCHEMY_API_KEY_ARBITRUM).Value;
+    10   : Result := web3.eth.alchemy.endpoint(chain, ALCHEMY_API_KEY_OPTIMISM).Value;
+  end;
 end;
 
 function headers: TNetHeaders;
