@@ -91,10 +91,10 @@ begin
       if Length(signature.Value) > 7 then
       begin
         Result := TResult<TTransaction>.Ok(TTransaction.Create(
-          toBigInt(signature.Value[1].Bytes),                       // nonce
-          TAddress.New(web3.utils.toHex(signature.Value[5].Bytes)), // recipient
-          toBigInt(signature.Value[6].Bytes),                       // value
-          signature.Value[7].Bytes                                  // data
+          toBigInt(signature.Value[1].Bytes),                          // nonce
+          TAddress.Create(web3.utils.toHex(signature.Value[5].Bytes)), // recipient
+          toBigInt(signature.Value[6].Bytes),                          // value
+          signature.Value[7].Bytes                                     // data
         ));
         EXIT;
       end;
@@ -113,10 +113,10 @@ begin
     if Length(signature.Value) > 5 then
     begin
       Result := TResult<TTransaction>.Ok(TTransaction.Create(
-        toBigInt(signature.Value[0].Bytes),                       // nonce
-        TAddress.New(web3.utils.toHex(signature.Value[3].Bytes)), // recipient
-        toBigInt(signature.Value[4].Bytes),                       // value
-        signature.Value[5].Bytes                                  // data
+        toBigInt(signature.Value[0].Bytes),                          // nonce
+        TAddress.Create(web3.utils.toHex(signature.Value[3].Bytes)), // recipient
+        toBigInt(signature.Value[4].Bytes),                          // value
+        signature.Value[5].Bytes                                     // data
       ));
       EXIT;
     end;
