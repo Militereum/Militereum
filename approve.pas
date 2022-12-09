@@ -34,19 +34,21 @@ type
     procedure lblSpenderTextClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    FChain: TChain;
     FToken: IToken;
     FOnBlock: TProc;
     FOnAllow: TProc;
     procedure SetToken(token: IToken);
     procedure SetSpender(spender: TAddress);
   public
+    property Chain: TChain write FChain;
     property Token: IToken write SetToken;
     property Spender: TAddress write SetSpender;
     property OnBlock: TProc write FOnBlock;
     property OnAllow: TProc write FOnAllow;
   end;
 
-procedure show(const token: IToken; spender: TAddress; onBlock, onAllow: TProc);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; onBlock, onAllow: TProc);
 
 implementation
 
@@ -62,9 +64,10 @@ uses
 
 {$R *.fmx}
 
-procedure show(const token: IToken; spender: TAddress; onBlock, onAllow: TProc);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; onBlock, onAllow: TProc);
 begin
   const frmApprove = TFrmApprove.Create(Application);
+  frmApprove.Chain := chain;
   frmApprove.Token := token;
   frmApprove.Spender := spender;
   frmApprove.OnBlock := onBlock;
@@ -104,7 +107,7 @@ end;
 procedure TFrmApprove.SetSpender(spender: TAddress);
 begin
   lblSpenderText.Text := string(spender);
-  if spender.IsEOA(TWeb3.Create(common.endpoint)).Value then
+  if spender.IsEOA(TWeb3.Create(Self.FChain)).Value then
     Self.Caption := Format(Self.Caption, ['someone'])
   else
     Self.Caption := Format(Self.Caption, ['something']);
@@ -112,12 +115,12 @@ end;
 
 procedure TFrmApprove.lblTokenTextClick(Sender: TObject);
 begin
-  common.open(chain.BlockExplorer + '/token/' + string(FToken.Address));
+  common.open(Self.FChain.BlockExplorer + '/token/' + string(FToken.Address));
 end;
 
 procedure TFrmApprove.lblSpenderTextClick(Sender: TObject);
 begin
-  common.open(chain.BlockExplorer + '/address/' + lblSpenderText.Text);
+  common.open(Self.FChain.BlockExplorer + '/address/' + lblSpenderText.Text);
 end;
 
 procedure TFrmApprove.btnBlockClick(Sender: TObject);

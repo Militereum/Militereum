@@ -9,6 +9,7 @@ uses
   // Indy
   IdContext,
   IdCustomHTTPServer,
+  IdGlobal,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // project
@@ -33,19 +34,26 @@ type
   private
     FOnRPC: TOnRPC;
     FOnLog: TOnLog;
-    procedure Forward(const request: string; aResponseInfo: TIdHTTPResponseInfo);
+    procedure Forward(
+      aContext: TIdContext;
+      const aRequest: string;
+      aResponseInfo: TIdHTTPResponseInfo);
   protected
     procedure DoCommandGet(
       aContext: TIdContext;
       aRequestInfo: TIdHTTPRequestInfo;
       aResponseInfo: TIdHTTPResponseInfo); override;
   public
-    function URL: string;
+    class function URL(port: TIdPort): string;
     property OnRPC: TOnRPC read FOnRPC write FOnRPC;
     property OnLog: TOnLog read FOnLog write FOnLog;
   end;
 
-function start: IResult<TEthereumRPCServer>;
+function ports(num: Integer): IResult<TArray<TIdPort>>;
+
+function start: IResult<TEthereumRPCServer>; overload;
+function start(port: TIdPort): IResult<TEthereumRPCServer>; overload;
+function start(ports: TArray<TIdPort>): IResult<TEthereumRPCServer>; overload;
 
 implementation
 
@@ -64,6 +72,53 @@ uses
 const
   MAX_PORT_NO = 65535 - 1024;
   MIN_PORT_NO = 1024;
+
+function ports(num: Integer): IResult<TArray<TIdPort>>;
+begin
+  var output: TArray<TIdPort> := [];
+  var port := MAX_PORT_NO;
+  while True do
+  begin
+    const server = TIdCustomHTTPServer.Create;
+    try
+      server.DefaultPort := port;
+      try
+        server.Active := True;
+      except
+        on E: Exception do
+        begin
+          if E is EIdCouldNotBindSocket and (server.DefaultPort > MIN_PORT_NO) then
+            port := port - 1
+          else
+          begin
+            Result := TResult<TArray<TIdPort>>.Err(nil, TError.Create(E.Message));
+            EXIT;
+          end;
+        end;
+      end;
+      if server.Active then
+      try
+        output := output + [server.DefaultPort];
+        if Length(output) >= num then
+        begin
+          Result := TResult<TArray<TIdPort>>.Ok(output);
+          EXIT;
+        end;
+        if server.DefaultPort > MIN_PORT_NO then
+          port := port - 1
+        else
+        begin
+          Result := TResult<TArray<TIdPort>>.Err(nil, Format('ports out of range %d..%d', [MIN_PORT_NO, MAX_PORT_NO]));
+          EXIT;
+        end;
+      finally
+        server.Active := False;
+      end;
+    finally
+      server.Free;
+    end;
+  end;
+end;
 
 function start: IResult<TEthereumRPCServer>;
 begin
@@ -94,6 +149,48 @@ begin
       EXIT;
     end;
   end;
+end;
+
+function start(port: TIdPort): IResult<TEthereumRPCServer>;
+begin
+  const server = TEthereumRPCServer.Create;
+  server.DefaultPort := port;
+  try
+    server.Active := True;
+  except
+    on E: Exception do
+    begin
+      Result := TResult<TEthereumRPCServer>.Err(nil, TError.Create(E.Message));
+      EXIT;
+    end;
+  end;
+  Result := TResult<TEthereumRPCServer>.Ok(server);
+end;
+
+function start(ports: TArray<TIdPort>): IResult<TEthereumRPCServer>;
+begin
+  if Length(ports) = 0 then
+  begin
+    Result := TResult<TEthereumRPCServer>.Err(nil, 'nothing to do');
+    EXIT;
+  end;
+  if Length(ports) = 1 then
+  begin
+    Result := start(ports[0]);
+    EXIT;
+  end;
+  const server = TEthereumRPCServer.Create;
+  for var I := 0 to High(ports) do server.Bindings.Add.Port := ports[I];
+  try
+    server.Active := True;
+  except
+    on E: Exception do
+    begin
+      Result := TResult<TEthereumRPCServer>.Err(nil, TError.Create(E.Message));
+      EXIT;
+    end;
+  end;
+  Result := TResult<TEthereumRPCServer>.Ok(server);
 end;
 
 type
@@ -185,28 +282,33 @@ begin
     &object.Free;
   end;
 
-  if status = TForward.Allow then Self.Forward(payload, aResponseInfo);
+  if status = TForward.Allow then Self.Forward(aContext, payload, aResponseInfo);
 end;
 
-procedure TEthereumRPCServer.Forward(const request: string; aResponseInfo: TIdHTTPResponseInfo);
+procedure TEthereumRPCServer.Forward(
+  aContext: TIdContext;
+  const aRequest: string;
+  aResponseInfo: TIdHTTPResponseInfo);
 begin
-  const response = web3.http.post(common.endpoint, request, common.headers);
-
-  if response.IsErr then
-  begin
-    var err: IHttpError;
-    if Supports(response.Error, IHttpError, err) then aResponseInfo.ResponseNo := err.StatusCode;
-    aResponseInfo.ContentText := response.Error.Message;
-  end
-  else
-    aResponseInfo.ContentText := response.Value.ContentAsString(TEncoding.UTF8);
-
-  if Assigned(FOnLog) then FOnLog(request, aResponseInfo.ContentText);
+  const endpoint = Self.endpoint(aContext.Binding.Port);
+  if endpoint.IsErr then
+    aResponseInfo.ContentText := endpoint.Error.Message
+  else begin
+    const response = web3.http.post(endpoint.Value, aRequest, common.headers);
+    if response.IsOk then
+      aResponseInfo.ContentText := response.Value.ContentAsString(TEncoding.UTF8)
+    else begin
+      var err: IHttpError;
+      if Supports(response.Error, IHttpError, err) then aResponseInfo.ResponseNo := err.StatusCode;
+      aResponseInfo.ContentText := response.Error.Message;
+    end;
+  end;
+  if Assigned(FOnLog) then FOnLog(aRequest, aResponseInfo.ContentText);
 end;
 
-function TEthereumRPCServer.URL: string;
+class function TEthereumRPCServer.URL(port: TIdPort): string;
 begin
-  Result := Format('http://%s:%d', [IndyComputerName.ToLower, Self.DefaultPort]);
+  Result := Format('http://%s:%d', [IndyComputerName.ToLower, port]);
 end;
 
 end.
