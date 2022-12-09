@@ -1,55 +1,325 @@
 object FrmMain: TFrmMain
   Left = 0
   Top = 0
-  ActiveControl = btnCopy
+  ActiveControl = btnDismiss
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = Single
   Caption = 'Militereum'
-  ClientHeight = 141
+  ClientHeight = 253
   ClientWidth = 569
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
   object lblHeader: TLabel
+    StyledSettings = [Family, FontColor]
     Position.X = 8.000000000000000000
     Position.Y = 16.000000000000000000
     Size.Width = 553.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
     TextSettings.HorzAlign = Center
     Text = 
       'Please paste this network URL into your crypto wallet to get sta' +
       'rted'
-    TabOrder = 0
-  end
-  object lblURL: TLabel
-    StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
-    Position.Y = 53.000000000000000000
-    Size.Width = 553.000000000000000000
-    Size.Height = 22.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.Font.Size = 20.000000000000000000
-    TextSettings.HorzAlign = Center
-    Text = 'lblURL'
     TabOrder = 1
-  end
-  object btnCopy: TButton
-    Default = True
-    Position.X = 201.000000000000000000
-    Position.Y = 103.000000000000000000
-    TabOrder = 2
-    Text = 'Copy'
-    OnClick = btnCopyClick
   end
   object btnDismiss: TButton
     Cancel = True
-    Position.X = 289.000000000000000000
-    Position.Y = 103.000000000000000000
-    TabOrder = 3
+    Position.X = 245.000000000000000000
+    Position.Y = 215.000000000000000000
+    TabOrder = 0
     Text = 'Dismiss'
     OnClick = btnDismissClick
+  end
+  object Grid: TGridPanelLayout
+    Position.X = 32.000000000000000000
+    Position.Y = 49.000000000000000000
+    Size.Width = 456.000000000000000000
+    Size.Height = 150.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    ColumnCollection = <
+      item
+        Value = 30.000000000000000000
+      end
+      item
+        Value = 70.000000000000000000
+      end
+      item
+        SizeStyle = Absolute
+        Value = 80.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = lblEthereum
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = lblEthereumURL
+        Row = 0
+      end
+      item
+        Column = 2
+        Control = btnEthereum
+        Row = 0
+      end
+      item
+        Column = 0
+        Control = lblGoerli
+        Row = 1
+      end
+      item
+        Column = 1
+        Control = lblGoerliURL
+        Row = 1
+      end
+      item
+        Column = 2
+        Control = btnGoerli
+        Row = 1
+      end
+      item
+        Column = 0
+        Control = lblPolygon
+        Row = 2
+      end
+      item
+        Column = 1
+        Control = lblPolygonURL
+        Row = 2
+      end
+      item
+        Column = 2
+        Control = btnPolygon
+        Row = 2
+      end
+      item
+        Column = 0
+        Control = lblArbitrum
+        Row = 3
+      end
+      item
+        Column = 1
+        Control = lblArbitrumURL
+        Row = 3
+      end
+      item
+        Column = 2
+        Control = btnArbitrum
+        Row = 3
+      end
+      item
+        Column = 0
+        Control = lblOptimism
+        Row = 4
+      end
+      item
+        Column = 1
+        Control = lblOptimismURL
+        Row = 4
+      end
+      item
+        Column = 2
+        Control = btnOptimism
+        Row = 4
+      end>
+    ExpandStyle = FixedSize
+    RowCollection = <
+      item
+        Value = 20.000000000000000000
+      end
+      item
+        Value = 20.000000000000000000
+      end
+      item
+        Value = 20.000000000000000000
+      end
+      item
+        Value = 20.000000000000000000
+      end
+      item
+        Value = 20.000000000000000000
+      end>
+    object lblEthereum: TLabel
+      Align = Client
+      StyledSettings = [Family, Style, FontColor]
+      Margins.Right = 8.000000000000000000
+      Size.Width = 104.800003051757800000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.HorzAlign = Trailing
+      Text = 'Ethereum:'
+      TabOrder = 0
+    end
+    object lblEthereumURL: TLabel
+      Tag = 1
+      Align = Client
+      StyledSettings = [Family]
+      Margins.Left = 8.000000000000000000
+      Size.Width = 255.199996948242200000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claDodgerblue
+      Text = 'http://localhost:1'
+      TabOrder = 6
+    end
+    object btnEthereum: TButton
+      Tag = 1
+      Align = VertCenter
+      Position.X = 376.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Copy'
+      OnClick = btnCopyClick
+      OnMouseEnter = btnCopyMouseEnter
+      OnMouseLeave = btnCopyMouseLeave
+    end
+    object lblGoerli: TLabel
+      Align = Client
+      StyledSettings = [Family, Style, FontColor]
+      Margins.Right = 8.000000000000000000
+      Size.Width = 104.800003051757800000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.HorzAlign = Trailing
+      Text = 'Goerli:'
+      TabOrder = 7
+    end
+    object lblGoerliURL: TLabel
+      Tag = 5
+      Align = Client
+      StyledSettings = [Family]
+      Margins.Left = 8.000000000000000000
+      Size.Width = 255.199996948242200000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claDodgerblue
+      Text = 'http://localhost:5'
+      TabOrder = 8
+    end
+    object btnGoerli: TButton
+      Tag = 5
+      Align = VertCenter
+      Position.X = 376.000000000000000000
+      Position.Y = 34.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Copy'
+      OnClick = btnCopyClick
+      OnMouseEnter = btnCopyMouseEnter
+      OnMouseLeave = btnCopyMouseLeave
+    end
+    object lblPolygon: TLabel
+      Align = Client
+      StyledSettings = [Family, Style, FontColor]
+      Margins.Right = 8.000000000000000000
+      Size.Width = 104.800003051757800000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.HorzAlign = Trailing
+      Text = 'Polygon:'
+      TabOrder = 9
+    end
+    object lblPolygonURL: TLabel
+      Tag = 137
+      Align = Client
+      StyledSettings = [Family]
+      Margins.Left = 8.000000000000000000
+      Size.Width = 255.199996948242200000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claDodgerblue
+      Text = 'http://localhost:137'
+      TabOrder = 10
+    end
+    object btnPolygon: TButton
+      Tag = 137
+      Align = VertCenter
+      Position.X = 376.000000000000000000
+      Position.Y = 64.000000000000000000
+      TabOrder = 3
+      Text = 'Copy'
+      OnClick = btnCopyClick
+      OnMouseEnter = btnCopyMouseEnter
+      OnMouseLeave = btnCopyMouseLeave
+    end
+    object lblArbitrum: TLabel
+      Align = Client
+      StyledSettings = [Family, Style, FontColor]
+      Margins.Right = 8.000000000000000000
+      Size.Width = 104.800003051757800000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.HorzAlign = Trailing
+      Text = 'Arbitrum:'
+      TabOrder = 11
+    end
+    object lblArbitrumURL: TLabel
+      Tag = 42161
+      Align = Client
+      StyledSettings = [Family]
+      Margins.Left = 8.000000000000000000
+      Size.Width = 255.199996948242200000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claDodgerblue
+      Text = 'http://localhost:42161'
+      TabOrder = 12
+    end
+    object btnArbitrum: TButton
+      Tag = 42161
+      Align = VertCenter
+      Position.X = 376.000000000000000000
+      Position.Y = 94.000000000000000000
+      TabOrder = 4
+      Text = 'Copy'
+      OnClick = btnCopyClick
+      OnMouseEnter = btnCopyMouseEnter
+      OnMouseLeave = btnCopyMouseLeave
+    end
+    object lblOptimism: TLabel
+      Align = Client
+      StyledSettings = [Family, Style, FontColor]
+      Margins.Right = 8.000000000000000000
+      Size.Width = 104.800003051757800000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.HorzAlign = Trailing
+      Text = 'Optimism:'
+      TabOrder = 13
+    end
+    object lblOptimismURL: TLabel
+      Tag = 10
+      Align = Client
+      StyledSettings = [Family]
+      Margins.Left = 8.000000000000000000
+      Size.Width = 255.199996948242200000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claDodgerblue
+      Text = 'http://localhost:10'
+      TabOrder = 14
+    end
+    object btnOptimism: TButton
+      Tag = 10
+      Align = VertCenter
+      Position.X = 376.000000000000000000
+      Position.Y = 124.000000000000000000
+      TabOrder = 5
+      Text = 'Copy'
+      OnClick = btnCopyClick
+      OnMouseEnter = btnCopyMouseEnter
+      OnMouseLeave = btnCopyMouseLeave
+    end
   end
   object NC: TNotificationCenter
     OnPermissionRequestResult = NCPermissionRequestResult

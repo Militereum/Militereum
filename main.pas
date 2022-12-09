@@ -11,11 +11,13 @@ uses
   FMX.Controls,
   FMX.Controls.Presentation,
   FMX.Forms,
+  FMX.Layouts,
   FMX.StdCtrls,
   FMX.Types,
   // Indy
   IdContext,
   IdCustomHTTPServer,
+  IdGlobal,
   // project
   log,
   server;
@@ -23,18 +25,36 @@ uses
 type
   TFrmMain = class(TForm)
     lblHeader: TLabel;
-    lblURL: TLabel;
-    btnCopy: TButton;
     btnDismiss: TButton;
     NC: TNotificationCenter;
+    Grid: TGridPanelLayout;
+    lblEthereum: TLabel;
+    lblEthereumURL: TLabel;
+    btnEthereum: TButton;
+    lblGoerli: TLabel;
+    lblGoerliURL: TLabel;
+    btnGoerli: TButton;
+    lblPolygon: TLabel;
+    lblPolygonURL: TLabel;
+    btnPolygon: TButton;
+    lblArbitrum: TLabel;
+    lblArbitrumURL: TLabel;
+    btnArbitrum: TButton;
+    lblOptimism: TLabel;
+    lblOptimismURL: TLabel;
+    btnOptimism: TButton;
     procedure btnCopyClick(Sender: TObject);
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
+    procedure btnCopyMouseEnter(Sender: TObject);
+    procedure btnCopyMouseLeave(Sender: TObject);
   private
     FCanNotify: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
+    function CanDismiss(port: TIdPort): Boolean;
     procedure Dismiss;
+    function GetURL(chainId: Integer): TLabel;
     procedure ShowLogWindow;
   protected
     procedure DoShow; override;
@@ -47,6 +67,7 @@ type
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
+    property URL[chainId: Integer]: TLabel read GetURL;
   end;
 
 var
@@ -79,16 +100,31 @@ uses
 { TFrmMain }
 
 constructor TFrmMain.Create(aOwner: TComponent);
-begin
-  inherited Create(aOwner);
 
-  const server = server.start;
-  if server.IsErr then
+  procedure terminate;
   begin
 {$WARN SYMBOL_DEPRECATED OFF}
     MessageDlg('Cannot start HTTP server. The app will quit.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
 {$WARN SYMBOL_DEPRECATED DEFAULT}
     Application.Terminate;
+  end;
+
+begin
+  inherited Create(aOwner);
+
+  Self.Caption := Self.Caption + ' ' + VERSION;
+
+  const ports = server.ports(5);
+  if ports.IsErr then
+  begin
+    terminate;
+    EXIT;
+  end;
+
+  const server = server.start(ports.Value);
+  if server.IsErr then
+  begin
+    terminate;
     EXIT;
   end;
 
@@ -96,8 +132,11 @@ begin
   FServer.OnRPC := DoRPC;
   FServer.OnLog := DoLog;
 
-  lblURL.Text := FServer.URL;
-  Self.Caption := Self.Caption + ' ' + VERSION;
+  lblEthereumURL.Text := FServer.URL(FServer.port(web3.Ethereum).Value);
+  lblGoerliURL.Text   := FServer.URL(FServer.port(web3.Goerli).Value);
+  lblPolygonURL.Text  := FServer.URL(FServer.port(web3.Polygon).Value);
+  lblArbitrumURL.Text := FServer.URL(FServer.port(web3.Arbitrum).Value);
+  lblOptimismURL.Text := FServer.URL(FServer.port(web3.Optimism).Value);
 
   FCanNotify := NC.AuthorizationStatus = TAuthorizationStatus.Authorized;
   if not FCanNotify then NC.RequestPermission;
@@ -114,6 +153,12 @@ begin
   inherited Destroy;
 end;
 
+function TFrmMain.CanDismiss(port: TIdPort): Boolean;
+begin
+  // ToDo: only when all ports have been "seen"
+  Result := True;
+end;
+
 procedure TFrmMain.Dismiss;
 begin
   thread.synchronize(procedure
@@ -125,7 +170,7 @@ begin
       begin
         const N = NC.CreateNotification;
         try
-          N.AlertBody := 'Securing your wallet on ' + FServer.URL;
+          N.AlertBody := 'Securing your wallet';
           NC.PresentNotification(N);
         finally
           N.Free;
@@ -133,6 +178,17 @@ begin
       end;
     end;
   end);
+end;
+
+function TFrmMain.GetURL(chainId: Integer): TLabel;
+begin
+  for var I := 0 to Pred(Self.ComponentCount) do
+    if (Self.Components[I] is TLabel) and (TLabel(Self.Components[I]).Tag = chainId) then
+    begin
+      Result := TLabel(Self.Components[I]);
+      EXIT;
+    end;
+  Result := nil;
 end;
 
 procedure TFrmMain.ShowLogWindow;
@@ -164,7 +220,7 @@ begin
     EXIT;
   end;
 
-  Self.Dismiss;
+  if Self.CanDismiss(aContext.Binding.Port) then Self.Dismiss;
 
   if  SameText(aPayload.Method, 'eth_sendRawTransaction')
   and (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
@@ -179,30 +235,34 @@ begin
           const args = getTransactionArgs(tx.Value.Data);
           if args.IsOk and (Length(args.Value) > 0) then
           begin
-            web3.eth.tokenlists.token(common.Chain, tx.Value.&To, procedure(token: IToken; _: IError)
+            const chain = FServer.chain(aContext.Binding.Port);
+            if chain.IsOk then
             begin
-              if not Assigned(token) then
+              web3.eth.tokenlists.token(chain.Value^, tx.Value.&To, procedure(token: IToken; _: IError)
               begin
-                callback(aResponseInfo, True);
-                EXIT;
-              end;
-              thread.synchronize(procedure
-              begin
-                approve.show(token, args.Value[0].ToAddress,
-                procedure // block
-                begin
-                  aResponseInfo.ResponseNo  := 405;
-                  aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
-                  Self.DoLog(aPayload.ToString, aResponseInfo.ContentText);
-                  callback(aResponseInfo, False);
-                end,
-                procedure // allow
+                if not Assigned(token) then
                 begin
                   callback(aResponseInfo, True);
+                  EXIT;
+                end;
+                thread.synchronize(procedure
+                begin
+                  approve.show(chain.Value^, token, args.Value[0].ToAddress,
+                  procedure // block
+                  begin
+                    aResponseInfo.ResponseNo  := 405;
+                    aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
+                    Self.DoLog(aPayload.ToString, aResponseInfo.ContentText);
+                    callback(aResponseInfo, False);
+                  end,
+                  procedure // allow
+                  begin
+                    callback(aResponseInfo, True);
+                  end);
                 end);
               end);
-            end);
-            EXIT;
+              EXIT;
+            end;
           end;
         end;
     end;
@@ -226,11 +286,29 @@ begin
     end);
 end;
 
+procedure TFrmMain.btnCopyMouseEnter(Sender: TObject);
+begin
+  const L = Self.URL[TButton(Sender).Tag];
+  if Assigned(L) then
+    L.TextSettings.Font.Style := L.TextSettings.Font.Style + [TFontStyle.fsUnderline];
+end;
+
+procedure TFrmMain.btnCopyMouseLeave(Sender: TObject);
+begin
+  const L = Self.URL[TButton(Sender).Tag];
+  if Assigned(L) then
+    L.TextSettings.Font.Style := L.TextSettings.Font.Style - [TFontStyle.fsUnderline];
+end;
+
 procedure TFrmMain.btnCopyClick(Sender: TObject);
 begin
-  var service: IFMXClipboardService;
-  if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, service) then
-    service.SetClipboard(FServer.URL);
+  var S: IFMXClipboardService;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, S) then
+  begin
+    const L = Self.URL[TButton(Sender).Tag];
+    if Assigned(L) then
+      S.SetClipboard(L.Text);
+  end;
 end;
 
 procedure TFrmMain.btnDismissClick(Sender: TObject);
