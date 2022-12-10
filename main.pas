@@ -7,6 +7,9 @@ uses
   System.Classes,
   System.Notification,
   System.SysUtils,
+{$IFDEF MSWINDOWS}
+  WinAPI.Messages,
+{$ENDIF}
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
@@ -67,6 +70,9 @@ type
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
+{$IFDEF MSWINDOWS}
+    procedure MessageWindowProc(var Msg: TMessage);
+{$ENDIF}
     property URL[chainId: Integer]: TLabel read GetURL;
   end;
 
@@ -315,5 +321,14 @@ procedure TFrmMain.btnDismissClick(Sender: TObject);
 begin
   Self.Dismiss;
 end;
+
+{$IFDEF MSWINDOWS}
+
+  procedure TFrmMain.MessageWindowProc(var Msg: TMessage);
+  begin
+    if Msg.Msg = common.CM_SHOW then FrmMain.Show;
+  end;
+
+{$ENDIF}
 
 end.
