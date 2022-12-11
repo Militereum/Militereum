@@ -4,12 +4,7 @@ interface
 
 uses
   // Delphi
-  System.Classes,
   System.Net.URLClient,
-{$IFDEF MSWINDOWS}
-  WinAPI.Messages,
-  WinAPI.Windows,
-{$ENDIF}
   // Indy
   IdGlobal,
   // web3
@@ -29,18 +24,19 @@ function debug: Boolean;
 function headers: TNetHeaders;
 procedure open(const URL: string);
 
-{$IFDEF MSWINDOWS}
-  const CM_SHOW = WM_APP + 1;
-  function allocateHwnd(const aClassName: string; const aMethod: TWndMethod): HWND;
-{$ENDIF}
+procedure initialize;
+procedure finalize;
 
 implementation
 
 uses
   // Delphi
+  System.Classes,
   System.SysUtils,
 {$IFDEF MSWINDOWS}
   WinAPI.ShellAPI,
+  WinAPI.Windows,
+  common.win,
 {$ENDIF MSWINDOWS}
 {$IFDEF POSIX}
   Posix.Stdlib,
@@ -124,35 +120,18 @@ begin
 {$ENDIF POSIX}
 end;
 
+procedure initialize;
+begin
 {$IFDEF MSWINDOWS}
+  common.win.initialize;
+{$ENDIF MSWINDOWS}
+end;
 
-  var aWindowClass: TWndClass = (
-    style: 0;
-    lpfnWndProc: @DefWindowProc;
-    cbClsExtra: 0;
-    cbWndExtra: 0;
-    hInstance: 0;
-    hIcon: 0;
-    hCursor: 0;
-    hbrBackground: 0;
-    lpszMenuName: nil;
-    lpszClassName: nil);
-
-  function allocateHwnd(const aClassName: string; const aMethod: TWndMethod): HWND;
-  begin
-    aWindowClass.hInstance := HInstance;
-    aWindowClass.lpszClassName := PChar(aClassName);
-    var tempClass: TWndClass;
-    const classRegistered = GetClassInfo(HInstance, aWindowClass.lpszClassName, tempClass);
-    if not(classRegistered) or (tempClass.lpfnWndProc <> @DefWindowProc) then
-    begin
-      if classRegistered then WinAPI.Windows.UnregisterClass(aWindowClass.lpszClassName, HInstance);
-      WinAPI.Windows.RegisterClass(aWindowClass);
-    end;
-    Result := CreateWindowEx(WS_EX_TOOLWINDOW, aWindowClass.lpszClassName, '', WS_POPUP, 0, 0, 0, 0, 0, 0, HInstance, nil);
-    if Assigned(aMethod) then SetWindowLongPtr(Result, GWL_WNDPROC, IntPtr(MakeObjectInstance(aMethod)));
-  end;
-
-{$ENDIF}
+procedure finalize;
+begin
+{$IFDEF MSWINDOWS}
+  common.win.finalize;
+{$ENDIF MSWINDOWS}
+end;
 
 end.

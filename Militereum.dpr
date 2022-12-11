@@ -4,9 +4,9 @@ uses
   System.StartUpCopy,
   FMX.Forms,
 {$IFDEF MSWINDOWS}
-  System.Classes,
   WinAPI.Windows,
-{$ENDIF}
+  common.win in 'common.win.pas',
+{$ENDIF }
   approve in 'approve.pas' {FrmApprove},
   common in 'common.pas',
   log in 'log.pas' {FrmLog},
@@ -20,24 +20,18 @@ uses
 begin
   Application.Initialize;
 {$IFDEF MSWINDOWS}
-  var window: HWND;
-  const MessageWindowClassName = 'MilitereumMessageWindow';
   const mutex = CreateMutex(nil, False, 'MilitereumMutex');
   if (mutex = 0) or (GetLastError = ERROR_ALREADY_EXISTS) then
   begin
-    window := FindWindow(PChar(MessageWindowClassName), nil);
-    if window <> 0 then
-      SendMessage(window, common.CM_SHOW, 0, 0);
+    common.win.activateMainWindow;
     EXIT;
   end;
-{$ENDIF}
+{$ENDIF MSWINDOWS}
   Application.CreateForm(TFrmMain, FrmMain);
-{$IFDEF MSWINDOWS}
-  window := common.allocateHwnd(MessageWindowClassName, FrmMain.MessageWindowProc);
-{$ENDIF}
+  common.initialize;
   Application.Run;
+  common.finalize;
 {$IFDEF MSWINDOWS}
-  if window <> 0 then DeallocateHwnd(window);
   if mutex <> 0 then CloseHandle(mutex);
-{$ENDIF}
+{$ENDIF MSWINDOWS}
 end.
