@@ -7,9 +7,6 @@ uses
   System.Classes,
   System.Notification,
   System.SysUtils,
-{$IFDEF MSWINDOWS}
-  WinAPI.Messages,
-{$ENDIF}
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
@@ -20,7 +17,6 @@ uses
   // Indy
   IdContext,
   IdCustomHTTPServer,
-  IdGlobal,
   // project
   log,
   server;
@@ -55,7 +51,6 @@ type
     FCanNotify: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
-    function CanDismiss(port: TIdPort): Boolean;
     procedure Dismiss;
     function GetURL(chainId: Integer): TLabel;
     procedure ShowLogWindow;
@@ -70,14 +65,11 @@ type
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
-{$IFDEF MSWINDOWS}
-    procedure MessageWindowProc(var Msg: TMessage);
-{$ENDIF}
     property URL[chainId: Integer]: TLabel read GetURL;
   end;
 
 var
-  FrmMain: TFrmMain;
+  FrmMain: TFrmMain = nil;
 
 implementation
 
@@ -159,12 +151,6 @@ begin
   inherited Destroy;
 end;
 
-function TFrmMain.CanDismiss(port: TIdPort): Boolean;
-begin
-  // ToDo: only when all ports have been "seen"
-  Result := True;
-end;
-
 procedure TFrmMain.Dismiss;
 begin
   thread.synchronize(procedure
@@ -176,7 +162,7 @@ begin
       begin
         const N = NC.CreateNotification;
         try
-          N.AlertBody := 'Securing your wallet';
+          N.AlertBody := 'Securing your crypto wallet';
           NC.PresentNotification(N);
         finally
           N.Free;
@@ -226,7 +212,7 @@ begin
     EXIT;
   end;
 
-  if Self.CanDismiss(aContext.Binding.Port) then Self.Dismiss;
+  Self.Dismiss;
 
   if  SameText(aPayload.Method, 'eth_sendRawTransaction')
   and (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
@@ -321,14 +307,5 @@ procedure TFrmMain.btnDismissClick(Sender: TObject);
 begin
   Self.Dismiss;
 end;
-
-{$IFDEF MSWINDOWS}
-
-  procedure TFrmMain.MessageWindowProc(var Msg: TMessage);
-  begin
-    if Msg.Msg = common.CM_SHOW then FrmMain.Show;
-  end;
-
-{$ENDIF}
 
 end.
