@@ -5,7 +5,7 @@ object FrmApprove: TFrmApprove
   BorderIcons = [biSystemMenu]
   BorderStyle = Single
   Caption = 'Militereum'
-  ClientHeight = 163
+  ClientHeight = 188
   ClientWidth = 569
   Position = ScreenCenter
   FormStyle = StayOnTop
@@ -58,7 +58,7 @@ object FrmApprove: TFrmApprove
   end
   object btnAllow: TButton
     Position.X = 288.000000000000000000
-    Position.Y = 125.000000000000000000
+    Position.Y = 150.000000000000000000
     TabOrder = 4
     Text = 'Allow'
     OnClick = btnAllowClick
@@ -66,7 +66,7 @@ object FrmApprove: TFrmApprove
   object btnBlock: TButton
     Default = True
     Position.X = 200.000000000000000000
-    Position.Y = 125.000000000000000000
+    Position.Y = 150.000000000000000000
     TabOrder = 5
     Text = 'Block'
     OnClick = btnBlockClick
@@ -100,5 +100,26 @@ object FrmApprove: TFrmApprove
     Text = '(unknown)'
     TabOrder = 7
     OnClick = lblTokenTextClick
+  end
+  object lblAmountTitle: TLabel
+    Position.X = 110.000000000000000000
+    Position.Y = 108.000000000000000000
+    Size.Width = 56.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
+    Text = 'Amount:'
+    TabOrder = 8
+  end
+  object lblAmountText: TLabel
+    StyledSettings = [Family, Size, Style]
+    Position.X = 174.000000000000000000
+    Position.Y = 109.000000000000000000
+    Size.Width = 387.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.FontColor = claBrown
+    Text = '$ 0.00'
+    TabOrder = 9
   end
 end
