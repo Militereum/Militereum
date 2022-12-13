@@ -108,9 +108,9 @@ procedure TFrmApprove.SetSpender(spender: TAddress);
 begin
   lblSpenderText.Text := string(spender);
   if spender.IsEOA(TWeb3.Create(Self.FChain)).Value then
-    Self.Caption := Format(Self.Caption, ['someone'])
+    lblTitle.Text := Format(lblTitle.Text, ['someone'])
   else
-    Self.Caption := Format(Self.Caption, ['something']);
+    lblTitle.Text := Format(lblTitle.Text, ['something']);
 end;
 
 procedure TFrmApprove.lblTokenTextClick(Sender: TObject);

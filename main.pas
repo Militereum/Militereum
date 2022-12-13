@@ -228,9 +228,9 @@ begin
           if args.IsOk and (Length(args.Value) > 0) then
           begin
             const chain = FServer.chain(aContext.Binding.Port);
-            if chain.IsOk then
+            if Assigned(chain) then
             begin
-              web3.eth.tokenlists.token(chain.Value^, tx.Value.&To, procedure(token: IToken; _: IError)
+              web3.eth.tokenlists.token(chain^, tx.Value.&To, procedure(token: IToken; _: IError)
               begin
                 if not Assigned(token) then
                 begin
@@ -239,7 +239,7 @@ begin
                 end;
                 thread.synchronize(procedure
                 begin
-                  approve.show(chain.Value^, token, args.Value[0].ToAddress,
+                  approve.show(chain^, token, args.Value[0].ToAddress,
                   procedure // block
                   begin
                     aResponseInfo.ResponseNo  := 405;
