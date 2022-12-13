@@ -239,7 +239,7 @@ begin
                 end;
                 thread.synchronize(procedure
                 begin
-                  approve.show(chain^, token, args.Value[0].ToAddress,
+                  approve.show(chain^, token, args.Value[0].ToAddress, args.Value[1].toUInt256,
                   procedure // block
                   begin
                     aResponseInfo.ResponseNo  := 405;

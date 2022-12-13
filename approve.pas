@@ -14,6 +14,8 @@ uses
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
+  // Velthuis' BigNumbers
+  Velthuis.BigIntegers,
   // web3
   web3,
   web3.eth.tokenlists;
@@ -28,6 +30,8 @@ type
     btnBlock: TButton;
     lblSpenderText: TLabel;
     lblTokenText: TLabel;
+    lblAmountTitle: TLabel;
+    lblAmountText: TLabel;
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
     procedure lblTokenTextClick(Sender: TObject);
@@ -40,15 +44,17 @@ type
     FOnAllow: TProc;
     procedure SetToken(token: IToken);
     procedure SetSpender(spender: TAddress);
+    procedure SetAmount(amount: BigInteger);
   public
     property Chain: TChain write FChain;
     property Token: IToken write SetToken;
     property Spender: TAddress write SetSpender;
+    property Amount: BigInteger write SetAmount;
     property OnBlock: TProc write FOnBlock;
     property OnAllow: TProc write FOnAllow;
   end;
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; onBlock, onAllow: TProc);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; onBlock, onAllow: TProc);
 
 implementation
 
@@ -56,6 +62,7 @@ uses
   // Delphi
   System.Net.HttpClient,
   // web3
+  web3.defillama,
   web3.eth.types,
   web3.http,
   // project
@@ -64,12 +71,13 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; onBlock, onAllow: TProc);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; onBlock, onAllow: TProc);
 begin
   const frmApprove = TFrmApprove.Create(Application);
   frmApprove.Chain := chain;
   frmApprove.Token := token;
   frmApprove.Spender := spender;
+  frmApprove.Amount := amount;
   frmApprove.OnBlock := onBlock;
   frmApprove.OnAllow := onAllow;
   frmApprove.Show;
@@ -111,6 +119,20 @@ begin
     lblTitle.Text := Format(lblTitle.Text, ['someone'])
   else
     lblTitle.Text := Format(lblTitle.Text, ['something']);
+end;
+
+procedure TFrmApprove.SetAmount(amount: BigInteger);
+begin
+  if amount = web3.Infinite then
+    lblAmountText.Text := 'Unlimited'
+  else
+    web3.defillama.price(Self.FChain, FToken.Address, procedure(price: Double; err: IError)
+    begin
+      if Assigned(err) then
+        lblAmountText.Text := 'Unknown'
+      else
+        lblAmountText.Text := Format('$ %.2f', [amount.AsUInt64 * price]);
+    end);
 end;
 
 procedure TFrmApprove.lblTokenTextClick(Sender: TObject);
