@@ -119,7 +119,7 @@ object FrmApprove: TFrmApprove
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.FontColor = claBrown
-    Text = '$ 0.00'
+    Text = 'Unlimited'
     TabOrder = 9
   end
 end

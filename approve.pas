@@ -123,14 +123,10 @@ end;
 
 procedure TFrmApprove.SetAmount(amount: BigInteger);
 begin
-  if amount = web3.Infinite then
-    lblAmountText.Text := 'Unlimited'
-  else
-    web3.defillama.price(Self.FChain, FToken.Address, procedure(price: Double; err: IError)
+  if amount <> web3.Infinite then
+    web3.defillama.price(Self.FChain, FToken.Address, procedure(price: Double; _: IError)
     begin
-      if Assigned(err) then
-        lblAmountText.Text := 'Unknown'
-      else
+      if price > 0 then
         lblAmountText.Text := Format('$ %.2f', [amount.AsUInt64 * price]);
     end);
 end;
