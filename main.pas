@@ -83,6 +83,8 @@ uses
   // FireMonkey
   FMX.Dialogs,
   FMX.Platform,
+  // Velthuis' BigNumbers
+  Velthuis.BigIntegers,
   // web3
   web3,
   web3.eth.tokenlists,
@@ -227,33 +229,43 @@ begin
           const args = getTransactionArgs(tx.Value.Data);
           if args.IsOk and (Length(args.Value) > 0) then
           begin
-            const chain = FServer.chain(aContext.Binding.Port);
-            if Assigned(chain) then
+            const value = (function: BigInteger
             begin
-              web3.eth.tokenlists.token(chain^, tx.Value.&To, procedure(token: IToken; _: IError)
+              if Length(args.Value) > 1 then
+                Result := args.Value[1].toUInt256
+              else
+                Result := web3.Infinite;
+            end)();
+            if value > 0 then
+            begin
+              const chain = FServer.chain(aContext.Binding.Port);
+              if Assigned(chain) then
               begin
-                if not Assigned(token) then
+                web3.eth.tokenlists.token(chain^, tx.Value.&To, procedure(token: IToken; _: IError)
                 begin
-                  callback(aResponseInfo, True);
-                  EXIT;
-                end;
-                thread.synchronize(procedure
-                begin
-                  approve.show(chain^, token, args.Value[0].ToAddress, args.Value[1].toUInt256,
-                  procedure // block
-                  begin
-                    aResponseInfo.ResponseNo  := 405;
-                    aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
-                    Self.DoLog(aPayload.ToString, aResponseInfo.ContentText);
-                    callback(aResponseInfo, False);
-                  end,
-                  procedure // allow
+                  if not Assigned(token) then
                   begin
                     callback(aResponseInfo, True);
+                    EXIT;
+                  end;
+                  thread.synchronize(procedure
+                  begin
+                    approve.show(chain^, token, args.Value[0].ToAddress, value,
+                    procedure // block
+                    begin
+                      aResponseInfo.ResponseNo  := 405;
+                      aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
+                      Self.DoLog(aPayload.ToString, aResponseInfo.ContentText);
+                      callback(aResponseInfo, False);
+                    end,
+                    procedure // allow
+                    begin
+                      callback(aResponseInfo, True);
+                    end);
                   end);
                 end);
-              end);
-              EXIT;
+                EXIT;
+              end;
             end;
           end;
         end;
