@@ -5,7 +5,7 @@
 * no cookie warnings, no ads
 * not susceptible to fishing (there is no web site to visit)
 * not susceptible to copycat extensions (there is no browser extension)
-* supports Ethereum and many other chains, including Polygon and BNB Chain
+* supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
 ## Setup
