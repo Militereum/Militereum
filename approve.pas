@@ -40,8 +40,7 @@ type
   private
     FChain: TChain;
     FToken: IToken;
-    FOnBlock: TProc;
-    FOnAllow: TProc;
+    FCallback: TProc<Boolean>;
     procedure SetToken(token: IToken);
     procedure SetSpender(spender: TAddress);
     procedure SetAmount(amount: BigInteger);
@@ -50,11 +49,10 @@ type
     property Token: IToken write SetToken;
     property Spender: TAddress write SetSpender;
     property Amount: BigInteger write SetAmount;
-    property OnBlock: TProc write FOnBlock;
-    property OnAllow: TProc write FOnAllow;
+    property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; onBlock, onAllow: TProc);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; callback: TProc<Boolean>);
 
 implementation
 
@@ -71,15 +69,14 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; onBlock, onAllow: TProc);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; callback: TProc<Boolean>);
 begin
   const frmApprove = TFrmApprove.Create(Application);
   frmApprove.Chain := chain;
   frmApprove.Token := token;
   frmApprove.Spender := spender;
   frmApprove.Amount := amount;
-  frmApprove.OnBlock := onBlock;
-  frmApprove.OnAllow := onAllow;
+  frmApprove.Callback := callback;
   frmApprove.Show;
 end;
 
@@ -143,13 +140,13 @@ end;
 
 procedure TFrmApprove.btnBlockClick(Sender: TObject);
 begin
-  if Assigned(Self.FOnBlock) then Self.FOnBlock();
+  if Assigned(Self.FCallback) then Self.FCallback(False);
   Self.Close;
 end;
 
 procedure TFrmApprove.btnAllowClick(Sender: TObject);
 begin
-  if Assigned(Self.FOnAllow) then Self.FOnAllow();
+  if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
 end;
 
