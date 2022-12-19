@@ -12,6 +12,7 @@ uses
   FMX.Controls.Presentation,
   FMX.Forms,
   FMX.Layouts,
+  FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // Indy
@@ -26,18 +27,23 @@ type
     btnDismiss: TButton;
     NC: TNotificationCenter;
     Grid: TGridPanelLayout;
+    imgEthereum: TImage;
     lblEthereum: TLabel;
     lblEthereumURL: TLabel;
     btnEthereum: TButton;
+    imgGoerli: TImage;
     lblGoerli: TLabel;
     lblGoerliURL: TLabel;
     btnGoerli: TButton;
+    imgPolygon: TImage;
     lblPolygon: TLabel;
     lblPolygonURL: TLabel;
     btnPolygon: TButton;
+    imgArbitrum: TImage;
     lblArbitrum: TLabel;
     lblArbitrumURL: TLabel;
     btnArbitrum: TButton;
+    imgOptimism: TImage;
     lblOptimism: TLabel;
     lblOptimismURL: TLabel;
     btnOptimism: TButton;
