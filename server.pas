@@ -26,14 +26,16 @@ type
   TOnRPC = procedure(
     aContext: TIdContext;
     aPayload: IPayload;
-    aResponseInfo: TIdHTTPResponseInfo;
-    callback: TProc<TIdHTTPResponseInfo, Boolean>) of object;
+    callback: TProc<Boolean>) of object;
   TOnLog = procedure(const request, response: string) of object;
 
   TEthereumRPCServer = class(TIdCustomHTTPServer)
   private
     FOnRPC: TOnRPC;
     FOnLog: TOnLog;
+    procedure Block(
+      aPayload: IPayload;
+      aResponseInfo: TIdHTTPResponseInfo);
     procedure Forward(
       aContext: TIdContext;
       const aRequest: string;
@@ -247,7 +249,7 @@ procedure TEthereumRPCServer.DoCommandGet(
 type
   TForward = (Allow, Wait, Block);
 begin
-  const payload = (function: string
+  const body = (function: string
   begin
     if not Assigned(aRequestInfo.PostStream) then
       EXIT;
@@ -260,16 +262,16 @@ begin
     end;
   end)();
 
-  var status := TForward.Allow;
-
-  const &object = web3.json.unmarshal(payload);
+  const &object = web3.json.unmarshal(body);
   if Assigned(&object) then
   try
     if web3.json.getPropAsStr(&object, 'jsonrpc') <> '' then
       if Assigned(FOnRPC) then
       begin
-        status := TForward.Wait;
-        FOnRPC(aContext, TPayload.Create(&object), aResponseInfo, procedure(_: TIdHTTPResponseInfo; allow: Boolean)
+        const payload: IPayload = TPayload.Create(&object);
+
+        var status := TForward.Wait;
+        FOnRPC(aContext, payload, procedure(allow: Boolean)
         begin
           if allow then
             status := TForward.Allow
@@ -277,12 +279,25 @@ begin
             status := TForward.Block;
         end);
         while status = TForward.Wait do TThread.Sleep(500);
+
+        if status = TForward.Block then
+          Self.Block(payload, aResponseInfo)
+        else
+          Self.Forward(aContext, body, aResponseInfo);
       end;
   finally
     &object.Free;
   end;
 
-  if status = TForward.Allow then Self.Forward(aContext, payload, aResponseInfo);
+  if Assigned(FOnLog) then FOnLog(body, aResponseInfo.ContentText);
+end;
+
+procedure TEthereumRPCServer.Block(
+  aPayload: IPayload;
+  aResponseInfo: TIdHTTPResponseInfo);
+begin
+  aResponseInfo.ResponseNo  := 405;
+  aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
 end;
 
 procedure TEthereumRPCServer.Forward(
@@ -303,7 +318,6 @@ begin
       aResponseInfo.ContentText := response.Error.Message;
     end;
   end;
-  if Assigned(FOnLog) then FOnLog(aRequest, aResponseInfo.ContentText);
 end;
 
 class function TEthereumRPCServer.URL(port: TIdPort): string;

@@ -16,7 +16,6 @@ uses
   FMX.Types,
   // Indy
   IdContext,
-  IdCustomHTTPServer,
   // project
   log,
   server;
@@ -59,8 +58,7 @@ type
     procedure DoRPC(
       aContext: TIdContext;
       aPayload: IPayload;
-      aResponseInfo: TIdHTTPResponseInfo;
-      callback: TProc<TIdHTTPResponseInfo, Boolean>);
+      callback: TProc<Boolean>);
     procedure DoLog(const request, response: string);
   public
     constructor Create(aOwner: TComponent); override;
@@ -205,12 +203,11 @@ end;
 procedure TFrmMain.DoRPC(
   aContext: TIdContext;
   aPayload: IPayload;
-  aResponseInfo: TIdHTTPResponseInfo;
-  callback: TProc<TIdHTTPResponseInfo, Boolean>);
+  callback: TProc<Boolean>);
 begin
   if not Assigned(aPayload) then
   begin
-    callback(aResponseInfo, True);
+    callback(True);
     EXIT;
   end;
 
@@ -245,23 +242,12 @@ begin
                 begin
                   if not Assigned(token) then
                   begin
-                    callback(aResponseInfo, True);
+                    callback(True);
                     EXIT;
                   end;
                   thread.synchronize(procedure
                   begin
-                    approve.show(chain^, token, args.Value[0].ToAddress, value,
-                    procedure // block
-                    begin
-                      aResponseInfo.ResponseNo  := 405;
-                      aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
-                      Self.DoLog(aPayload.ToString, aResponseInfo.ContentText);
-                      callback(aResponseInfo, False);
-                    end,
-                    procedure // allow
-                    begin
-                      callback(aResponseInfo, True);
-                    end);
+                    approve.show(chain^, token, args.Value[0].ToAddress, value, callback);
                   end);
                 end);
                 EXIT;
@@ -272,7 +258,7 @@ begin
     end;
   end;
 
-  callback(aResponseInfo, True);
+  callback(True);
 end;
 
 procedure TFrmMain.DoLog(const request: string; const response: string);
