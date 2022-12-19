@@ -46,14 +46,14 @@ type
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnCopyMouseEnter(Sender: TObject);
     procedure btnCopyMouseLeave(Sender: TObject);
-  private
+  strict private
     FCanNotify: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
     procedure Dismiss;
     function GetURL(chainId: Integer): TLabel;
     procedure ShowLogWindow;
-  protected
+  strict protected
     procedure DoShow; override;
     procedure DoRPC(
       aContext: TIdContext;
@@ -91,7 +91,8 @@ uses
   approve,
   common,
   thread,
-  transaction;
+  transaction,
+  unverified;
 
 {$I Militereum.version}
 
@@ -112,7 +113,7 @@ begin
 
   Self.Caption := Self.Caption + ' ' + VERSION;
 
-  const ports = server.ports(5);
+  const ports = server.ports(NUM_CHAINS);
   if ports.IsErr then
   begin
     terminate;
@@ -219,24 +220,24 @@ begin
     const tx = decodeRawTransaction(web3.utils.fromHex(TJsonString(aPayload.Params[0]).Value));
     if tx.IsOk then
     begin
-      const func = getTransactionFourBytes(tx.Value.Data);
-      if func.IsOk then
-        if SameText(fourBytestoHex(func.Value), '0x095EA7B3') then // approve(address,uint256)
-        begin
-          const args = getTransactionArgs(tx.Value.Data);
-          if args.IsOk and (Length(args.Value) > 0) then
+      const chain = FServer.chain(aContext.Binding.Port);
+      if Assigned(chain) then
+      begin
+        const func = getTransactionFourBytes(tx.Value.Data);
+        if func.IsOk then
+          if SameText(fourBytestoHex(func.Value), '0x095EA7B3') then // approve(address,uint256)
           begin
-            const value = (function: BigInteger
+            const args = getTransactionArgs(tx.Value.Data);
+            if args.IsOk and (Length(args.Value) > 0) then
             begin
-              if Length(args.Value) > 1 then
-                Result := args.Value[1].toUInt256
-              else
-                Result := web3.Infinite;
-            end)();
-            if value > 0 then
-            begin
-              const chain = FServer.chain(aContext.Binding.Port);
-              if Assigned(chain) then
+              const value = (function: BigInteger
+              begin
+                if Length(args.Value) > 1 then
+                  Result := args.Value[1].toUInt256
+                else
+                  Result := web3.Infinite;
+              end)();
+              if value > 0 then
               begin
                 web3.eth.tokenlists.token(chain^, tx.Value.&To, procedure(token: IToken; _: IError)
                 begin
@@ -254,7 +255,29 @@ begin
               end;
             end;
           end;
+        // are we transacting with (a) smart contract and (b) not verified with etherscan?
+        const isEOA = tx.Value.&To.IsEOA(TWeb3.Create(chain^));
+        if isEOA.IsOk and not isEOA.Value then
+        begin
+          const etherscan = FServer.etherscan(aContext.Binding.Port);
+          if etherscan.IsOk then
+          begin
+            etherscan.Value.getContractSourceCode(tx.Value.&To, procedure(src: string; _: IError)
+            begin
+              if src <> '' then
+              begin
+                callback(True);
+                EXIT;
+              end;
+              thread.synchronize(procedure
+              begin
+                unverified.show(chain^, tx.Value.&To, callback);
+              end);
+            end);
+            EXIT;
+          end;
         end;
+      end;
     end;
   end;
 

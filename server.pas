@@ -30,7 +30,7 @@ type
   TOnLog = procedure(const request, response: string) of object;
 
   TEthereumRPCServer = class(TIdCustomHTTPServer)
-  private
+  strict private
     FOnRPC: TOnRPC;
     FOnLog: TOnLog;
     procedure Block(
@@ -40,7 +40,7 @@ type
       aContext: TIdContext;
       const aRequest: string;
       aResponseInfo: TIdHTTPResponseInfo);
-  protected
+  strict protected
     procedure DoCommandGet(
       aContext: TIdContext;
       aRequestInfo: TIdHTTPRequestInfo;
@@ -197,7 +197,7 @@ end;
 
 type
   TPayload = class(TInterfacedObject, IPayload)
-  private
+  strict private
     FObject: TJsonObject;
   public
     function Id: BigInteger;

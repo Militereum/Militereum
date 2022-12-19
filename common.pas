@@ -9,8 +9,12 @@ uses
   IdGlobal,
   // web3
   web3,
+  web3.eth.etherscan,
   // project
   server;
+
+const
+  NUM_CHAINS = 5;
 
 type
   TEthereumRPCServerHelper = class helper for TEthereumRPCServer
@@ -18,6 +22,7 @@ type
     function chain(port: TIdPort): PChain;
     function port(chain: TChain): IResult<TIdPort>;
     function endpoint(port: TIdPort): IResult<string>;
+    function etherscan(port: TIdPort): IResult<IEtherscan>;
   end;
 
 function debug: Boolean;
@@ -98,6 +103,35 @@ begin
     Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM)
   else
     Result := TResult<string>.Err('', Format('invalid port: %d', [port]));
+end;
+
+var
+  _etherscan: array[0..NUM_CHAINS - 1] of IEtherscan = (nil, nil, nil, nil, nil);
+
+function TEthereumRPCServerHelper.etherscan(port: TIdPort): IResult<IEtherscan>;
+begin
+  if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
+  begin
+    if not Assigned(_etherscan[0]) then _etherscan[0] := web3.eth.etherscan.create(web3.Ethereum, '');
+    Result := TResult<IEtherscan>.Ok(_etherscan[0]);
+  end else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
+  begin
+    if not Assigned(_etherscan[1]) then _etherscan[1] := web3.eth.etherscan.create(web3.Goerli, '');
+    Result := TResult<IEtherscan>.Ok(_etherscan[1]);
+  end else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
+  begin
+    if not Assigned(_etherscan[2]) then _etherscan[2] := web3.eth.etherscan.create(web3.Polygon, '');
+    Result := TResult<IEtherscan>.Ok(_etherscan[2]);
+  end else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
+  begin
+    if not Assigned(_etherscan[3]) then _etherscan[3] := web3.eth.etherscan.create(web3.Arbitrum, '');
+    Result := TResult<IEtherscan>.Ok(_etherscan[3]);
+  end else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
+  begin
+    if not Assigned(_etherscan[4]) then _etherscan[4] := web3.eth.etherscan.create(web3.Optimism, '');
+    Result := TResult<IEtherscan>.Ok(_etherscan[4]);
+  end else
+    Result := TResult<IEtherscan>.Err(nil, Format('invalid port: %d', [port]));
 end;
 
 function debug: Boolean;

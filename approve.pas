@@ -37,7 +37,7 @@ type
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblSpenderTextClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
+  strict private
     FChain: TChain;
     FToken: IToken;
     FCallback: TProc<Boolean>;
