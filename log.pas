@@ -20,7 +20,7 @@ type
   TFrmLog = class(TForm)
     Memo: TMemo;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
+  strict private
     { Private declarations }
   public
     constructor Create(aOwner: TComponent); override;

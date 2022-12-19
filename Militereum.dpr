@@ -13,7 +13,8 @@ uses
   main in 'main.pas' {FrmMain},
   server in 'server.pas',
   thread in 'thread.pas',
-  transaction in 'transaction.pas';
+  transaction in 'transaction.pas',
+  unverified in 'unverified.pas' {FrmUnverified};
 
 {$R *.res}
 
