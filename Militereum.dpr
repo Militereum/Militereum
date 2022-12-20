@@ -11,6 +11,7 @@ uses
   common in 'common.pas',
   log in 'log.pas' {FrmLog},
   main in 'main.pas' {FrmMain},
+  sanctioned in 'sanctioned.pas' {FrmSanctioned},
   server in 'server.pas',
   thread in 'thread.pas',
   transaction in 'transaction.pas',

@@ -91,11 +91,13 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3,
+  web3.eth.breadcrumbs,
   web3.eth.tokenlists,
   web3.utils,
   // project
   approve,
   common,
+  sanctioned,
   thread,
   transaction,
   unverified;
@@ -283,6 +285,18 @@ begin
             EXIT;
           end;
         end;
+        // are we transacting with a sanctioned address?
+        web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain^, tx.Value.&To, procedure(value: Boolean; _: IError)
+        begin
+          if not value then
+            callback(True)
+          else
+            thread.synchronize(procedure
+            begin
+              sanctioned.show(chain^, tx.Value.&To, callback);
+            end);
+        end);
+        EXIT;
       end;
     end;
   end;
