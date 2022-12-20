@@ -1,4 +1,4 @@
-object FrmUnverified: TFrmUnverified
+object FrmSanctioned: TFrmSanctioned
   Left = 0
   Top = 0
   ActiveControl = btnBlock
@@ -6,7 +6,7 @@ object FrmUnverified: TFrmUnverified
   BorderStyle = Single
   Caption = 'Militereum'
   ClientHeight = 196
-  ClientWidth = 569
+  ClientWidth = 800
   Position = ScreenCenter
   FormStyle = StayOnTop
   FormFactor.Width = 320
@@ -17,27 +17,27 @@ object FrmUnverified: TFrmUnverified
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
-    Position.Y = 16.000000000000000000
-    Size.Width = 553.000000000000000000
+    Position.Y = 18.000000000000000000
+    Size.Width = 784.000000000000000000
     Size.Height = 27.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
-    Text = 'You are about to transact with an unverified contract.'
+    Text = 'You are about to transact with a sanctioned address.'
     TabOrder = 1
   end
-  object lblContractTitle: TLabel
+  object lblAddressTitle: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 59.000000000000000000
-    Size.Width = 158.000000000000000000
+    Size.Width = 256.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
-    Text = 'Contract:'
+    Text = 'Address:'
     TabOrder = 2
   end
   object btnAllow: TButton
-    Position.X = 288.000000000000000000
+    Position.X = 404.000000000000000000
     Position.Y = 158.000000000000000000
     TabOrder = 3
     Text = 'Allow'
@@ -45,47 +45,49 @@ object FrmUnverified: TFrmUnverified
   end
   object btnBlock: TButton
     Default = True
-    Position.X = 200.000000000000000000
+    Position.X = 316.000000000000000000
     Position.Y = 158.000000000000000000
     TabOrder = 4
     Text = 'Block'
     OnClick = btnBlockClick
   end
-  object lblContractText: TLabel
+  object lblAddressText: TLabel
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 174.000000000000000000
+    Position.X = 272.000000000000000000
     Position.Y = 59.000000000000000000
-    Size.Width = 387.000000000000000000
+    Size.Width = 520.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 5
-    OnClick = lblContractTextClick
+    OnClick = lblAddressTextClick
   end
   object Label1: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 92.000000000000000000
-    Size.Width = 553.000000000000000000
+    Size.Width = 784.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
-    Text = 'This contract isn'#8217't necessarily insecure, but it is suspicious.'
+    Text = 
+      'This address is sanctioned by the U.S. Department of the Treasur' +
+      'y'#8217's Office of Foreign Assets Control (OFAC).'
     TabOrder = 6
   end
   object Label2: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 117.000000000000000000
-    Size.Width = 553.000000000000000000
+    Size.Width = 784.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
     Text = 
-      'There is no guarantee that this contract actually does what it i' +
-      's supposed to do.'
+      'Worst case scenario and depending on your jurisdiction, you migh' +
+      't incur in penalty or fines by the U.S. Department of Treasury.'
     TabOrder = 7
   end
 end
