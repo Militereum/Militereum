@@ -16,8 +16,11 @@ uses
   // Delphi
   System.Classes,
   WinAPI.Messages,
+  // FireMonkey
+  FMX.Platform.Win,
   // project
-  main;
+  main,
+  thread;
 
 const
   CM_SHOW_MAIN_WINDOW    = WM_APP + 1;
@@ -32,13 +35,27 @@ type
 procedure TMessageWindow.WndProc(var Msg: TMessage);
 begin
   if Msg.Msg = CM_SHOW_MAIN_WINDOW then
-    if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
+    thread.synchronize(procedure
+    begin
+      if Assigned(FrmMain) and not(FrmMain.Visible) then
+      begin
+        FrmMain.Show;
+        const hWnd = FormToHWND(FrmMain);
+        if hWnd <> 0 then
+        begin
+          var input: TInput;
+          ZeroMemory(@input, SizeOf(input));
+          SendInput(1, input, SizeOf(input));
+          SetForegroundWindow(hWnd);
+        end;
+      end;
+    end);
 end;
 
 function activateMainWindow: BOOL;
 begin
   Result := FALSE;
-  const msgWindow = FindWindow(PChar(MessageWindowClassName), nil);
+  const msgWindow = WinAPI.Windows.FindWindow(PChar(MessageWindowClassName), nil);
   if msgWindow <> 0 then
     Result := PostMessage(msgWindow, CM_SHOW_MAIN_WINDOW, 0, 0);
 end;
