@@ -38,6 +38,9 @@ uses
   // Delphi
   System.Classes,
   System.SysUtils,
+{$IFDEF MACOS}
+  common.mac,
+{$ENDIF MACOS}
 {$IFDEF MSWINDOWS}
   WinAPI.ShellAPI,
   WinAPI.Windows,
@@ -156,6 +159,9 @@ end;
 
 procedure initialize;
 begin
+{$IFDEF MACOS}
+  common.mac.initialize;
+{$ENDIF MACOS}
 {$IFDEF MSWINDOWS}
   common.win.initialize;
 {$ENDIF MSWINDOWS}

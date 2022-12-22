@@ -3,6 +3,9 @@ program Militereum;
 uses
   System.StartUpCopy,
   FMX.Forms,
+{$IFDEF MACOS}
+  common.mac in 'common.mac.pas',
+{$ENDIF MACOS}
 {$IFDEF MSWINDOWS}
   WinAPI.Windows,
   common.win in 'common.win.pas',
