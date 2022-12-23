@@ -8,6 +8,12 @@
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
+| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) |
+|-|:-:|:-:|:-:|:-:|:-:|
+| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| works with desktop wallets ([Frame](https://frame.sh/), [Zerion](https://zerion.io/), etc)                  | ✅ | ✅ | ❌ | ❌ | ❌ |
+| blocks transactions BEFORE they leave your device                                                           | ✅ | ❌ | ✅ | ✅ | ✅ |
+
 ## Setup
 
 1. Download Militereum for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) or [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
