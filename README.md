@@ -42,7 +42,7 @@ After your crypto wallet has approved the allowance, Militereum will intercept t
 ![image](assets/approve.png)
 
 Besides token allowances, Militereum will block...
-1. monetary transfers above $5k, and
+1. monetary transfers above $5k [➹](assets/limit.png), and
 2. transactions to a sanctioned address [➹](assets/sanctioned.png), and
 3. transactions to a smart contract that has not been [etherscan](https://etherscan.io/)-verified [➹](assets/unverified.png), and
 4. deposits to a smart contract with an admin key that can pause the contract, and
