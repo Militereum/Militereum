@@ -17,9 +17,13 @@ uses
   FMX.Types,
   // Indy
   IdContext,
+  IdGlobal,
+  // web3
+  web3,
   // project
   log,
-  server;
+  server,
+  transaction;
 
 type
   TFrmMain = class(TForm)
@@ -59,6 +63,11 @@ type
     procedure Dismiss;
     function GetURL(chainId: Integer): TLabel;
     procedure ShowLogWindow;
+    procedure Step1(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+    procedure Step2(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+    procedure Step3(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+    procedure Step4(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+    procedure Step5(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
   strict protected
     procedure DoShow; override;
     procedure DoRPC(
@@ -87,19 +96,20 @@ uses
   // FireMonkey
   FMX.Dialogs,
   FMX.Platform,
+  FMX.Text,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
-  web3,
+  web3.defillama,
   web3.eth.breadcrumbs,
   web3.eth.tokenlists,
   web3.utils,
   // project
   approve,
   common,
+  limit,
   sanctioned,
   thread,
-  transaction,
   unverified;
 
 {$I Militereum.version}
@@ -153,7 +163,10 @@ destructor TFrmMain.Destroy;
 begin
   if Assigned(FServer) then
   try
-    FServer.Active := False;
+    if FServer.Active then
+    try
+      FServer.Active := False;
+    except end;
   finally
     FServer.Free;
   end;
@@ -209,10 +222,144 @@ begin
   FCanNotify := aIsGranted;
 end;
 
+// approve(address,uint256)
+procedure TFrmMain.Step1(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  const func = getTransactionFourBytes(tx.Data);
+  if func.IsOk and SameText(fourBytestoHex(func.Value), '0x095EA7B3') then
+  begin
+    const args = getTransactionArgs(tx.Data);
+    if args.IsOk and (Length(args.Value) > 0) then
+    begin
+      const value = (function: BigInteger
+      begin
+        if Length(args.Value) > 1 then
+          Result := args.Value[1].toUInt256
+        else
+          Result := web3.Infinite;
+      end)();
+      if value > 0 then
+      begin
+        web3.eth.tokenlists.token(chain, tx.&To, procedure(token: IToken; _: IError)
+        begin
+          if not Assigned(token) then
+            next
+          else
+            thread.synchronize(procedure
+            begin
+              approve.show(chain, token, args.Value[0].ToAddress, value, callback);
+            end);
+        end);
+        EXIT;
+      end;
+    end;
+  end;
+  next;
+end;
+
+// transfer(address,uint256)
+procedure TFrmMain.Step2(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  const func = getTransactionFourBytes(tx.Data);
+  if func.IsOk and SameText(fourBytestoHex(func.Value), '0xA9059CBB') then
+  begin
+    const args = getTransactionArgs(tx.Data);
+    if args.IsOk and (Length(args.Value) > 1) then
+    begin
+      const quantity = args.Value[1].toUInt256;
+      if quantity > 0 then
+      begin
+        web3.defillama.price(chain, tx.&To, procedure(price: Double; _: IError)
+        begin
+          const amount = quantity.AsInt64 * price;
+          if amount < common.LIMIT then
+            next
+          else
+            common.symbol(chain, tx.&To, procedure(symbol: string; _: IError)
+            begin
+              thread.synchronize(procedure
+              begin
+                limit.show(chain, symbol, args.Value[0].ToAddress, amount, callback);
+              end);
+            end);
+        end);
+        EXIT;
+      end;
+    end;
+  end;
+  next;
+end;
+
+// are we sending more than $5k in ETH, translated to USD?
+procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  if tx.Value > 0 then
+  begin
+    const client: IWeb3 = TWeb3.Create(chain);
+    client.LatestPrice(procedure(price: Double; _: IError)
+    begin
+      const amount = tx.Value.AsInt64 * price;
+      if amount < common.LIMIT then
+        next
+      else
+        thread.synchronize(procedure
+        begin
+          limit.show(chain, chain.Symbol, tx.&To, amount, callback);
+        end);
+    end);
+    EXIT;
+  end;
+  next;
+end;
+
+// are we transacting with (a) smart contract and (b) not verified with etherscan?
+procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  const isEOA = tx.&To.IsEOA(TWeb3.Create(chain));
+  if isEOA.IsOk and not isEOA.Value then
+  begin
+    const etherscan = FServer.etherscan(port);
+    if etherscan.IsOk then
+    begin
+      etherscan.Value.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
+      begin
+        if src <> '' then
+          next
+        else
+          thread.synchronize(procedure
+          begin
+            unverified.show(chain, tx.&To, callback);
+          end);
+      end);
+      EXIT;
+    end;
+  end;
+  next;
+end;
+
+// are we transacting with a sanctioned address?
+procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; _: IError)
+  begin
+    if not value then
+      next
+    else
+      thread.synchronize(procedure
+      begin
+        sanctioned.show(chain, tx.&To, callback);
+      end);
+  end);
+end;
+
 procedure TFrmMain.DoRPC(
   aContext: TIdContext;
   aPayload: IPayload;
   callback: TProc<Boolean>);
+type
+  TStep  = reference to procedure(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+  TSteps = array of TStep;
+  TNext  = reference to procedure(steps: TSteps; index: Integer; done: TProc);
 begin
   if not Assigned(aPayload) then
   begin
@@ -222,84 +369,37 @@ begin
 
   Self.Dismiss;
 
-  if  SameText(aPayload.Method, 'eth_sendRawTransaction')
-  and (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
-  begin
-    const tx = decodeRawTransaction(web3.utils.fromHex(TJsonString(aPayload.Params[0]).Value));
-    if tx.IsOk then
+  if SameText(aPayload.Method, 'eth_sendRawTransaction') then
+    if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
     begin
-      const chain = FServer.chain(aContext.Binding.Port);
-      if Assigned(chain) then
+      const tx = decodeRawTransaction(web3.utils.fromHex(TJsonString(aPayload.Params[0]).Value));
+      if tx.IsOk then
       begin
-        const func = getTransactionFourBytes(tx.Value.Data);
-        if func.IsOk then
-          if SameText(fourBytestoHex(func.Value), '0x095EA7B3') then // approve(address,uint256)
-          begin
-            const args = getTransactionArgs(tx.Value.Data);
-            if args.IsOk and (Length(args.Value) > 0) then
-            begin
-              const value = (function: BigInteger
-              begin
-                if Length(args.Value) > 1 then
-                  Result := args.Value[1].toUInt256
-                else
-                  Result := web3.Infinite;
-              end)();
-              if value > 0 then
-              begin
-                web3.eth.tokenlists.token(chain^, tx.Value.&To, procedure(token: IToken; _: IError)
-                begin
-                  if not Assigned(token) then
-                  begin
-                    callback(True);
-                    EXIT;
-                  end;
-                  thread.synchronize(procedure
-                  begin
-                    approve.show(chain^, token, args.Value[0].ToAddress, value, callback);
-                  end);
-                end);
-                EXIT;
-              end;
-            end;
-          end;
-        // are we transacting with (a) smart contract and (b) not verified with etherscan?
-        const isEOA = tx.Value.&To.IsEOA(TWeb3.Create(chain^));
-        if isEOA.IsOk and not isEOA.Value then
+        const chain = FServer.chain(aContext.Binding.Port);
+        if Assigned(chain) then
         begin
-          const etherscan = FServer.etherscan(aContext.Binding.Port);
-          if etherscan.IsOk then
+          var next: TNext;
+
+          next := procedure(steps: TSteps; index: Integer; done: TProc)
           begin
-            etherscan.Value.getContractSourceCode(tx.Value.&To, procedure(src: string; _: IError)
-            begin
-              if src <> '' then
+            if index >= Length(steps) then
+              done
+            else
+              steps[index](aContext.Binding.Port, chain^, tx.Value, callback, procedure
               begin
-                callback(True);
-                EXIT;
-              end;
-              thread.synchronize(procedure
-              begin
-                unverified.show(chain^, tx.Value.&To, callback);
+                next(steps, index + 1, done)
               end);
-            end);
-            EXIT;
           end;
+
+          next([Step1, Step2, Step3, Step4, Step5], 0, procedure
+          begin
+            callback(True);
+          end);
+
+          EXIT;
         end;
-        // are we transacting with a sanctioned address?
-        web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain^, tx.Value.&To, procedure(value: Boolean; _: IError)
-        begin
-          if not value then
-            callback(True)
-          else
-            thread.synchronize(procedure
-            begin
-              sanctioned.show(chain^, tx.Value.&To, callback);
-            end);
-        end);
-        EXIT;
       end;
     end;
-  end;
 
   callback(True);
 end;
@@ -316,6 +416,7 @@ begin
       finally
         FFrmLog.Memo.Lines.EndUpdate;
       end;
+      FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
     end);
 end;
 

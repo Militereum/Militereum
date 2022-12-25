@@ -5,6 +5,7 @@ interface
 uses
   // Delphi
   System.Net.URLClient,
+  System.SysUtils,
   // Indy
   IdGlobal,
   // web3
@@ -15,6 +16,7 @@ uses
 
 const
   NUM_CHAINS = 5;
+  LIMIT      = 5000; // USD
 
 type
   TEthereumRPCServerHelper = class helper for TEthereumRPCServer
@@ -28,6 +30,7 @@ type
 function debug: Boolean;
 function headers: TNetHeaders;
 procedure open(const URL: string);
+procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
 
 procedure initialize;
 procedure finalize;
@@ -37,7 +40,6 @@ implementation
 uses
   // Delphi
   System.Classes,
-  System.SysUtils,
 {$IFDEF MACOS}
   common.mac,
 {$ENDIF MACOS}
@@ -50,7 +52,8 @@ uses
   Posix.Stdlib,
 {$ENDIF POSIX}
   // web3
-  web3.eth.alchemy;
+  web3.eth.alchemy,
+  web3.eth.erc20;
 
 {$I alchemy.api.key}
 
@@ -155,6 +158,16 @@ begin
 {$IFDEF POSIX}
   _system(PAnsiChar('open ' + AnsiString(URL)));
 {$ENDIF POSIX}
+end;
+
+procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
+begin
+  const erc20 = TERC20.Create(TWeb3.Create(chain), token);
+  try
+    erc20.Symbol(callback);
+  finally
+    erc20.Free;
+  end;
 end;
 
 procedure initialize;
