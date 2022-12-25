@@ -11,6 +11,7 @@ uses
   common.win in 'common.win.pas',
 {$ENDIF }
   approve in 'approve.pas' {FrmApprove},
+  base in 'base.pas' {FrmBase},
   common in 'common.pas',
   limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},

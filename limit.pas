@@ -6,19 +6,19 @@ uses
   // Delphi
   System.Classes,
   System.SysUtils,
-  System.UITypes,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
-  FMX.Forms,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
-  web3;
+  web3,
+  // project
+  base;
 
 type
-  TFrmLimit = class(TForm)
+  TFrmLimit = class(TFrmBase)
     lblTitle: TLabel;
     lblAssetTitle: TLabel;
     lblRecipientTitle: TLabel;
@@ -28,12 +28,9 @@ type
     lblAssetText: TLabel;
     lblAmountTitle: TLabel;
     lblAmountText: TLabel;
-    imgMilitereum: TImage;
-    imgWarning: TImage;
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
     procedure lblRecipientTextClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
@@ -49,11 +46,13 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
- procedure show(chain: TChain; const symbol: string; recipient: TAddress; amount: Double; callback: TProc<Boolean>);
+procedure show(chain: TChain; const symbol: string; recipient: TAddress; amount: Double; callback: TProc<Boolean>);
 
 implementation
 
 uses
+  // FireMonkey
+  FMX.Forms,
   // project
   common;
 
@@ -108,11 +107,6 @@ procedure TFrmLimit.btnAllowClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
-end;
-
-procedure TFrmLimit.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Action := TCloseAction.caFree;
 end;
 
 end.

@@ -6,18 +6,19 @@ uses
   // Delphi
   System.Classes,
   System.SysUtils,
-  System.UITypes,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
-  FMX.Forms,
+  FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
-  web3;
+  web3,
+  // project
+  base;
 
 type
-  TFrmUnverified = class(TForm)
+  TFrmUnverified = class(TFrmBase)
     lblTitle: TLabel;
     lblContractTitle: TLabel;
     btnAllow: TButton;
@@ -28,7 +29,6 @@ type
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
     procedure lblContractTextClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
@@ -44,6 +44,8 @@ procedure show(chain: TChain; contract: TAddress; callback: TProc<Boolean>);
 implementation
 
 uses
+  // FireMonkey
+  FMX.Forms,
   // project
   common;
 
@@ -80,11 +82,6 @@ procedure TFrmUnverified.btnAllowClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
-end;
-
-procedure TFrmUnverified.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Action := TCloseAction.caFree;
 end;
 
 end.

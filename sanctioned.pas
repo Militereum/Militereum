@@ -6,18 +6,19 @@ uses
   // Delphi
   System.Classes,
   System.SysUtils,
-  System.UITypes,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
-  FMX.Forms,
+  FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
-  web3;
+  web3,
+  // project
+  base;
 
 type
-  TFrmSanctioned = class(TForm)
+  TFrmSanctioned = class(TFrmBase)
     lblTitle: TLabel;
     lblAddressTitle: TLabel;
     btnAllow: TButton;
@@ -28,7 +29,6 @@ type
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
     procedure lblAddressTextClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
@@ -44,6 +44,8 @@ procedure show(chain: TChain; address: TAddress; callback: TProc<Boolean>);
 implementation
 
 uses
+  // FireMonkey
+  FMX.Forms,
   // project
   common;
 
@@ -80,11 +82,6 @@ procedure TFrmSanctioned.btnAllowClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
-end;
-
-procedure TFrmSanctioned.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Action := TCloseAction.caFree;
 end;
 
 end.

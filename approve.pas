@@ -6,11 +6,9 @@ uses
   // Delphi
   System.Classes,
   System.SysUtils,
-  System.UITypes,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
-  FMX.Forms,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
@@ -18,10 +16,12 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3,
-  web3.eth.tokenlists;
+  web3.eth.tokenlists,
+  // project
+  base;
 
 type
-  TFrmApprove = class(TForm)
+  TFrmApprove = class(TFrmBase)
     imgLogo: TImage;
     lblTitle: TLabel;
     lblTokenTitle: TLabel;
@@ -32,13 +32,10 @@ type
     lblTokenText: TLabel;
     lblAmountTitle: TLabel;
     lblAmountText: TLabel;
-    imgMilitereum: TImage;
-    imgWarning: TImage;
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblSpenderTextClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   strict private
     FChain: TChain;
     FToken: IToken;
@@ -61,6 +58,8 @@ implementation
 uses
   // Delphi
   System.Net.HttpClient,
+  // FireMonkey
+  FMX.Forms,
   // web3
   web3.defillama,
   web3.eth.types,
@@ -150,11 +149,6 @@ procedure TFrmApprove.btnAllowClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
-end;
-
-procedure TFrmApprove.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Action := TCloseAction.caFree;
 end;
 
 end.
