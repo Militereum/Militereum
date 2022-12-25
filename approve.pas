@@ -32,6 +32,8 @@ type
     lblTokenText: TLabel;
     lblAmountTitle: TLabel;
     lblAmountText: TLabel;
+    imgMilitereum: TImage;
+    imgWarning: TImage;
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
     procedure lblTokenTextClick(Sender: TObject);
@@ -43,16 +45,16 @@ type
     FCallback: TProc<Boolean>;
     procedure SetToken(token: IToken);
     procedure SetSpender(spender: TAddress);
-    procedure SetAmount(amount: BigInteger);
+    procedure SetQuantity(quantity: BigInteger);
   public
     property Chain: TChain write FChain;
     property Token: IToken write SetToken;
     property Spender: TAddress write SetSpender;
-    property Amount: BigInteger write SetAmount;
+    property Quantity: BigInteger write SetQuantity;
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; callback: TProc<Boolean>);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
 
 implementation
 
@@ -69,13 +71,13 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; amount: BigInteger; callback: TProc<Boolean>);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
 begin
   const frmApprove = TFrmApprove.Create(Application);
   frmApprove.Chain := chain;
   frmApprove.Token := token;
   frmApprove.Spender := spender;
-  frmApprove.Amount := amount;
+  frmApprove.Quantity := quantity;
   frmApprove.Callback := callback;
   frmApprove.Show;
 end;
@@ -118,13 +120,13 @@ begin
     lblTitle.Text := Format(lblTitle.Text, ['something']);
 end;
 
-procedure TFrmApprove.SetAmount(amount: BigInteger);
+procedure TFrmApprove.SetQuantity(quantity: BigInteger);
 begin
-  if amount <> web3.Infinite then
+  if quantity <> web3.Infinite then
     web3.defillama.price(Self.FChain, FToken.Address, procedure(price: Double; _: IError)
     begin
       if price > 0 then
-        lblAmountText.Text := Format('$ %.2f', [amount.AsUInt64 * price]);
+        lblAmountText.Text := Format('$ %.2f', [quantity.AsInt64 * price]);
     end);
 end;
 

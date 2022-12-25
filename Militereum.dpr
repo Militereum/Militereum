@@ -12,6 +12,7 @@ uses
 {$ENDIF }
   approve in 'approve.pas' {FrmApprove},
   common in 'common.pas',
+  limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},
   main in 'main.pas' {FrmMain},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
