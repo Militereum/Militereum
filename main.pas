@@ -62,6 +62,7 @@ type
     FServer: TEthereumRPCServer;
     procedure Dismiss;
     function GetURL(chainId: Integer): TLabel;
+    procedure Notify(const body: string);
     procedure ShowLogWindow;
     procedure Step1(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
     procedure Step2(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
@@ -173,6 +174,21 @@ begin
   inherited Destroy;
 end;
 
+procedure TFrmMain.Notify(const body: string);
+begin
+  if FCanNotify then
+    thread.synchronize(procedure
+    begin
+      const N = NC.CreateNotification;
+      try
+        N.AlertBody := body;
+        NC.PresentNotification(N);
+      finally
+        N.Free;
+      end;
+    end);
+end;
+
 procedure TFrmMain.Dismiss;
 begin
   thread.synchronize(procedure
@@ -180,16 +196,7 @@ begin
     if Self.Visible then
     begin
       Self.Hide;
-      if FCanNotify then
-      begin
-        const N = NC.CreateNotification;
-        try
-          N.AlertBody := 'Securing your crypto wallet';
-          NC.PresentNotification(N);
-        finally
-          N.Free;
-        end;
-      end;
+      Self.Notify('Securing your crypto wallet');
     end;
   end);
 end;
@@ -359,7 +366,7 @@ procedure TFrmMain.DoRPC(
 type
   TStep  = reference to procedure(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
   TSteps = array of TStep;
-  TNext  = reference to procedure(steps: TSteps; index: Integer; done: TProc);
+  TNext  = reference to procedure(steps: TSteps; index: Integer; callback: TProc<Boolean>; done: TProc);
 begin
   if not Assigned(aPayload) then
   begin
@@ -378,23 +385,36 @@ begin
         const chain = FServer.chain(aContext.Binding.Port);
         if Assigned(chain) then
         begin
-          var next: TNext;
+          common.beforeTransaction;
 
-          next := procedure(steps: TSteps; index: Integer; done: TProc)
+          var next: TNext;
+          next := procedure(steps: TSteps; index: Integer; callback: TProc<Boolean>; done: TProc)
           begin
             if index >= Length(steps) then
               done
             else
               steps[index](aContext.Binding.Port, chain^, tx.Value, callback, procedure
               begin
-                next(steps, index + 1, done)
+                next(steps, index + 1, callback, done)
               end);
           end;
 
-          next([Step1, Step2, Step3, Step4, Step5], 0, procedure
+          const done: TProc<Boolean> = procedure(allow: Boolean)
           begin
-            callback(True);
-          end);
+            common.afterTransaction;
+            callback(allow);
+          end;
+
+          next([Step1, Step2, Step3, Step4, Step5], 0,
+            procedure(allow: Boolean)
+            begin
+              done(allow);
+            end,
+            procedure
+            begin
+              Self.Notify('Approved your transaction');
+              done(True);
+            end);
 
           EXIT;
         end;

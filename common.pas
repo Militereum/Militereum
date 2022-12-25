@@ -35,6 +35,9 @@ procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>
 procedure initialize;
 procedure finalize;
 
+procedure beforeTransaction;
+procedure afterTransaction;
+
 implementation
 
 uses
@@ -185,6 +188,20 @@ begin
 {$IFDEF MSWINDOWS}
   common.win.finalize;
 {$ENDIF MSWINDOWS}
+end;
+
+procedure beforeTransaction;
+begin
+{$IFDEF MACOS}
+  common.mac.beforeTransaction;
+{$ENDIF MACOS}
+end;
+
+procedure afterTransaction;
+begin
+{$IFDEF MACOS}
+  common.mac.afterTransaction;
+{$ENDIF MACOS}
 end;
 
 end.
