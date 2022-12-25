@@ -4,6 +4,9 @@ interface
 
 procedure initialize;
 
+procedure beforeTransaction;
+procedure afterTransaction;
+
 implementation
 
 uses
@@ -16,6 +19,8 @@ uses
   // FireMonkey
   FMX.Helpers.Mac,
   FMX.Platform.Mac,
+  // web3
+  web3.sync,
   // Project
   main,
   thread;
@@ -44,6 +49,13 @@ var
   app: NSApplication;
   old: NSApplicationDelegate;
   new: TApplicationDelegate;
+  cnt: ICriticalInt64 = nil;
+
+function counter: ICriticalInt64;
+begin
+  if not Assigned(cnt) then cnt := TCriticalInt64.Create(0);
+  Result := cnt;
+end;
 
 procedure initialize;
 begin
@@ -51,6 +63,26 @@ begin
   old := app.delegate;
   new := TApplicationDelegate.Create;
   app.setDelegate(IApplicationDelegate(new));
+end;
+
+procedure beforeTransaction;
+begin
+  counter.Enter;
+  try
+    counter.Inc;
+  finally
+    counter.Leave;
+  end;
+end;
+
+procedure afterTransaction;
+begin
+  counter.Enter;
+  try
+    counter.Dec;
+  finally
+    counter.Leave;
+  end;
 end;
 
 function SendOSXMessage(const Sender: TObject; const OSXMessageClass: TOSXMessageClass; const NSSender: NSObject): NSObject;
@@ -103,10 +135,11 @@ end;
 
 procedure TApplicationDelegate.applicationWillBecomeActive(Notification: NSNotification);
 begin
-  thread.synchronize(procedure
-  begin
-    if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
-  end);
+  if counter.Get = 0 then
+    thread.synchronize(procedure
+    begin
+      if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
+    end);
 end;
 
 end.
