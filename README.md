@@ -26,6 +26,10 @@
 5. The following tab appears. Paste Militereum's network URL in `New RPC URL`. Click on `Save`
 
 ![image](assets/MetaMask.png)
+<strong>Network name:</strong> Militereum</br>
+<strong>New RPC URL:</strong> Coppy from tool <http://PC-Name.local:64511></br>
+<strong>Chain ID:</strong> 1</br>
+<strong>Curruncy symbol:</strong> ETH</br>
 
 ## Running
 
