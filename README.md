@@ -5,6 +5,7 @@
 * no cookie warnings, no ads
 * not susceptible to phishing (there is no web site to visit)
 * not susceptible to copycat extensions (there is no browser extension)
+* 100% uptime (there is no remote server)
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
@@ -26,10 +27,8 @@
 5. The following tab appears. Paste Militereum's network URL in `New RPC URL`. Click on `Save`
 
 ![image](assets/MetaMask.png)
-<strong>Network name: </strong>Militereum</br>
-<strong>New RPC URL: </strong>http://localhost:64511</br>
-<strong>Chain ID: </strong>1</br>
-<strong>Currency symbol: </strong>ETH</br>
+
+Click [here](networks.md) for more info on how to configure Militereum.
 
 ## Running
 
@@ -39,7 +38,7 @@ Every raw transaction passes through Militereum and if it is suspicious, Militer
 
 Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer](https://app.balancer.fi/). Initiate a swap from one of your tokens to another. Before Uniswap or Balancer can swap your token, you'll need to sign a so-called _token allowance_.
 
-Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for an allowance and drain your tokens from your wallet.
+Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially phish you for an allowance and drain your tokens from your wallet.
 
 After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
 
