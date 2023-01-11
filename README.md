@@ -51,19 +51,6 @@ Besides token allowances, Militereum will block...
 4. deposits to a smart contract with an admin key that can pause the contract, and
 5. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
-## Middleware
-
-In addition to a firewall, Militereum provides the following custom JSON-RPC methods to supporting wallets:
-
-| method                   | description |
-|--------------------------|-------------|
-| `eth_isTaintedToken`     | Detect tainted tokens in your wallet, and report the reason why the tokens are high risk (for example: if the sender is sanctioned). 
-| `eth_previewTransaction` | Preview the expected outcome of your transactions (based upon the current state of the blockchain) before the transaction leaves your device. This should help reduce transaction anxiety and prevent unintended consequences.
-| `eth_getTokenApy`        | Return the annual percentage yield you are earning on your tokens (if any).
-| `eth_isDeprecatedToken`  | If you own LP tokens from outdated DeFi protocols that have been replaced with never versions (for example: Aave v1) or yield aggregators that aren’t boosted anymore (for example: Yearn vaults v1), this method will alert you.
-
-_more custom JSON-RPC methods are in the works._
-
 ## License
 
 Distributed under the [GNU AGP v3.0](https://github.com/svanas/Militereum/blob/master/LICENSE) with [Commons Clause](https://commonsclause.com/) license.
