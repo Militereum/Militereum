@@ -9,16 +9,22 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3,
+  web3.eth.alchemy.api,
   web3.eth.types;
 
 type
   TTransaction = record
+  private
+    Raw: TBytes;
+    class function Empty: TTransaction; static;
+  public
     Nonce: BigInteger;
     &To  : TAddress;
     Value: TWei;
     Data : TBytes;
-    constructor Create(aNonce: BigInteger; aTo: TAddress; aValue: TWei; aData: TBytes);
-    class function Empty: TTransaction; static;
+    function From: IResult<TAddress>;
+    constructor Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
+    procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
   end;
 
 // input the JSON-RPC "params", returns the transaction
@@ -38,22 +44,38 @@ implementation
 
 uses
   // web3
+  web3.eth.tx,
   web3.rlp,
   web3.utils;
 
 { TTransaction }
 
-constructor TTransaction.Create(aNonce: BigInteger; aTo: TAddress; aValue: TWei; aData: TBytes);
+constructor TTransaction.Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
 begin
-  Self.Nonce := aNonce;
-  Self.&To   := aTo;
-  Self.Value := aValue;
-  Self.Data  := aData;
+  Self.Raw   := raw;
+  Self.Nonce := nonce;
+  Self.&To   := &to;
+  Self.Value := value;
+  Self.Data  := data;
 end;
 
 class function TTransaction.Empty: TTransaction;
 begin
   FillChar(Result, 0, SizeOf(Result));
+end;
+
+function TTransaction.From: IResult<TAddress>;
+begin
+  Result := ecRecoverTransaction(Self.Raw);
+end;
+
+procedure TTransaction.Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
+begin
+  const from = Self.From;
+  if from.IsErr then
+    callback(nil, TError.Create('cannot recover signer from signature: %s', [from.Error.Message]))
+  else
+    web3.eth.alchemy.api.simulate(apiKey, chain, from.Value, Self.&To, Self.Value, web3.utils.toHex(Self.Data), callback);
 end;
 
 // input the JSON-RPC "params", returns the transaction
@@ -91,6 +113,7 @@ begin
       if Length(signature.Value) > 7 then
       begin
         Result := TResult<TTransaction>.Ok(TTransaction.Create(
+          encoded,                                                     // raw
           toBigInt(signature.Value[1].Bytes),                          // nonce
           TAddress.Create(web3.utils.toHex(signature.Value[5].Bytes)), // recipient
           toBigInt(signature.Value[6].Bytes),                          // value
@@ -113,6 +136,7 @@ begin
     if Length(signature.Value) > 5 then
     begin
       Result := TResult<TTransaction>.Ok(TTransaction.Create(
+        encoded,                                                     // raw
         toBigInt(signature.Value[0].Bytes),                          // nonce
         TAddress.Create(web3.utils.toHex(signature.Value[3].Bytes)), // recipient
         toBigInt(signature.Value[4].Bytes),                          // value

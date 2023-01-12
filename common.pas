@@ -23,11 +23,13 @@ type
   public
     function chain(port: TIdPort): PChain;
     function port(chain: TChain): IResult<TIdPort>;
+    function apiKey(port: TIdPort): IResult<string>;
     function endpoint(port: TIdPort): IResult<string>;
     function etherscan(port: TIdPort): IResult<IEtherscan>;
   end;
 
 function debug: Boolean;
+function formatFloat(value: Double): string;
 function headers: TNetHeaders;
 procedure open(const URL: string);
 procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
@@ -98,6 +100,22 @@ begin
     Result := TResult<TIdPort>.Err(0, Format('invalid chain: %s', [chain.Name]));
 end;
 
+function TEthereumRPCServerHelper.apiKey(port: TIdPort): IResult<string>;
+begin
+  if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_ETHEREUM)
+  else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_GOERLI)
+  else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_POLYGON)
+  else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_ARBITRUM)
+  else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_OPTIMISM)
+  else
+    Result := TResult<string>.Err('', Format('invalid port: %d', [port]));
+end;
+
 function TEthereumRPCServerHelper.endpoint(port: TIdPort): IResult<string>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
@@ -146,6 +164,15 @@ end;
 function debug: Boolean;
 begin
   Result := FindCmdLineSwitch('debug');
+end;
+
+function formatFloat(value: Double): string;
+begin
+  Result := Format('%.6f', [value]);
+  while (Length(Result) > 0) and (Result[High(Result)] = '0') do
+    Delete(Result, High(Result), 1);
+  if (Length(Result) > 0) and (Result[High(Result)] = FormatSettings.DecimalSeparator) then
+    Delete(Result, High(Result), 1);
 end;
 
 function headers: TNetHeaders;
