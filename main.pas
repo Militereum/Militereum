@@ -62,7 +62,8 @@ type
     FServer: TEthereumRPCServer;
     procedure Dismiss;
     function GetURL(chainId: Integer): TLabel;
-    procedure Notify(const body: string);
+    procedure Notify(const body: string); overload;
+    procedure Notify(port: TIdPort; chain: TChain; tx: TTransaction); overload;
     procedure ShowLogWindow;
     procedure Step1(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
     procedure Step2(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
@@ -102,8 +103,10 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3.defillama,
+  web3.eth.alchemy.api,
   web3.eth.breadcrumbs,
   web3.eth.tokenlists,
+  web3.eth.types,
   web3.utils,
   // project
   approve,
@@ -185,6 +188,39 @@ begin
         NC.PresentNotification(N);
       finally
         N.Free;
+      end;
+    end);
+end;
+
+// notify the user when we allow (not block) a transaction
+procedure TFrmMain.Notify(port: TIdPort; chain: TChain; tx: TTransaction);
+begin
+  const apiKey = FServer.apiKey(port);
+  if apiKey.IsErr then
+    Self.Notify('Approved your transaction')
+  else
+    tx.Simulate(apiKey.Value, chain, procedure(changes: IAssetChanges; _: IError)
+    begin
+      if (changes = nil) or (changes.Count = 0) or (changes.Item(0).Change <> Transfer) then
+        Self.Notify('Approved your transaction')
+      else
+      begin
+        const item = changes.Item(0);
+        item.&To.ToString(TWeb3.Create(chain), procedure(name: string; err: IError)
+        begin
+          const amount = item.Unscale;
+          const &to = (function: string
+          begin
+            if Assigned(err) then
+              Result := string(item.&To)
+            else
+              Result := name;
+          end)();
+          if amount > 1 then
+            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, formatFloat(amount), &to]))
+          else
+            Self.Notify(System.SysUtils.Format('Approved transfer of %s to %s', [item.Symbol, &to]));
+        end, True);
       end;
     end);
 end;
@@ -436,7 +472,7 @@ begin
             end,
             procedure
             begin
-              Self.Notify('Approved your transaction');
+              Self.Notify(aContext.Binding.Port, chain^, tx.Value);
               done(True);
             end);
 
