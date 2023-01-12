@@ -5,6 +5,7 @@
 * no cookie warnings, no ads
 * not susceptible to phishing (there is no web site to visit)
 * not susceptible to copycat extensions (there is no browser extension)
+* 100% uptime (there is no remote server)
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
@@ -27,6 +28,8 @@
 
 ![image](assets/MetaMask.png)
 
+Click [here](networks.md) for more info on how to configure Militereum.
+
 ## Running
 
 As soon as your wallet has connected to Militereum, the firewall gets minimized and keeps running in the background.
@@ -35,7 +38,7 @@ Every raw transaction passes through Militereum and if it is suspicious, Militer
 
 Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer](https://app.balancer.fi/). Initiate a swap from one of your tokens to another. Before Uniswap or Balancer can swap your token, you'll need to sign a so-called _token allowance_.
 
-Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially fish you for an allowance and drain your tokens from your wallet.
+Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially phish you for an allowance and drain your tokens from your wallet.
 
 After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
 
@@ -48,22 +51,13 @@ Besides token allowances, Militereum will block...
 4. deposits to a smart contract with an admin key that can pause the contract, and
 5. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
-## Middleware
-
-In addition to a firewall, Militereum provides the following custom JSON-RPC methods to supporting wallets:
-
-| method                   | description |
-|--------------------------|-------------|
-| `eth_isTaintedToken`     | Detect tainted tokens in your wallet, and report the reason why the tokens are high risk (for example: if the sender is sanctioned). 
-| `eth_previewTransaction` | Preview the expected outcome of your transactions (based upon the current state of the blockchain) before the transaction leaves your device. This should help reduce transaction anxiety and prevent unintended consequences.
-| `eth_getTokenApy`        | Return the annual percentage yield you are earning on your tokens (if any).
-| `eth_isDeprecatedToken`  | If you own LP tokens from outdated DeFi protocols that have been replaced with never versions (for example: Aave v1) or yield aggregators that aren’t boosted anymore (for example: Yearn vaults v1), this method will alert you.
-
-_more custom JSON-RPC methods are in the works._
-
 ## License
 
 Distributed under the [GNU AGP v3.0](https://github.com/svanas/Militereum/blob/master/LICENSE) with [Commons Clause](https://commonsclause.com/) license.
+
+## Sponsors
+
+This project received a [WAGBI grant](https://www.alchemy.com/developer-grant-program) from alchemy.com and is featured in [Alchemy’s Dapp Store](https://www.alchemy.com/dapps/militereum).
 
 ## Disclaimer
 
