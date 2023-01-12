@@ -248,9 +248,9 @@ inherited FrmApprove: TFrmApprove
       item
       end>
     Position.X = 58.000000000000000000
-    Position.Y = 133.000000000000000000
-    Size.Width = 40.000000000000000000
-    Size.Height = 40.000000000000000000
+    Position.Y = 150.000000000000000000
+    Size.Width = 32.000000000000000000
+    Size.Height = 32.000000000000000000
     Size.PlatformDefault = False
   end
   object lblTitle: TLabel
