@@ -97,8 +97,8 @@ begin
       Result := string(token.Address);
   end)();
 
-  if token.LogoURI <> '' then
-    web3.http.get(token.LogoURI, [], procedure(img: IHttpResponse; err: IError)
+  if token.Logo <> '' then
+    web3.http.get(token.Logo, [], procedure(img: IHttpResponse; err: IError)
     begin
       if Assigned(img) then
         thread.synchronize(procedure

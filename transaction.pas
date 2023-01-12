@@ -76,11 +76,11 @@ begin
   end;
 
   // EIP-1559 ['2', [signature]]
-  if  Length(decoded.Value) = 2 then
+  if Length(decoded.Value) = 2 then
   begin
     const i0 = decoded.Value[0];
     const i1 = decoded.Value[1];
-    if (Length(i0.Bytes) = 1) and (i0.Bytes[0] = 2) and (i1.DataType = dtList) then
+    if (Length(i0.Bytes) = 1) and (i0.Bytes[0] >= 2) and (i1.DataType = dtList) then
     begin
       const signature = web3.rlp.decode(i1.Bytes);
       if signature.IsErr then

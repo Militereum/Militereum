@@ -254,7 +254,13 @@ begin
           else
             thread.synchronize(procedure
             begin
-              approve.show(chain, token, args.Value[0].ToAddress, value, callback);
+              approve.show(chain, token, args.Value[0].ToAddress, value, procedure(allow: Boolean)
+              begin
+                if allow then
+                  next
+                else
+                  callback(allow);
+              end);
             end);
         end);
         EXIT;
@@ -286,7 +292,13 @@ begin
             begin
               thread.synchronize(procedure
               begin
-                limit.show(chain, symbol, args.Value[0].ToAddress, amount, callback);
+                limit.show(chain, symbol, args.Value[0].ToAddress, amount, procedure(allow: Boolean)
+                begin
+                  if allow then
+                    next
+                  else
+                    callback(allow);
+                end);
               end);
             end);
         end);
@@ -311,7 +323,13 @@ begin
       else
         thread.synchronize(procedure
         begin
-          limit.show(chain, chain.Symbol, tx.&To, amount, callback);
+          limit.show(chain, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
+          begin
+            if allow then
+              next
+            else
+              callback(allow);
+          end);
         end);
     end);
     EXIT;
@@ -335,7 +353,13 @@ begin
         else
           thread.synchronize(procedure
           begin
-            unverified.show(chain, tx.&To, callback);
+            unverified.show(chain, tx.&To, procedure(allow: Boolean)
+            begin
+              if allow then
+                next
+              else
+                callback(allow);
+            end);
           end);
       end);
       EXIT;
