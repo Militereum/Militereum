@@ -70,6 +70,8 @@ type
     procedure Step3(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
     procedure Step4(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
     procedure Step5(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+    procedure Step6(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+    procedure Block(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
   strict protected
     procedure DoShow; override;
     procedure DoRPC(
@@ -114,6 +116,7 @@ uses
   limit,
   sanctioned,
   thread,
+  untransferable,
   unverified;
 
 {$I Militereum.version}
@@ -306,8 +309,53 @@ begin
   next;
 end;
 
-// transfer(address,uint256)
+// transfer(address,uint256) -- detect non-transferable token
 procedure TFrmMain.Step2(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  const func = getTransactionFourBytes(tx.Data);
+  if func.IsOk and SameText(fourBytestoHex(func.Value), '0xA9059CBB') then
+  begin
+    const args = getTransactionArgs(tx.Data);
+    if args.IsOk and (Length(args.Value) > 1) then
+    begin
+      const quantity = args.Value[1].toUInt256;
+      if quantity > 0 then
+      begin
+        const apiKey = FServer.apiKey(port);
+        if apiKey.IsOk then
+        begin
+          tx.Simulate(apiKey.Value, chain, procedure(changes: IAssetChanges; _: IError)
+          begin
+            if not Assigned(changes) then
+            begin
+              next;
+              EXIT;
+            end;
+            const I = changes.IndexOf(tx.&To);
+            if (I > -1) and (changes.Item(I).Amount > 0) then
+              next
+            else
+              thread.synchronize(procedure
+              begin
+                untransferable.show(chain, tx.&To, args.Value[0].ToAddress, procedure(allow: Boolean)
+                begin
+                  if allow then
+                    next
+                  else
+                    callback(allow);
+                end);
+              end);
+          end);
+          EXIT;
+        end;
+      end;
+    end;
+  end;
+  next;
+end;
+
+// transfer(address,uint256) -- enforce spending limit
+procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
 begin
   const func = getTransactionFourBytes(tx.Data);
   if func.IsOk and SameText(fourBytestoHex(func.Value), '0xA9059CBB') then
@@ -346,7 +394,7 @@ begin
 end;
 
 // are we sending more than $5k in ETH, translated to USD?
-procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
 begin
   if tx.Value > 0 then
   begin
@@ -374,7 +422,7 @@ begin
 end;
 
 // are we transacting with (a) smart contract and (b) not verified with etherscan?
-procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
 begin
   const isEOA = tx.&To.IsEOA(TWeb3.Create(chain));
   if isEOA.IsOk and not isEOA.Value then
@@ -405,7 +453,7 @@ begin
 end;
 
 // are we transacting with a sanctioned address?
-procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; _: IError)
   begin
@@ -417,6 +465,12 @@ begin
         sanctioned.show(chain, tx.&To, callback);
       end);
   end);
+end;
+
+// include this step if you want every transaction to fail (debug only)
+procedure TFrmMain.Block(port: TIdPort; chain: TChain; tx: TTransaction; callback: TProc<Boolean>; next: TProc);
+begin
+  callback(False);
 end;
 
 procedure TFrmMain.DoRPC(
@@ -465,7 +519,7 @@ begin
             callback(allow);
           end;
 
-          next([Step1, Step2, Step3, Step4, Step5], 0,
+          next([Step1, Step2, Step3, Step4, Step5, Step6], 0,
             procedure(allow: Boolean)
             begin
               done(allow);
