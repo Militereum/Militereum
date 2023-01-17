@@ -20,6 +20,7 @@ uses
   server in 'server.pas',
   thread in 'thread.pas',
   transaction in 'transaction.pas',
+  untransferable in 'untransferable.pas' {FrmUntransferable},
   unverified in 'unverified.pas' {FrmUnverified};
 
 {$R *.res}
