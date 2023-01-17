@@ -48,7 +48,7 @@ Besides token allowances, Militereum will block...
 1. monetary transfers above $5k [➹](assets/limit.png), and
 2. transactions to a sanctioned address [➹](assets/sanctioned.png), and
 3. transactions to a smart contract that has not been [etherscan](https://etherscan.io/)-verified [➹](assets/unverified.png), and
-4. deposits to a smart contract with an admin key that can pause the contract, and
+4. transfers of non-transferable tokens that are designed to pump but you cannot sell [➹](assets/untransferable.png), and
 5. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 ## License
