@@ -5,15 +5,15 @@
 * no cookie warnings, no ads
 * not susceptible to phishing (there is no web site to visit)
 * not susceptible to copycat extensions (there is no browser extension)
-* 100% uptime (there is no remote server)
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
-| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) |
-|-|:-:|:-:|:-:|:-:|:-:|
-| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| works with desktop wallets ([Frame](https://frame.sh/), [Zerion](https://zerion.io/), etc)                  | ✅ | ✅ | ❌ | ❌ | ❌ |
-| blocks transactions BEFORE they leave your device                                                           | ✅ | ❌ | ✅ | ✅ | ✅ |
+| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) | [Eagle](https://twitter.com/harpieio/status/1615454753672286209) |
+|-|:-:|:-:|:-:|:-:|:-:|:-:|
+| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| works with desktop wallets ([Frame](https://frame.sh/), [Zerion](https://zerion.io/), etc)                  | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| blocks transactions BEFORE they leave your device                                                           | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 100% uptime (there is no remote server)                                                                     | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
 
 ## Setup
 
