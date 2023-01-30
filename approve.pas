@@ -16,6 +16,7 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3,
+  web3.eth.alchemy.api,
   web3.eth.tokenlists,
   // project
   base;
@@ -38,20 +39,23 @@ type
     procedure lblSpenderTextClick(Sender: TObject);
   strict private
     FChain: TChain;
-    FToken: IToken;
+    FToken: TAddress;
     FCallback: TProc<Boolean>;
     procedure SetToken(token: IToken);
+    procedure SetChange(change: IAssetChange);
     procedure SetSpender(spender: TAddress);
     procedure SetQuantity(quantity: BigInteger);
   public
     property Chain: TChain write FChain;
     property Token: IToken write SetToken;
+    property Change: IAssetChange write SetChange;
     property Spender: TAddress write SetSpender;
     property Quantity: BigInteger write SetQuantity;
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
+procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>); overload;
+procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>); overload;
 
 implementation
 
@@ -81,11 +85,20 @@ begin
   frmApprove.Show;
 end;
 
+procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>);
+begin
+  const frmApprove = TFrmApprove.Create(Application);
+  frmApprove.Chain := chain;
+  frmApprove.Change := change;
+  frmApprove.Callback := callback;
+  frmApprove.Show;
+end;
+
 { TFrmApprove }
 
 procedure TFrmApprove.SetToken(token: IToken);
 begin
-  FToken := token;
+  FToken := token.Address;
 
   lblTokenText.Text := (function: string
   begin
@@ -110,6 +123,36 @@ begin
     end);
 end;
 
+procedure TFrmApprove.SetChange(change: IAssetChange);
+begin
+  FToken := change.Contract;
+
+  lblTokenText.Text := (function: string
+  begin
+    if change.Name <> '' then
+      Result := change.Name
+    else if change.Symbol <> '' then
+      Result := change.Symbol
+    else
+      Result := string(change.Contract);
+  end)();
+
+  if change.Logo <> '' then
+    web3.http.get(change.Logo, [], procedure(img: IHttpResponse; err: IError)
+    begin
+      if Assigned(img) then
+        thread.synchronize(procedure
+        begin
+          try
+            imgLogo.Bitmap.LoadFromStream(img.ContentStream);
+          except end;
+        end);
+    end);
+
+  Self.Spender  := change.&To;
+  Self.Quantity := change.Amount;
+end;
+
 procedure TFrmApprove.SetSpender(spender: TAddress);
 begin
   lblSpenderText.Text := string(spender);
@@ -122,7 +165,7 @@ end;
 procedure TFrmApprove.SetQuantity(quantity: BigInteger);
 begin
   if quantity <> web3.Infinite then
-    web3.defillama.price(Self.FChain, FToken.Address, procedure(price: Double; _: IError)
+    web3.defillama.price(Self.FChain, FToken, procedure(price: Double; _: IError)
     begin
       if price > 0 then
         lblAmountText.Text := Format('$ %.2f', [quantity.AsInt64 * price]);
@@ -131,7 +174,7 @@ end;
 
 procedure TFrmApprove.lblTokenTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/token/' + string(FToken.Address));
+  common.open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
 end;
 
 procedure TFrmApprove.lblSpenderTextClick(Sender: TObject);
