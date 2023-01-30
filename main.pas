@@ -497,19 +497,27 @@ begin
         next(checked);
         EXIT;
       end;
-      if changes.Count = 1 then
-        thread.synchronize(procedure
-        begin
-          approve.show(chain, changes.Item(0), procedure(allow: Boolean)
+      var step: TProc<Integer, TProc>;
+      step := procedure(index: Integer; done: TProc)
+      begin
+        if index >= changes.Count then
+          done
+        else
+          thread.synchronize(procedure
           begin
-            if allow then
-              next(checked + [TCheck.approve])
-            else
-              block;
+            approve.show(chain, changes.Item(index), procedure(allow: Boolean)
+            begin
+              if allow then
+                step(index + 1, done)
+              else
+                block;
+            end);
           end);
-        end)
-      else
-        next(checked); // ToDo: multi-token "you are about to allow someome else to spend your money"
+      end;
+      step(0, procedure
+      begin
+        next(checked + [TCheck.approve]);
+      end);
     end);
     EXIT;
   end;
