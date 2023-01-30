@@ -1,19 +1,20 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
 
 * blocks suspicious transactions
-* works with every EVM-compatible wallet, including browser-based _and_ desktop wallets
+* works with every EVM-compatible wallet, including browser-based and native desktop wallets
 * no cookie warnings, no ads
 * not susceptible to phishing (there is no web site to visit)
 * not susceptible to copycat extensions (there is no browser extension)
-* 100% uptime (there is no remote server)
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
-| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) |
-|-|:-:|:-:|:-:|:-:|:-:|
-| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| works with desktop wallets ([Frame](https://frame.sh/), [Zerion](https://zerion.io/), etc)                  | ✅ | ✅ | ❌ | ❌ | ❌ |
-| blocks transactions BEFORE they leave your device                                                           | ✅ | ❌ | ✅ | ✅ | ✅ |
+| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) | [Eagle<br>RPC](https://twitter.com/harpieio/status/1615454753672286209) |
+|-|:-:|:-:|:-:|:-:|:-:|:-:|
+| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc)       | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| works with native desktop wallets ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| blocks transactions BEFORE they leave your device                                                                 | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 100% uptime (there is no remote server)                                                                           | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| auditable open source code                                                                                        | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
 
 ## Setup
 
@@ -48,7 +49,7 @@ Besides token allowances, Militereum will block...
 1. monetary transfers above $5k [➹](assets/limit.png), and
 2. transactions to a sanctioned address [➹](assets/sanctioned.png), and
 3. transactions to a smart contract that has not been [etherscan](https://etherscan.io/)-verified [➹](assets/unverified.png), and
-4. deposits to a smart contract with an admin key that can pause the contract, and
+4. transfers of non-transferable tokens that are designed to pump but you cannot sell [➹](assets/untransferable.png), and
 5. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 ## License
