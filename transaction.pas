@@ -34,11 +34,11 @@ type
   TFourBytes = array[0..3] of Byte;
 
 // input the transaction "data", returns the 4-byte function signature
-function getTransactionFourBytes(data: TBytes): IResult<TFourBytes>;
+function getTransactionFourBytes(const data: TBytes): IResult<TFourBytes>;
 function fourBytesToHex(const input: TFourBytes): string;
 
 // input the transaction "data", returns the function arguments
-function getTransactionArgs(data: TBytes): IResult<TArray<TArg>>;
+function getTransactionArgs(const data: TBytes): IResult<TArray<TArg>>;
 
 implementation
 
@@ -150,7 +150,7 @@ begin
 end;
 
 // input the transaction "data", returns the 4-byte function signature
-function getTransactionFourBytes(data: TBytes): IResult<TFourBytes>;
+function getTransactionFourBytes(const data: TBytes): IResult<TFourBytes>;
 begin
   var func: TFourBytes;
   FillChar(func, SizeOf(func), 0);
@@ -172,7 +172,7 @@ begin
 end;
 
 // input the transaction "data", returns the function arguments
-function getTransactionArgs(data: TBytes): IResult<TArray<TArg>>;
+function getTransactionArgs(const data: TBytes): IResult<TArray<TArg>>;
 begin
   const func = getTransactionFourBytes(data);
   if func.IsErr then
@@ -180,13 +180,13 @@ begin
     Result := TResult<TArray<TArg>>.Err([], func.Error);
     EXIT;
   end;
-  Delete(data, 0, 4);
+  var input : TBytes := Copy(data, 4, Length(data) - 4);
   var output: TArray<TArg> := [];
-  while Length(data) >= 32 do
+  while Length(input) >= 32 do
   begin
     SetLength(output, Length(output) + 1);
-    Move(data[0], output[High(output)].Inner[0], 32);
-    Delete(data, 0, 32);
+    Move(input[0], output[High(output)].Inner[0], 32);
+    Delete(input, 0, 32);
   end;
   Result := TResult<TArray<TArg>>.Ok(output);
 end;

@@ -41,16 +41,19 @@ type
     FChain: TChain;
     FToken: TAddress;
     FCallback: TProc<Boolean>;
-    procedure SetToken(token: IToken);
-    procedure SetChange(change: IAssetChange);
-    procedure SetSpender(spender: TAddress);
-    procedure SetQuantity(quantity: BigInteger);
+    procedure SetKind(value: TChangeType);
+    procedure SetToken(value: IToken);
+    procedure SetChange(value: IAssetChange);
+    procedure SetLogo(value: TURL);
+    procedure SetSpender(value: TAddress);
   public
+    procedure Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
     property Chain: TChain write FChain;
+    property Kind: TChangeType write SetKind;
     property Token: IToken write SetToken;
     property Change: IAssetChange write SetChange;
+    property Logo: TURL write SetLogo;
     property Spender: TAddress write SetSpender;
-    property Quantity: BigInteger write SetQuantity;
     property Callback: TProc<Boolean> write FCallback;
   end;
 
@@ -61,12 +64,12 @@ implementation
 
 uses
   // Delphi
+  System.Math,
   System.Net.HttpClient,
   // FireMonkey
   FMX.Forms,
   // web3
   web3.defillama,
-  web3.eth.types,
   web3.http,
   // project
   common,
@@ -80,7 +83,7 @@ begin
   frmApprove.Chain := chain;
   frmApprove.Token := token;
   frmApprove.Spender := spender;
-  frmApprove.Quantity := quantity;
+  frmApprove.Amount(token.Symbol, quantity, token.Decimals);
   frmApprove.Callback := callback;
   frmApprove.Show;
 end;
@@ -96,22 +99,52 @@ end;
 
 { TFrmApprove }
 
-procedure TFrmApprove.SetToken(token: IToken);
+procedure TFrmApprove.SetKind(value: TChangeType);
 begin
-  FToken := token.Address;
+  if value = Transfer then
+  begin
+    lblTitle.Text := 'The following token is about to leave your wallet.';
+    lblSpenderTitle.Text := 'Recipient';
+  end;
+end;
+
+procedure TFrmApprove.SetToken(value: IToken);
+begin
+  FToken := value.Address;
 
   lblTokenText.Text := (function: string
   begin
-    if token.Name <> '' then
-      Result := token.Name
-    else if token.Symbol <> '' then
-      Result := token.Symbol
+    if value.Name <> '' then
+      Result := value.Name
     else
-      Result := string(token.Address);
+      Result := string(value.Address);
   end)();
 
-  if token.Logo <> '' then
-    web3.http.get(token.Logo, [], procedure(img: IHttpResponse; err: IError)
+  Self.Logo := value.Logo;
+end;
+
+procedure TFrmApprove.SetChange(value: IAssetChange);
+begin
+  FToken := value.Contract;
+
+  lblTokenText.Text := (function: string
+  begin
+    if value.Name <> '' then
+      Result := value.Name
+    else
+      Result := string(value.Contract);
+  end)();
+
+  Self.Kind := value.Change;
+  Self.Logo := value.Logo;
+  Self.Spender := value.&To;
+  Self.Amount(value.Symbol, value.Amount, value.Decimals);
+end;
+
+procedure TFrmApprove.SetLogo(value: TURL);
+begin
+  if value <> '' then
+    web3.http.get(value, [], procedure(img: IHttpResponse; err: IError)
     begin
       if Assigned(img) then
         thread.synchronize(procedure
@@ -123,52 +156,20 @@ begin
     end);
 end;
 
-procedure TFrmApprove.SetChange(change: IAssetChange);
+procedure TFrmApprove.SetSpender(value: TAddress);
 begin
-  FToken := change.Contract;
-
-  lblTokenText.Text := (function: string
-  begin
-    if change.Name <> '' then
-      Result := change.Name
-    else if change.Symbol <> '' then
-      Result := change.Symbol
-    else
-      Result := string(change.Contract);
-  end)();
-
-  if change.Logo <> '' then
-    web3.http.get(change.Logo, [], procedure(img: IHttpResponse; err: IError)
-    begin
-      if Assigned(img) then
-        thread.synchronize(procedure
-        begin
-          try
-            imgLogo.Bitmap.LoadFromStream(img.ContentStream);
-          except end;
-        end);
-    end);
-
-  Self.Spender  := change.&To;
-  Self.Quantity := change.Amount;
+  lblSpenderText.Text := string(value);
 end;
 
-procedure TFrmApprove.SetSpender(spender: TAddress);
-begin
-  lblSpenderText.Text := string(spender);
-  if spender.IsEOA(TWeb3.Create(Self.FChain)).Value then
-    lblTitle.Text := Format(lblTitle.Text, ['someone'])
-  else
-    lblTitle.Text := Format(lblTitle.Text, ['something']);
-end;
-
-procedure TFrmApprove.SetQuantity(quantity: BigInteger);
+procedure TFrmApprove.Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
 begin
   if quantity <> web3.Infinite then
     web3.defillama.price(Self.FChain, FToken, procedure(price: Double; _: IError)
     begin
-      if price > 0 then
-        lblAmountText.Text := Format('$ %.2f', [quantity.AsInt64 * price]);
+      if (price > 0) and (quantity.BitLength <= 64) then
+        lblAmountText.Text := System.SysUtils.Format('$ %.2f', [quantity.AsUInt64 * price])
+      else
+        lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.format(quantity.AsDouble / Round(Power(10, decimals)))]);
     end);
 end;
 

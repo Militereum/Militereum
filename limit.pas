@@ -74,7 +74,7 @@ end;
 constructor TFrmLimit.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
-  lblTitle.Text := Format(lblTitle.Text, [common.LIMIT]);
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);
 end;
 
 procedure TFrmLimit.SetSymbol(const symbol: string);
@@ -89,7 +89,7 @@ end;
 
 procedure TFrmLimit.SetAmount(amount: Double);
 begin
-  lblAmountText.Text := Format('$ %.2f', [amount]);
+  lblAmountText.Text := System.SysUtils.Format('$ %.2f', [amount]);
 end;
 
 procedure TFrmLimit.lblRecipientTextClick(Sender: TObject);

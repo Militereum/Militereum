@@ -20,14 +20,14 @@ uses
   IdGlobal,
   // web3
   web3,
+  web3.eth.alchemy.api,
   // project
   log,
   server,
   transaction;
 
 type
-  TCheck = (approve, limit);
-  TChecked = set of TCheck;
+  TChecked = set of TChangeType;
 
 type
   TFrmMain = class(TForm)
@@ -110,7 +110,6 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3.defillama,
-  web3.eth.alchemy.api,
   web3.eth.breadcrumbs,
   web3.eth.tokenlists,
   web3.eth.types,
@@ -225,7 +224,7 @@ begin
               Result := name;
           end)();
           if amount > 1 then
-            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, formatFloat(amount), &to]))
+            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.format(amount), &to]))
           else
             Self.Notify(System.SysUtils.Format('Approved transfer of %s to %s', [item.Symbol, &to]));
         end, True);
@@ -301,7 +300,7 @@ begin
               approve.show(chain, token, args.Value[0].ToAddress, value, procedure(allow: Boolean)
               begin
                 if allow then
-                  next(checked + [TCheck.approve])
+                  next(checked + [TChangeType.Approve])
                 else
                   block;
               end);
@@ -314,7 +313,7 @@ begin
   next(checked);
 end;
 
-// transfer(address,uint256) -- detect non-transferable token
+// transfer(address,uint256)
 procedure TFrmMain.Step2(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const func = getTransactionFourBytes(tx.Data);
@@ -336,9 +335,18 @@ begin
               next(checked);
               EXIT;
             end;
-            const I = changes.IndexOf(tx.&To);
-            if (I > -1) and (changes.Item(I).Amount > 0) then
-              next(checked)
+            const index = changes.IndexOf(tx.&To);
+            if (index > -1) and (changes.Item(index).Amount > 0) then
+              thread.synchronize(procedure
+              begin
+                approve.show(chain, changes.Item(index), procedure(allow: Boolean)
+                begin
+                  if allow then
+                    next(checked + [TChangeType.Transfer])
+                  else
+                    block;
+                end);
+              end)
             else
               thread.synchronize(procedure
               begin
@@ -359,7 +367,7 @@ begin
   next(checked);
 end;
 
-// transfer(address,uint256) -- enforce spending limit
+// are we transferring more than $5k in ERC-20, translated to USD?
 procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const func = getTransactionFourBytes(tx.Data);
@@ -373,23 +381,27 @@ begin
       begin
         web3.defillama.price(chain, tx.&To, procedure(price: Double; _: IError)
         begin
-          const amount = quantity.AsInt64 * price;
-          if amount < common.LIMIT then
+          if (price = 0) or (quantity.BitLength > 64) then
             next(checked)
-          else
-            common.symbol(chain, tx.&To, procedure(symbol: string; _: IError)
-            begin
-              thread.synchronize(procedure
+          else begin
+            const amount = quantity.AsUInt64 * price;
+            if amount < common.LIMIT then
+              next(checked)
+            else
+              common.symbol(chain, tx.&To, procedure(symbol: string; _: IError)
               begin
-                limit.show(chain, symbol, args.Value[0].ToAddress, amount, procedure(allow: Boolean)
+                thread.synchronize(procedure
                 begin
-                  if allow then
-                    next(checked + [TCheck.limit])
-                  else
-                    block;
+                  limit.show(chain, symbol, args.Value[0].ToAddress, amount, procedure(allow: Boolean)
+                  begin
+                    if allow then
+                      next(checked)
+                    else
+                      block;
+                  end);
                 end);
               end);
-            end);
+          end;
         end);
         EXIT;
       end;
@@ -406,20 +418,24 @@ begin
     const client: IWeb3 = TWeb3.Create(chain);
     client.LatestPrice(procedure(price: Double; _: IError)
     begin
-      const amount = tx.Value.AsInt64 * price;
-      if amount < common.LIMIT then
+      if (price = 0) or (tx.Value.BitLength > 64) then
         next(checked)
-      else
-        thread.synchronize(procedure
-        begin
-          limit.show(chain, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
+      else begin
+        const amount = tx.Value.AsUInt64 * price;
+        if amount < common.LIMIT then
+          next(checked)
+        else
+          thread.synchronize(procedure
           begin
-            if allow then
-              next(checked + [TCheck.limit])
-            else
-              block;
+            limit.show(chain, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
+            begin
+              if allow then
+                next(checked)
+              else
+                block;
+            end);
           end);
-        end);
+      end;
     end);
     EXIT;
   end;
@@ -478,7 +494,7 @@ begin
   end);
 end;
 
-// simulate transaction, search for approval(s)
+// simulate transaction
 procedure TFrmMain.Step7(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const apiKey = FServer.apiKey(port);
@@ -491,32 +507,47 @@ begin
         next(checked);
         EXIT;
       end;
-      changes.FilterBy(TChangeType.Approve);
-      if (changes.Count = 0) or ((changes.Count = 1) and (TCheck.approve in checked)) then
+      const approvals = (function: Integer
       begin
-        next(checked);
-        EXIT;
-      end;
+        Result := 0;
+        for var I := 0 to Pred(changes.Count) do
+          if changes.Item(I).Change = TChangeType.Approve then Inc(Result);
+      end)();
+      const transfers = (function: Integer
+      begin
+        Result := 0;
+        for var I := 0 to Pred(changes.Count) do
+          if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
+      end)();
       var step: TProc<Integer, TProc>;
       step := procedure(index: Integer; done: TProc)
       begin
         if index >= changes.Count then
           done
         else
-          thread.synchronize(procedure
-          begin
-            approve.show(chain, changes.Item(index), procedure(allow: Boolean)
-            begin
-              if allow then
-                step(index + 1, done)
-              else
-                block;
-            end);
-          end);
+          if changes.Item(index).Amount = 0 then
+            step(index + 1, done)
+          else
+            // if we have prompted for this approval before in step 1
+            if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TChangeType.Approve in checked))
+            // or we have prompted for this transfer before in step 2
+            or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TChangeType.Transfer in checked)) then
+              step(index + 1, done)
+            else
+              thread.synchronize(procedure
+              begin
+                approve.show(chain, changes.Item(index), procedure(allow: Boolean)
+                begin
+                  if allow then
+                    step(index + 1, done)
+                  else
+                    block;
+                end);
+              end);
       end;
       step(0, procedure
       begin
-        next(checked + [TCheck.approve]);
+        next(checked);
       end);
     end);
     EXIT;

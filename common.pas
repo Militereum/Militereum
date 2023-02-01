@@ -29,7 +29,7 @@ type
   end;
 
 function debug: Boolean;
-function formatFloat(value: Double): string;
+function format(value: Double): string;
 function headers: TNetHeaders;
 procedure open(const URL: string);
 procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
@@ -97,7 +97,7 @@ begin
   else if (chain = web3.Optimism) and (Self.Bindings.Count > 4) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[4].Port)
   else
-    Result := TResult<TIdPort>.Err(0, Format('invalid chain: %s', [chain.Name]));
+    Result := TResult<TIdPort>.Err(0, System.SysUtils.Format('invalid chain: %s', [chain.Name]));
 end;
 
 function TEthereumRPCServerHelper.apiKey(port: TIdPort): IResult<string>;
@@ -113,7 +113,7 @@ begin
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_OPTIMISM)
   else
-    Result := TResult<string>.Err('', Format('invalid port: %d', [port]));
+    Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
 function TEthereumRPCServerHelper.endpoint(port: TIdPort): IResult<string>;
@@ -129,7 +129,7 @@ begin
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM)
   else
-    Result := TResult<string>.Err('', Format('invalid port: %d', [port]));
+    Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
 var
@@ -158,7 +158,7 @@ begin
     if not Assigned(_etherscan[4]) then _etherscan[4] := web3.eth.etherscan.create(web3.Optimism, '');
     Result := TResult<IEtherscan>.Ok(_etherscan[4]);
   end else
-    Result := TResult<IEtherscan>.Err(nil, Format('invalid port: %d', [port]));
+    Result := TResult<IEtherscan>.Err(nil, System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
 function debug: Boolean;
@@ -166,9 +166,9 @@ begin
   Result := FindCmdLineSwitch('debug');
 end;
 
-function formatFloat(value: Double): string;
+function format(value: Double): string;
 begin
-  Result := Format('%.6f', [value]);
+  Result := System.SysUtils.Format('%.8f', [value]);
   while (Length(Result) > 0) and (Result[High(Result)] = '0') do
     Delete(Result, High(Result), 1);
   if (Length(Result) > 0) and (Result[High(Result)] = FormatSettings.DecimalSeparator) then
