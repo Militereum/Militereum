@@ -110,7 +110,7 @@ begin
           port := port - 1
         else
         begin
-          Result := TResult<TArray<TIdPort>>.Err(nil, Format('ports out of range %d..%d', [MIN_PORT_NO, MAX_PORT_NO]));
+          Result := TResult<TArray<TIdPort>>.Err(nil, System.SysUtils.Format('ports out of range %d..%d', [MIN_PORT_NO, MAX_PORT_NO]));
           EXIT;
         end;
       finally
@@ -237,7 +237,7 @@ end;
 
 function TPayload.ToString: string;
 begin
-  Result := Format('{"jsonrpc":"2.0","method":"%s","params":%s,"id":%s}', [Self.Method, web3.json.marshal(Self.Params), Self.Id.ToString(10)]);
+  Result := System.SysUtils.Format('{"jsonrpc":"2.0","method":"%s","params":%s,"id":%s}', [Self.Method, web3.json.marshal(Self.Params), Self.Id.ToString(10)]);
 end;
 
 { TEthereumRPCServer }
@@ -297,7 +297,7 @@ procedure TEthereumRPCServer.Block(
   aResponseInfo: TIdHTTPResponseInfo);
 begin
   aResponseInfo.ResponseNo  := 405;
-  aResponseInfo.ContentText := Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
+  aResponseInfo.ContentText := System.SysUtils.Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
 end;
 
 procedure TEthereumRPCServer.Forward(
@@ -322,7 +322,7 @@ end;
 
 class function TEthereumRPCServer.URL(port: TIdPort): string;
 begin
-  Result := Format('http://%s:%d', [IndyComputerName.ToLower, port]);
+  Result := System.SysUtils.Format('http://%s:%d', [IndyComputerName.ToLower, port]);
 end;
 
 end.
