@@ -5,30 +5,23 @@ interface
 uses
   // Delphi
   System.SysUtils,
-  // Velthuis' BigNumbers
-  Velthuis.BigIntegers,
   // web3
   web3,
   web3.eth.alchemy.api,
   web3.eth.types;
 
 type
-  TTransaction = record
-  private
-    Raw: TBytes;
-    class function Empty: TTransaction; static;
-  public
-    Nonce: BigInteger;
-    &To  : TAddress;
-    Value: TWei;
-    Data : TBytes;
-    function From: IResult<TAddress>;
-    constructor Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
+  ITransaction = interface
+    function From : IResult<TAddress>;
+    function &To  : TAddress;
+    function Value: TWei;
+    function Data : TBytes;
+    procedure ToEOA(chain: TChain; callback: TProc<Boolean, IError>);
     procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
   end;
 
 // input the JSON-RPC "params", returns the transaction
-function decodeRawTransaction(encoded: TBytes): IResult<TTransaction>;
+function decodeRawTransaction(encoded: TBytes): IResult<ITransaction>;
 
 type
   TFourBytes = array[0..3] of Byte;
@@ -43,6 +36,8 @@ function getTransactionArgs(const data: TBytes): IResult<TArray<TArg>>;
 implementation
 
 uses
+  // Velthuis' BigNumbers
+  Velthuis.BigIntegers,
   // web3
   web3.eth.tx,
   web3.rlp,
@@ -50,36 +45,95 @@ uses
 
 { TTransaction }
 
+type
+  TTransaction = class(TInterfacedObject, ITransaction)
+  private
+    type
+      TIsEOA = (Unknown, Yes, No);
+    var
+      FRaw  : TBytes;
+      FNonce: BigInteger;
+      FTo   : TAddress;
+      FToEOA: TIsEOA;
+      FValue: TWei;
+      FData : TBytes;
+      FSimulated: IAssetChanges;
+  public
+    constructor Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
+    function From : IResult<TAddress>;
+    function &To  : TAddress;
+    function Value: TWei;
+    function Data : TBytes;
+    procedure ToEOA(chain: TChain; callback: TProc<Boolean, IError>);
+    procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
+  end;
+
 constructor TTransaction.Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
 begin
-  Self.Raw   := raw;
-  Self.Nonce := nonce;
-  Self.&To   := &to;
-  Self.Value := value;
-  Self.Data  := data;
-end;
-
-class function TTransaction.Empty: TTransaction;
-begin
-  FillChar(Result, 0, SizeOf(Result));
+  Self.FRaw   := raw;
+  Self.FNonce := nonce;
+  Self.FTo    := &to;
+  Self.FToEOA := Unknown;
+  Self.FValue := value;
+  Self.FData  := data;
 end;
 
 function TTransaction.From: IResult<TAddress>;
 begin
-  Result := ecRecoverTransaction(Self.Raw);
+  Result := ecRecoverTransaction(FRaw);
+end;
+
+function TTransaction.&To: TAddress;
+begin
+  Result := FTo;
+end;
+
+function TTransaction.Value: TWei;
+begin
+  Result := FValue;
+end;
+
+function TTransaction.Data: TBytes;
+begin
+  Result := FData;
+end;
+
+procedure TTransaction.ToEOA(chain: TChain; callback: TProc<Boolean, IError>);
+begin
+  if FToEOA = Unknown then
+  begin
+    Self.&To.IsEOA(TWeb3.Create(chain), procedure(isEOA: Boolean; err: IError)
+    begin
+      if (err = nil) then if isEOA then Self.FToEOA := Yes else Self.FToEOA := No;
+      callback(isEOA, err);
+    end);
+    EXIT;
+  end;
+  if FToEOA = Yes then callback(True, nil) else callback(False, nil);
 end;
 
 procedure TTransaction.Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
 begin
+  if Assigned(FSimulated) then
+  begin
+    callback(FSimulated, nil);
+    EXIT;
+  end;
   const from = Self.From;
   if from.IsErr then
-    callback(nil, TError.Create('cannot recover signer from signature: %s', [from.Error.Message]))
-  else
-    web3.eth.alchemy.api.simulate(apiKey, chain, from.Value, Self.&To, Self.Value, web3.utils.toHex(Self.Data), callback);
+  begin
+    callback(nil, TError.Create('cannot recover signer from signature: %s', [from.Error.Message]));
+    EXIT;
+  end;
+  web3.eth.alchemy.api.simulate(apiKey, chain, from.Value, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
+  begin
+    Self.FSimulated := changes;
+    callback(changes, err);
+  end);
 end;
 
 // input the JSON-RPC "params", returns the transaction
-function decodeRawTransaction(encoded: TBytes): IResult<TTransaction>;
+function decodeRawTransaction(encoded: TBytes): IResult<ITransaction>;
 
   function toBigInt(const bytes: TBytes): BigInteger; inline;
   begin
@@ -93,7 +147,7 @@ begin
   const decoded = web3.rlp.decode(encoded);
   if decoded.IsErr then
   begin
-    Result := TResult<TTransaction>.Err(TTransaction.Empty, decoded.Error);
+    Result := TResult<ITransaction>.Err(nil, decoded.Error);
     EXIT;
   end;
 
@@ -107,12 +161,12 @@ begin
       const signature = web3.rlp.decode(i1.Bytes);
       if signature.IsErr then
       begin
-        Result := TResult<TTransaction>.Err(TTransaction.Empty, signature.Error);
+        Result := TResult<ITransaction>.Err(nil, signature.Error);
         EXIT;
       end;
       if Length(signature.Value) > 7 then
       begin
-        Result := TResult<TTransaction>.Ok(TTransaction.Create(
+        Result := TResult<ITransaction>.Ok(TTransaction.Create(
           encoded,                                                     // raw
           toBigInt(signature.Value[1].Bytes),                          // nonce
           TAddress.Create(web3.utils.toHex(signature.Value[5].Bytes)), // recipient
@@ -130,12 +184,12 @@ begin
     const signature = web3.rlp.decode(decoded.Value[0].Bytes);
     if signature.IsErr then
     begin
-      Result := TResult<TTransaction>.Err(TTransaction.Empty, signature.Error);
+      Result := TResult<ITransaction>.Err(nil, signature.Error);
       EXIT;
     end;
     if Length(signature.Value) > 5 then
     begin
-      Result := TResult<TTransaction>.Ok(TTransaction.Create(
+      Result := TResult<ITransaction>.Ok(TTransaction.Create(
         encoded,                                                     // raw
         toBigInt(signature.Value[0].Bytes),                          // nonce
         TAddress.Create(web3.utils.toHex(signature.Value[3].Bytes)), // recipient
@@ -146,7 +200,7 @@ begin
     end;
   end;
 
-  Result := TResult<TTransaction>.Err(TTransaction.Empty, 'unknown transaction encoding');
+  Result := TResult<ITransaction>.Err(nil, 'unknown transaction encoding');
 end;
 
 // input the transaction "data", returns the 4-byte function signature

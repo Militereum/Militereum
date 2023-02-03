@@ -112,7 +112,6 @@ inherited FrmApprove: TFrmApprove
     Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
-    Text = 'Unlimited'
     TabOrder = 9
   end
 end
