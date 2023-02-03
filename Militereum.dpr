@@ -13,6 +13,7 @@ uses
   approve in 'approve.pas' {FrmApprove},
   base in 'base.pas' {FrmBase},
   common in 'common.pas',
+  firsttime in 'firsttime.pas' {FrmFirstTime},
   limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},
   main in 'main.pas' {FrmMain},

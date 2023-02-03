@@ -163,7 +163,9 @@ end;
 
 procedure TFrmApprove.Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
 begin
-  if quantity <> web3.Infinite then
+  if quantity = web3.Infinite then
+    lblAmountText.Text := 'Unlimited'
+  else
     web3.defillama.price(Self.FChain, FToken, procedure(price: Double; _: IError)
     begin
       if (price > 0) and (quantity.BitLength <= 64) then

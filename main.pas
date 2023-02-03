@@ -21,6 +21,7 @@ uses
   // web3
   web3,
   web3.eth.alchemy.api,
+  web3.eth.etherscan,
   // project
   log,
   server,
@@ -67,22 +68,20 @@ type
     procedure Dismiss;
     function GetURL(chainId: Integer): TLabel;
     procedure Notify(const body: string); overload;
-    procedure Notify(port: TIdPort; chain: TChain; tx: TTransaction); overload;
+    procedure Notify(port: TIdPort; chain: TChain; tx: ITransaction); overload;
     procedure ShowLogWindow;
-    procedure Step1(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Step2(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Step3(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Step4(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Step5(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Step6(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Step7(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
-    procedure Block(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step1(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step2(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step3(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step4(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step5(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step6(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step7(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step8(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Block(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
   strict protected
     procedure DoShow; override;
-    procedure DoRPC(
-      aContext: TIdContext;
-      aPayload: IPayload;
-      callback: TProc<Boolean>);
+    procedure DoRPC(aContext: TIdContext; aPayload: IPayload; callback: TProc<Boolean>);
     procedure DoLog(const request, response: string);
   public
     constructor Create(aOwner: TComponent); override;
@@ -117,6 +116,7 @@ uses
   // project
   approve,
   common,
+  firsttime,
   limit,
   sanctioned,
   thread,
@@ -200,7 +200,7 @@ begin
 end;
 
 // notify the user when we allow (not block) a transaction
-procedure TFrmMain.Notify(port: TIdPort; chain: TChain; tx: TTransaction);
+procedure TFrmMain.Notify(port: TIdPort; chain: TChain; tx: transaction.ITransaction);
 begin
   const apiKey = FServer.apiKey(port);
   if apiKey.IsErr then
@@ -273,7 +273,7 @@ begin
 end;
 
 // approve(address,uint256)
-procedure TFrmMain.Step1(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step1(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const func = getTransactionFourBytes(tx.Data);
   if func.IsOk and SameText(fourBytestoHex(func.Value), '0x095EA7B3') then
@@ -314,7 +314,7 @@ begin
 end;
 
 // transfer(address,uint256)
-procedure TFrmMain.Step2(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step2(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const func = getTransactionFourBytes(tx.Data);
   if func.IsOk and SameText(fourBytestoHex(func.Value), '0xA9059CBB') then
@@ -368,7 +368,7 @@ begin
 end;
 
 // are we transferring more than $5k in ERC-20, translated to USD?
-procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const func = getTransactionFourBytes(tx.Data);
   if func.IsOk and SameText(fourBytestoHex(func.Value), '0xA9059CBB') then
@@ -411,7 +411,7 @@ begin
 end;
 
 // are we sending more than $5k in ETH, translated to USD?
-procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   if tx.Value > 0 then
   begin
@@ -443,38 +443,79 @@ begin
 end;
 
 // are we transacting with (a) smart contract and (b) not verified with etherscan?
-procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
-  const isEOA = tx.&To.IsEOA(TWeb3.Create(chain));
-  if isEOA.IsOk and not isEOA.Value then
+  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
-    const etherscan = FServer.etherscan(port);
-    if etherscan.IsOk then
+    if Assigned(err) or isEOA then
     begin
-      etherscan.Value.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
-      begin
-        if src <> '' then
-          next(checked)
-        else
-          thread.synchronize(procedure
-          begin
-            unverified.show(chain, tx.&To, procedure(allow: Boolean)
-            begin
-              if allow then
-                next(checked)
-              else
-                block;
-            end);
-          end);
-      end);
+      next(checked);
       EXIT;
     end;
-  end;
-  next(checked);
+    etherscan.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
+    begin
+      if src <> '' then
+        next(checked)
+      else
+        thread.synchronize(procedure
+        begin
+          unverified.show(chain, tx.&To, procedure(allow: Boolean)
+          begin
+            if allow then
+              next(checked)
+            else
+              block;
+          end);
+        end);
+    end);
+  end);
+end;
+
+// have we transacted with this contract before?
+procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+begin
+  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
+  begin
+    if Assigned(err) or isEOA then
+    begin
+      next(checked);
+      EXIT;
+    end;
+    const from = tx.From;
+    if from.IsErr then
+    begin
+      next(checked);
+      EXIT;
+    end;
+    etherscan.getTransactions(from.Value, procedure(txs: ITransactions; _: IError)
+    begin
+      if not Assigned(txs) then
+      begin
+        next(checked);
+        EXIT;
+      end;
+      txs.FilterBy(tx.&To);
+      if txs.Count > 0 then
+      begin
+        next(checked);
+        EXIT;
+      end;
+      thread.synchronize(procedure
+      begin
+        firsttime.show(chain, tx.&To, procedure(allow: Boolean)
+        begin
+          if allow then
+            next(checked)
+          else
+            block;
+        end);
+      end);
+    end);
+  end);
 end;
 
 // are we transacting with a sanctioned address?
-procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step7(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; _: IError)
   begin
@@ -495,7 +536,7 @@ begin
 end;
 
 // simulate transaction
-procedure TFrmMain.Step7(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step8(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const apiKey = FServer.apiKey(port);
   if apiKey.IsOk then
@@ -556,19 +597,16 @@ begin
 end;
 
 // include this step if you want every transaction to fail (debug only)
-procedure TFrmMain.Block(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Block(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   block;
 end;
 
-procedure TFrmMain.DoRPC(
-  aContext: TIdContext;
-  aPayload: IPayload;
-  callback: TProc<Boolean>);
+procedure TFrmMain.DoRPC(aContext: TIdContext; aPayload: IPayload; callback: TProc<Boolean>);
 type
-  TStep  = reference to procedure(port: TIdPort; chain: TChain; tx: TTransaction; checked: TChecked; block: TProc; next: TProc<TChecked>);
+  TStep  = reference to procedure(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
   TSteps = array of TStep;
-  TNext  = reference to procedure(steps: TSteps; index: Integer; checked: TChecked; block: TProc; done: TProc);
+  TNext  = reference to procedure(steps: TSteps; index: Integer; etherscan: IEtherscan; checked: TChecked; block: TProc; done: TProc);
 begin
   if not Assigned(aPayload) then
   begin
@@ -590,14 +628,14 @@ begin
           common.beforeTransaction;
 
           var next: TNext;
-          next := procedure(steps: TSteps; index: Integer; input: TChecked; block: TProc; done: TProc)
+          next := procedure(steps: TSteps; index: Integer; etherscan: IEtherscan; input: TChecked; block: TProc; done: TProc)
           begin
             if index >= Length(steps) then
               done
             else
-              steps[index](aContext.Binding.Port, chain^, tx.Value, input, block, procedure(output: TChecked)
+              steps[index](aContext.Binding.Port, chain^, tx.Value, etherscan, input, block, procedure(output: TChecked)
               begin
-                next(steps, index + 1, output, block, done)
+                next(steps, index + 1, etherscan, output, block, done)
               end);
           end;
 
@@ -607,7 +645,7 @@ begin
             callback(allow);
           end;
 
-          next([Step1, Step2, Step3, Step4, Step5, Step6, Step7], 0, [],
+          next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8], 0, web3.eth.etherscan.create(chain^, ''), [],
             procedure
             begin
               done(False);

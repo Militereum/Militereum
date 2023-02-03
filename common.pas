@@ -10,7 +10,6 @@ uses
   IdGlobal,
   // web3
   web3,
-  web3.eth.etherscan,
   // project
   server;
 
@@ -25,7 +24,6 @@ type
     function port(chain: TChain): IResult<TIdPort>;
     function apiKey(port: TIdPort): IResult<string>;
     function endpoint(port: TIdPort): IResult<string>;
-    function etherscan(port: TIdPort): IResult<IEtherscan>;
   end;
 
 function debug: Boolean;
@@ -132,35 +130,6 @@ begin
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
-var
-  _etherscan: array[0..NUM_CHAINS - 1] of IEtherscan = (nil, nil, nil, nil, nil);
-
-function TEthereumRPCServerHelper.etherscan(port: TIdPort): IResult<IEtherscan>;
-begin
-  if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
-  begin
-    if not Assigned(_etherscan[0]) then _etherscan[0] := web3.eth.etherscan.create(web3.Ethereum, '');
-    Result := TResult<IEtherscan>.Ok(_etherscan[0]);
-  end else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
-  begin
-    if not Assigned(_etherscan[1]) then _etherscan[1] := web3.eth.etherscan.create(web3.Goerli, '');
-    Result := TResult<IEtherscan>.Ok(_etherscan[1]);
-  end else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-  begin
-    if not Assigned(_etherscan[2]) then _etherscan[2] := web3.eth.etherscan.create(web3.Polygon, '');
-    Result := TResult<IEtherscan>.Ok(_etherscan[2]);
-  end else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-  begin
-    if not Assigned(_etherscan[3]) then _etherscan[3] := web3.eth.etherscan.create(web3.Arbitrum, '');
-    Result := TResult<IEtherscan>.Ok(_etherscan[3]);
-  end else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
-  begin
-    if not Assigned(_etherscan[4]) then _etherscan[4] := web3.eth.etherscan.create(web3.Optimism, '');
-    Result := TResult<IEtherscan>.Ok(_etherscan[4]);
-  end else
-    Result := TResult<IEtherscan>.Err(nil, System.SysUtils.Format('invalid port: %d', [port]));
-end;
-
 function debug: Boolean;
 begin
   Result := FindCmdLineSwitch('debug');
@@ -168,7 +137,7 @@ end;
 
 function format(value: Double): string;
 begin
-  Result := System.SysUtils.Format('%.8f', [value]);
+  Result := System.SysUtils.Format('%.6f', [value]);
   while (Length(Result) > 0) and (Result[High(Result)] = '0') do
     Delete(Result, High(Result), 1);
   if (Length(Result) > 0) and (Result[High(Result)] = FormatSettings.DecimalSeparator) then
