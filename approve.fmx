@@ -1,6 +1,6 @@
 inherited FrmApprove: TFrmApprove
   ActiveControl = btnBlock
-  ClientHeight = 262
+  ClientHeight = 263
   ClientWidth = 569
   DesignerMasterStyle = 0
   inherited imgMilitereum: TImage
@@ -14,7 +14,7 @@ inherited FrmApprove: TFrmApprove
       item
       end>
     Position.X = 58.000000000000000000
-    Position.Y = 150.000000000000000000
+    Position.Y = 151.000000000000000000
     Size.Width = 32.000000000000000000
     Size.Height = 32.000000000000000000
     Size.PlatformDefault = False
@@ -22,9 +22,9 @@ inherited FrmApprove: TFrmApprove
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
-    Position.Y = 90.000000000000000000
+    Position.Y = 96.000000000000000000
     Size.Width = 553.000000000000000000
-    Size.Height = 27.000000000000000000
+    Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
@@ -33,7 +33,7 @@ inherited FrmApprove: TFrmApprove
   end
   object lblTokenTitle: TLabel
     Position.X = 98.000000000000000000
-    Position.Y = 133.000000000000000000
+    Position.Y = 134.000000000000000000
     Size.Width = 68.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -43,7 +43,7 @@ inherited FrmApprove: TFrmApprove
   end
   object lblSpenderTitle: TLabel
     Position.X = 98.000000000000000000
-    Position.Y = 158.000000000000000000
+    Position.Y = 159.000000000000000000
     Size.Width = 68.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
@@ -53,7 +53,7 @@ inherited FrmApprove: TFrmApprove
   end
   object btnAllow: TButton
     Position.X = 288.000000000000000000
-    Position.Y = 224.000000000000000000
+    Position.Y = 225.000000000000000000
     TabOrder = 4
     Text = 'Allow'
     OnClick = btnAllowClick
@@ -61,7 +61,7 @@ inherited FrmApprove: TFrmApprove
   object btnBlock: TButton
     Default = True
     Position.X = 200.000000000000000000
-    Position.Y = 224.000000000000000000
+    Position.Y = 225.000000000000000000
     TabOrder = 5
     Text = 'Block'
     OnClick = btnBlockClick
@@ -71,7 +71,7 @@ inherited FrmApprove: TFrmApprove
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 174.000000000000000000
-    Position.Y = 158.000000000000000000
+    Position.Y = 159.000000000000000000
     Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -86,7 +86,7 @@ inherited FrmApprove: TFrmApprove
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 174.000000000000000000
-    Position.Y = 133.000000000000000000
+    Position.Y = 134.000000000000000000
     Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -98,7 +98,7 @@ inherited FrmApprove: TFrmApprove
   end
   object lblAmountTitle: TLabel
     Position.X = 98.000000000000000000
-    Position.Y = 183.000000000000000000
+    Position.Y = 184.000000000000000000
     Size.Width = 68.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -108,10 +108,11 @@ inherited FrmApprove: TFrmApprove
   end
   object lblAmountText: TLabel
     Position.X = 174.000000000000000000
-    Position.Y = 183.000000000000000000
+    Position.Y = 184.000000000000000000
     Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
+    Text = '(calculating...)'
     TabOrder = 9
   end
 end

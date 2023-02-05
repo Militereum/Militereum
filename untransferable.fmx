@@ -1,20 +1,20 @@
 inherited FrmUntransferable: TFrmUntransferable
   ActiveControl = btnBlock
-  ClientHeight = 267
-  ClientWidth = 569
+  ClientHeight = 271
+  ClientWidth = 500
   DesignerMasterStyle = 0
   inherited imgMilitereum: TImage
-    Position.X = 247.000000000000000000
+    Position.X = 212.000000000000000000
   end
   inherited imgWarning: TImage
-    Position.X = 291.000000000000000000
+    Position.X = 256.000000000000000000
   end
   object lblHeader: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
-    Position.Y = 90.000000000000000000
-    Size.Width = 553.000000000000000000
-    Size.Height = 27.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 484.000000000000000000
+    Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
@@ -22,9 +22,9 @@ inherited FrmUntransferable: TFrmUntransferable
     TabOrder = 2
   end
   object lblTokenTitle: TLabel
-    Position.X = 96.000000000000000000
-    Position.Y = 165.000000000000000000
-    Size.Width = 70.000000000000000000
+    Position.X = 8.000000000000000000
+    Position.Y = 134.000000000000000000
+    Size.Width = 129.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -32,9 +32,9 @@ inherited FrmUntransferable: TFrmUntransferable
     TabOrder = 3
   end
   object lblRecipientTitle: TLabel
-    Position.X = 96.000000000000000000
-    Position.Y = 190.000000000000000000
-    Size.Width = 70.000000000000000000
+    Position.X = 8.000000000000000000
+    Position.Y = 159.000000000000000000
+    Size.Width = 129.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -42,16 +42,16 @@ inherited FrmUntransferable: TFrmUntransferable
     TabOrder = 4
   end
   object btnAllow: TButton
-    Position.X = 288.000000000000000000
-    Position.Y = 229.000000000000000000
+    Position.X = 254.000000000000000000
+    Position.Y = 233.000000000000000000
     TabOrder = 5
     Text = 'Allow'
     OnClick = btnAllowClick
   end
   object btnBlock: TButton
     Default = True
-    Position.X = 200.000000000000000000
-    Position.Y = 229.000000000000000000
+    Position.X = 166.000000000000000000
+    Position.Y = 233.000000000000000000
     TabOrder = 6
     Text = 'Block'
     OnClick = btnBlockClick
@@ -60,9 +60,9 @@ inherited FrmUntransferable: TFrmUntransferable
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 174.000000000000000000
-    Position.Y = 190.000000000000000000
-    Size.Width = 387.000000000000000000
+    Position.X = 145.000000000000000000
+    Position.Y = 159.000000000000000000
+    Size.Width = 347.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -75,9 +75,9 @@ inherited FrmUntransferable: TFrmUntransferable
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 174.000000000000000000
-    Position.Y = 165.000000000000000000
-    Size.Width = 387.000000000000000000
+    Position.X = 145.000000000000000000
+    Position.Y = 134.000000000000000000
+    Size.Width = 347.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -87,11 +87,10 @@ inherited FrmUntransferable: TFrmUntransferable
     OnClick = lblTokenTextClick
   end
   object lblFooter: TLabel
-    StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
-    Position.Y = 123.000000000000000000
-    Size.Width = 553.000000000000000000
-    Size.Height = 27.000000000000000000
+    Position.Y = 192.000000000000000000
+    Size.Width = 484.000000000000000000
+    Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
