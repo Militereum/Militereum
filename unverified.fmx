@@ -1,6 +1,6 @@
 inherited FrmUnverified: TFrmUnverified
   ActiveControl = btnBlock
-  ClientHeight = 276
+  ClientHeight = 271
   ClientWidth = 569
   DesignerMasterStyle = 0
   inherited imgMilitereum: TImage
@@ -12,9 +12,9 @@ inherited FrmUnverified: TFrmUnverified
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 8.000000000000000000
-    Position.Y = 90.000000000000000000
+    Position.Y = 96.000000000000000000
     Size.Width = 553.000000000000000000
-    Size.Height = 27.000000000000000000
+    Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
@@ -23,7 +23,7 @@ inherited FrmUnverified: TFrmUnverified
   end
   object lblContractTitle: TLabel
     Position.X = 8.000000000000000000
-    Position.Y = 139.000000000000000000
+    Position.Y = 134.000000000000000000
     Size.Width = 158.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -33,7 +33,7 @@ inherited FrmUnverified: TFrmUnverified
   end
   object btnAllow: TButton
     Position.X = 288.000000000000000000
-    Position.Y = 238.000000000000000000
+    Position.Y = 233.000000000000000000
     TabOrder = 3
     Text = 'Allow'
     OnClick = btnAllowClick
@@ -41,7 +41,7 @@ inherited FrmUnverified: TFrmUnverified
   object btnBlock: TButton
     Default = True
     Position.X = 200.000000000000000000
-    Position.Y = 238.000000000000000000
+    Position.Y = 233.000000000000000000
     TabOrder = 4
     Text = 'Block'
     OnClick = btnBlockClick
@@ -51,7 +51,7 @@ inherited FrmUnverified: TFrmUnverified
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 174.000000000000000000
-    Position.Y = 139.000000000000000000
+    Position.Y = 134.000000000000000000
     Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -63,7 +63,7 @@ inherited FrmUnverified: TFrmUnverified
   end
   object Label1: TLabel
     Position.X = 8.000000000000000000
-    Position.Y = 172.000000000000000000
+    Position.Y = 167.000000000000000000
     Size.Width = 553.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
@@ -73,7 +73,7 @@ inherited FrmUnverified: TFrmUnverified
   end
   object Label2: TLabel
     Position.X = 8.000000000000000000
-    Position.Y = 197.000000000000000000
+    Position.Y = 192.000000000000000000
     Size.Width = 553.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False

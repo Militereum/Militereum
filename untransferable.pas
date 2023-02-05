@@ -53,7 +53,9 @@ uses
   FMX.Forms,
   // project
   common,
-  thread;
+  thread,
+  // web3
+  web3.eth.types;
 
 {$R *.fmx}
 
@@ -72,13 +74,14 @@ end;
 procedure TFrmUntransferable.SetToken(token: TAddress);
 begin
   FToken := token;
-  common.symbol(FChain, FToken, procedure(symbol: string; _: IError)
-  begin
-    thread.synchronize(procedure
+  if not FToken.IsZero then
+    common.symbol(FChain, FToken, procedure(symbol: string; _: IError)
     begin
-      lblTokenText.Text := symbol;
+      thread.synchronize(procedure
+      begin
+        lblTokenText.Text := symbol;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmUntransferable.SetRecipient(recipient: TAddress);

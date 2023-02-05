@@ -367,8 +367,37 @@ begin
   next(checked);
 end;
 
-// are we transferring more than $5k in ERC-20, translated to USD?
+// are we transacting with (a) smart contract and (b) not verified with etherscan?
 procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+begin
+  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
+  begin
+    if Assigned(err) or isEOA then
+    begin
+      next(checked);
+      EXIT;
+    end;
+    etherscan.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
+    begin
+      if src <> '' then
+        next(checked)
+      else
+        thread.synchronize(procedure
+        begin
+          unverified.show(chain, tx.&To, procedure(allow: Boolean)
+          begin
+            if allow then
+              next(checked)
+            else
+              block;
+          end);
+        end);
+    end);
+  end);
+end;
+
+// are we transferring more than $5k in ERC-20, translated to USD?
+procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const func = getTransactionFourBytes(tx.Data);
   if func.IsOk and SameText(fourBytestoHex(func.Value), '0xA9059CBB') then
@@ -411,7 +440,7 @@ begin
 end;
 
 // are we sending more than $5k in ETH, translated to USD?
-procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   if tx.Value > 0 then
   begin
@@ -440,35 +469,6 @@ begin
     EXIT;
   end;
   next(checked);
-end;
-
-// are we transacting with (a) smart contract and (b) not verified with etherscan?
-procedure TFrmMain.Step5(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
-begin
-  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
-  begin
-    if Assigned(err) or isEOA then
-    begin
-      next(checked);
-      EXIT;
-    end;
-    etherscan.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
-    begin
-      if src <> '' then
-        next(checked)
-      else
-        thread.synchronize(procedure
-        begin
-          unverified.show(chain, tx.&To, procedure(allow: Boolean)
-          begin
-            if allow then
-              next(checked)
-            else
-              block;
-          end);
-        end);
-    end);
-  end);
 end;
 
 // have we transacted with this contract before?
