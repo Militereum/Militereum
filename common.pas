@@ -26,11 +26,12 @@ type
     function endpoint(port: TIdPort): IResult<string>;
   end;
 
-function debug: Boolean;
-function format(value: Double): string;
-function headers: TNetHeaders;
-procedure open(const URL: string);
-procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
+function Debug: Boolean;
+function Ethereum: TChain;
+function Format(value: Double): string;
+function Headers: TNetHeaders;
+procedure Open(const URL: string);
+procedure Symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
 
 procedure initialize;
 procedure finalize;
@@ -78,7 +79,7 @@ begin
   begin
     const endpoint = endpoint(port);
     if endpoint.IsOk then
-      Result^.SetGateway(endpoint.Value);
+      Result^.SetRPC(endpoint.Value);
   end;
 end;
 
@@ -130,12 +131,17 @@ begin
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
-function debug: Boolean;
+function Debug: Boolean;
 begin
   Result := FindCmdLineSwitch('debug');
 end;
 
-function format(value: Double): string;
+function Ethereum: TChain;
+begin
+  Result := web3.Ethereum.SetRPC(web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM).Value);
+end;
+
+function Format(value: Double): string;
 begin
   Result := System.SysUtils.Format('%.6f', [value]);
   while (Length(Result) > 0) and (Result[High(Result)] = '0') do
@@ -144,12 +150,12 @@ begin
     Delete(Result, High(Result), 1);
 end;
 
-function headers: TNetHeaders;
+function Headers: TNetHeaders;
 begin
   Result := [TNetHeader.Create('Content-Type', 'application/json')];
 end;
 
-procedure open(const URL: string);
+procedure Open(const URL: string);
 begin
 {$IFDEF MSWINDOWS}
   ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
@@ -159,7 +165,7 @@ begin
 {$ENDIF POSIX}
 end;
 
-procedure symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
+procedure Symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
 begin
   const erc20 = TERC20.Create(TWeb3.Create(chain), token);
   try

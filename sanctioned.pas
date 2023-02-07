@@ -32,7 +32,7 @@ type
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
-    procedure SetAddress(address: TAddress);
+    procedure SetAddress(value: TAddress);
   public
     property Chain: TChain write FChain;
     property Address: TAddress write SetAddress;
@@ -46,8 +46,11 @@ implementation
 uses
   // FireMonkey
   FMX.Forms,
+  // web3
+  web3.eth.types,
   // project
-  common;
+  common,
+  thread;
 
 {$R *.fmx}
 
@@ -62,14 +65,28 @@ end;
 
 { TFrmSanctioned }
 
-procedure TFrmSanctioned.SetAddress(address: TAddress);
+procedure TFrmSanctioned.SetAddress(value: TAddress);
 begin
-  lblAddressText.Text := string(address);
+  lblAddressText.Text := string(value);
+  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  begin
+    if not Assigned(err) then
+      thread.synchronize(procedure
+      begin
+        lblAddressText.Text := ens;
+      end);
+  end);
 end;
 
 procedure TFrmSanctioned.lblAddressTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/address/' + lblAddressText.Text);
+  TAddress.Create(TWeb3.Create(common.Ethereum), lblAddressText.Text, procedure(address: TAddress; err: IError)
+  begin
+    if not Assigned(err) then
+      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+    else
+      common.Open(Self.FChain.BlockExplorer + '/address/' + lblAddressText.Text);
+  end);
 end;
 
 procedure TFrmSanctioned.btnBlockClick(Sender: TObject);

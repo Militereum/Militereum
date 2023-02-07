@@ -70,6 +70,7 @@ uses
   FMX.Forms,
   // web3
   web3.defillama,
+  web3.eth.types,
   web3.http,
   // project
   common,
@@ -159,6 +160,14 @@ end;
 procedure TFrmApprove.SetSpender(value: TAddress);
 begin
   lblSpenderText.Text := string(value);
+  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  begin
+    if not Assigned(err) then
+      thread.synchronize(procedure
+      begin
+        lblSpenderText.Text := ens;
+      end);
+  end);
 end;
 
 procedure TFrmApprove.Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
@@ -168,21 +177,30 @@ begin
   else
     web3.defillama.price(Self.FChain, FToken, procedure(price: Double; _: IError)
     begin
-      if (price > 0) and (quantity.BitLength <= 64) then
-        lblAmountText.Text := System.SysUtils.Format('$ %.2f', [quantity.AsUInt64 * price])
-      else
-        lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.format(quantity.AsDouble / Round(Power(10, decimals)))]);
+      thread.synchronize(procedure
+      begin
+        if (price > 0) and (quantity.BitLength <= 64) then
+          lblAmountText.Text := System.SysUtils.Format('$ %.2f', [quantity.AsUInt64 * price])
+        else
+          lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.Format(quantity.AsDouble / Round(Power(10, decimals)))]);
+      end);
     end);
 end;
 
 procedure TFrmApprove.lblTokenTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
+  common.Open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
 end;
 
 procedure TFrmApprove.lblSpenderTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/address/' + lblSpenderText.Text);
+  TAddress.Create(TWeb3.Create(common.Ethereum), lblSpenderText.Text, procedure(address: TAddress; err: IError)
+  begin
+    if not Assigned(err) then
+      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+    else
+      common.Open(Self.FChain.BlockExplorer + '/address/' + lblSpenderText.Text);
+  end);
 end;
 
 procedure TFrmApprove.btnBlockClick(Sender: TObject);

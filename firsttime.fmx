@@ -18,17 +18,17 @@ inherited FrmFirstTime: TFrmFirstTime
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
-    Text = 'You have not transacted with this contract before.'
+    Text = 'You have not transacted with this address before.'
     TabOrder = 1
   end
-  object lblContractTitle: TLabel
+  object lblAddressTitle: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 134.000000000000000000
     Size.Width = 177.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
-    Text = 'Contract:'
+    Text = 'Address:'
     TabOrder = 2
   end
   object btnAllow: TButton
@@ -46,7 +46,7 @@ inherited FrmFirstTime: TFrmFirstTime
     Text = 'Block'
     OnClick = btnBlockClick
   end
-  object lblContractText: TLabel
+  object lblAddressText: TLabel
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
@@ -59,7 +59,7 @@ inherited FrmFirstTime: TFrmFirstTime
     TextSettings.FontColor = claDodgerblue
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 5
-    OnClick = lblContractTextClick
+    OnClick = lblAddressTextClick
   end
   object Label1: TLabel
     Position.X = 8.000000000000000000

@@ -20,55 +20,72 @@ uses
 type
   TFrmFirstTime = class(TFrmBase)
     lblTitle: TLabel;
-    lblContractTitle: TLabel;
+    lblAddressTitle: TLabel;
     btnAllow: TButton;
     btnBlock: TButton;
-    lblContractText: TLabel;
+    lblAddressText: TLabel;
     Label1: TLabel;
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
-    procedure lblContractTextClick(Sender: TObject);
+    procedure lblAddressTextClick(Sender: TObject);
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
-    procedure SetContract(contract: TAddress);
+    procedure SetAddress(value: TAddress);
   public
     property Chain: TChain write FChain;
-    property Contract: TAddress write SetContract;
+    property Address: TAddress write SetAddress;
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; contract: TAddress; callback: TProc<Boolean>);
+procedure show(chain: TChain; address: TAddress; callback: TProc<Boolean>);
 
 implementation
 
 uses
   // FireMonkey
   FMX.Forms,
+  // web3
+  web3.eth.types,
   // project
-  common;
+  common,
+  thread;
 
 {$R *.fmx}
 
-procedure show(chain: TChain; contract: TAddress; callback: TProc<Boolean>);
+procedure show(chain: TChain; address: TAddress; callback: TProc<Boolean>);
 begin
   const frmFirstTime = TFrmFirstTime.Create(Application);
   frmFirstTime.Chain := chain;
-  frmFirstTime.Contract := contract;
+  frmFirstTime.Address := address;
   frmFirstTime.Callback := callback;
   frmFirstTime.Show;
 end;
 
 { TFrmFirstTime }
 
-procedure TFrmFirstTime.SetContract(contract: TAddress);
+procedure TFrmFirstTime.SetAddress(value: TAddress);
 begin
-  lblContractText.Text := string(contract);
+  lblAddressText.Text := string(value);
+  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  begin
+    if not Assigned(err) then
+      thread.synchronize(procedure
+      begin
+        lblAddressText.Text := ens;
+      end);
+  end);
 end;
 
-procedure TFrmFirstTime.lblContractTextClick(Sender: TObject);
+procedure TFrmFirstTime.lblAddressTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/address/' + lblContractText.Text);
+  TAddress.Create(TWeb3.Create(common.Ethereum), lblAddressText.Text, procedure(address: TAddress; err: IError)
+  begin
+    if not Assigned(err) then
+      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+    else
+      common.Open(Self.FChain.BlockExplorer + '/address/' + lblAddressText.Text);
+  end);
 end;
 
 procedure TFrmFirstTime.btnBlockClick(Sender: TObject);

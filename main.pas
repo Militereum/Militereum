@@ -224,7 +224,7 @@ begin
               Result := name;
           end)();
           if amount > 1 then
-            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.format(amount), &to]))
+            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(amount), &to]))
           else
             Self.Notify(System.SysUtils.Format('Approved transfer of %s to %s', [item.Symbol, &to]));
         end, True);
@@ -264,7 +264,7 @@ end;
 procedure TFrmMain.DoShow;
 begin
   inherited DoShow;
-  if common.debug then ShowLogWindow;
+  if common.Debug then ShowLogWindow;
 end;
 
 procedure TFrmMain.NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
@@ -417,7 +417,7 @@ begin
             if amount < common.LIMIT then
               next(checked)
             else
-              common.symbol(chain, tx.&To, procedure(symbol: string; _: IError)
+              common.Symbol(chain, tx.&To, procedure(symbol: string; _: IError)
               begin
                 thread.synchronize(procedure
                 begin
@@ -471,44 +471,36 @@ begin
   next(checked);
 end;
 
-// have we transacted with this contract before?
+// have we transacted with this address before?
 procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
-  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
+  const from = tx.From;
+  if from.IsErr then
   begin
-    if Assigned(err) or isEOA then
+    next(checked);
+    EXIT;
+  end;
+  etherscan.getTransactions(from.Value, procedure(txs: ITransactions; _: IError)
+  begin
+    if not Assigned(txs) then
     begin
       next(checked);
       EXIT;
     end;
-    const from = tx.From;
-    if from.IsErr then
+    txs.FilterBy(tx.&To);
+    if txs.Count > 0 then
     begin
       next(checked);
       EXIT;
     end;
-    etherscan.getTransactions(from.Value, procedure(txs: ITransactions; _: IError)
+    thread.synchronize(procedure
     begin
-      if not Assigned(txs) then
+      firsttime.show(chain, tx.&To, procedure(allow: Boolean)
       begin
-        next(checked);
-        EXIT;
-      end;
-      txs.FilterBy(tx.&To);
-      if txs.Count > 0 then
-      begin
-        next(checked);
-        EXIT;
-      end;
-      thread.synchronize(procedure
-      begin
-        firsttime.show(chain, tx.&To, procedure(allow: Boolean)
-        begin
-          if allow then
-            next(checked)
-          else
-            block;
-        end);
+        if allow then
+          next(checked)
+        else
+          block;
       end);
     end);
   end);
