@@ -35,8 +35,8 @@ type
     FChain: TChain;
     FToken: TAddress;
     FCallback: TProc<Boolean>;
-    procedure SetToken(token: TAddress);
-    procedure SetRecipient(recipient: TAddress);
+    procedure SetToken(value: TAddress);
+    procedure SetRecipient(value: TAddress);
   public
     property Chain: TChain write FChain;
     property Token: TAddress write SetToken;
@@ -71,11 +71,11 @@ end;
 
 { TFrmUntransferable }
 
-procedure TFrmUntransferable.SetToken(token: TAddress);
+procedure TFrmUntransferable.SetToken(value: TAddress);
 begin
-  FToken := token;
+  FToken := value;
   if not FToken.IsZero then
-    common.symbol(FChain, FToken, procedure(symbol: string; _: IError)
+    common.Symbol(FChain, FToken, procedure(symbol: string; _: IError)
     begin
       thread.synchronize(procedure
       begin
@@ -84,19 +84,33 @@ begin
     end);
 end;
 
-procedure TFrmUntransferable.SetRecipient(recipient: TAddress);
+procedure TFrmUntransferable.SetRecipient(value: TAddress);
 begin
-  lblRecipientText.Text := string(recipient);
+  lblRecipientText.Text := string(value);
+  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  begin
+    if not Assigned(err) then
+      thread.synchronize(procedure
+      begin
+        lblRecipientText.Text := ens;
+      end);
+  end);
 end;
 
 procedure TFrmUntransferable.lblTokenTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
+  common.Open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
 end;
 
 procedure TFrmUntransferable.lblRecipientTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/address/' + lblRecipientText.Text);
+  TAddress.Create(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
+  begin
+    if not Assigned(err) then
+      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+    else
+      common.Open(Self.FChain.BlockExplorer + '/address/' + lblRecipientText.Text);
+  end);
 end;
 
 procedure TFrmUntransferable.btnBlockClick(Sender: TObject);

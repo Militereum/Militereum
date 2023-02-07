@@ -32,7 +32,7 @@ type
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
-    procedure SetContract(contract: TAddress);
+    procedure SetContract(value: TAddress);
   public
     property Chain: TChain write FChain;
     property Contract: TAddress write SetContract;
@@ -46,8 +46,11 @@ implementation
 uses
   // FireMonkey
   FMX.Forms,
+  // web3
+  web3.eth.types,
   // project
-  common;
+  common,
+  thread;
 
 {$R *.fmx}
 
@@ -62,14 +65,28 @@ end;
 
 { TFrmUnverified }
 
-procedure TFrmUnverified.SetContract(contract: TAddress);
+procedure TFrmUnverified.SetContract(value: TAddress);
 begin
-  lblContractText.Text := string(contract);
+  lblContractText.Text := string(value);
+  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  begin
+    if not Assigned(err) then
+      thread.synchronize(procedure
+      begin
+        lblContractText.Text := ens;
+      end);
+  end);
 end;
 
 procedure TFrmUnverified.lblContractTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/address/' + lblContractText.Text + '#code');
+  TAddress.Create(TWeb3.Create(common.Ethereum), lblContractText.Text, procedure(address: TAddress; err: IError)
+  begin
+    if not Assigned(err) then
+      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address) + '#code')
+    else
+      common.Open(Self.FChain.BlockExplorer + '/address/' + lblContractText.Text + '#code');
+  end);
 end;
 
 procedure TFrmUnverified.btnBlockClick(Sender: TObject);

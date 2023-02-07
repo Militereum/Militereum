@@ -34,9 +34,9 @@ type
   strict private
     FChain: TChain;
     FCallback: TProc<Boolean>;
-    procedure SetSymbol(const symbol: string);
-    procedure SetRecipient(recipient: TAddress);
-    procedure SetAmount(amount: Double);
+    procedure SetSymbol(const value: string);
+    procedure SetRecipient(value: TAddress);
+    procedure SetAmount(value: Double);
   public
     constructor Create(aOwner: TComponent); override;
     property Chain: TChain write FChain;
@@ -53,8 +53,11 @@ implementation
 uses
   // FireMonkey
   FMX.Forms,
+  // web3
+  web3.eth.types,
   // project
-  common;
+  common,
+  thread;
 
 {$R *.fmx}
 
@@ -77,24 +80,38 @@ begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);
 end;
 
-procedure TFrmLimit.SetSymbol(const symbol: string);
+procedure TFrmLimit.SetSymbol(const value: string);
 begin
-  lblAssetText.Text := symbol;
+  lblAssetText.Text := value;
 end;
 
-procedure TFrmLimit.SetRecipient(recipient: TAddress);
+procedure TFrmLimit.SetRecipient(value: TAddress);
 begin
-  lblRecipientText.Text := string(recipient);
+  lblRecipientText.Text := string(value);
+  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  begin
+    if not Assigned(err) then
+      thread.synchronize(procedure
+      begin
+        lblRecipientText.Text := ens;
+      end);
+  end);
 end;
 
-procedure TFrmLimit.SetAmount(amount: Double);
+procedure TFrmLimit.SetAmount(value: Double);
 begin
-  lblAmountText.Text := System.SysUtils.Format('$ %.2f', [amount]);
+  lblAmountText.Text := System.SysUtils.Format('$ %.2f', [value]);
 end;
 
 procedure TFrmLimit.lblRecipientTextClick(Sender: TObject);
 begin
-  common.open(Self.FChain.BlockExplorer + '/address/' + lblRecipientText.Text);
+  TAddress.Create(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
+  begin
+    if not Assigned(err) then
+      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+    else
+      common.Open(Self.FChain.BlockExplorer + '/address/' + lblRecipientText.Text);
+  end);
 end;
 
 procedure TFrmLimit.btnBlockClick(Sender: TObject);

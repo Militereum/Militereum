@@ -309,7 +309,7 @@ begin
   if endpoint.IsErr then
     aResponseInfo.ContentText := endpoint.Error.Message
   else begin
-    const response = web3.http.post(endpoint.Value, aRequest, common.headers);
+    const response = web3.http.post(endpoint.Value, aRequest, common.Headers);
     if response.IsOk then
       aResponseInfo.ContentText := response.Value.ContentAsString(TEncoding.UTF8)
     else begin
