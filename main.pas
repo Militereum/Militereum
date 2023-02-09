@@ -78,6 +78,7 @@ type
     procedure Step6(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
     procedure Step7(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
     procedure Step8(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+    procedure Step9(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
     procedure Block(port: TIdPort; chain: TChain; tx: ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
   strict protected
     procedure DoShow; override;
@@ -114,11 +115,13 @@ uses
   web3.eth.types,
   web3.utils,
   // project
+  airdrop,
   approve,
   common,
   firsttime,
   limit,
   sanctioned,
+  spam,
   thread,
   untransferable,
   unverified;
@@ -208,25 +211,20 @@ begin
   else
     tx.Simulate(apiKey.Value, chain, procedure(changes: IAssetChanges; _: IError)
     begin
-      if (changes = nil) or (changes.Count = 0) or (changes.Item(0).Change <> Transfer) then
+      if (changes = nil) or (changes.Count = 0) or (changes.Item(0).Change <> Transfer) or (changes.Item(0).Amount = 0) then
         Self.Notify('Approved your transaction')
       else
       begin
         const item = changes.Item(0);
-        item.&To.ToString(TWeb3.Create(chain), procedure(name: string; err: IError)
+        item.&To.ToString(TWeb3.Create(common.Ethereum), procedure(name: string; err: IError)
         begin
-          const amount = item.Unscale;
-          const &to = (function: string
+          Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(item.Unscale), (function: string
           begin
             if Assigned(err) then
               Result := string(item.&To)
             else
               Result := name;
-          end)();
-          if amount > 1 then
-            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(amount), &to]))
-          else
-            Self.Notify(System.SysUtils.Format('Approved transfer of %s to %s', [item.Symbol, &to]));
+          end)()]));
         end, True);
       end;
     end);
@@ -471,8 +469,56 @@ begin
   next(checked);
 end;
 
-// have we transacted with this address before?
+// are we transacting with a spam contract?
 procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+begin
+  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
+  begin
+    if Assigned(err) or isEOA then
+    begin
+      next(checked);
+      EXIT;
+    end;
+    const apiKey = FServer.apiKey(port);
+    if apiKey.IsErr then
+    begin
+      next(checked);
+      EXIT;
+    end;
+    web3.eth.alchemy.api.detect(apiKey.Value, chain, tx.&To, procedure(contractType: TContractType; _: IError)
+    begin
+      case contractType of
+        TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
+          thread.synchronize(procedure
+          begin
+            airdrop.show(chain, tx.&To, procedure(allow: Boolean)
+            begin
+              if allow then
+                next(checked)
+              else
+                block;
+            end);
+          end);
+        TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
+          thread.synchronize(procedure
+          begin
+            spam.show(chain, tx.&To, procedure(allow: Boolean)
+            begin
+              if allow then
+                next(checked)
+              else
+                block;
+            end);
+          end);
+      else
+        next(checked);
+      end;
+    end);
+  end);
+end;
+
+// have we transacted with this address before?
+procedure TFrmMain.Step7(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const from = tx.From;
   if from.IsErr then
@@ -507,7 +553,7 @@ begin
 end;
 
 // are we transacting with a sanctioned address?
-procedure TFrmMain.Step7(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step8(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; _: IError)
   begin
@@ -528,11 +574,17 @@ begin
 end;
 
 // simulate transaction
-procedure TFrmMain.Step8(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
+procedure TFrmMain.Step9(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   const apiKey = FServer.apiKey(port);
   if apiKey.IsOk then
   begin
+    const from = tx.From;
+    if from.IsErr then
+    begin
+      next(checked);
+      EXIT;
+    end;
     tx.Simulate(apiKey.Value, chain, procedure(changes: IAssetChanges; _: IError)
     begin
       if not Assigned(changes) then
@@ -558,7 +610,7 @@ begin
         if index >= changes.Count then
           done
         else
-          if changes.Item(index).Amount = 0 then
+          if (changes.Item(index).Amount = 0) or from.Value.SameAs(changes.Item(index).&To) then
             step(index + 1, done)
           else
             // if we have prompted for this approval before in step 1
@@ -637,7 +689,7 @@ begin
             callback(allow);
           end;
 
-          next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8], 0, web3.eth.etherscan.create(chain^, ''), [],
+          next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9], 0, web3.eth.etherscan.create(chain^, ''), [],
             procedure
             begin
               done(False);
