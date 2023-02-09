@@ -9,7 +9,8 @@ uses
 {$IFDEF MSWINDOWS}
   WinAPI.Windows,
   common.win in 'common.win.pas',
-{$ENDIF }
+{$ENDIF}
+  airdrop in 'airdrop.pas' {FrmAirdrop},
   approve in 'approve.pas' {FrmApprove},
   base in 'base.pas' {FrmBase},
   common in 'common.pas',
@@ -19,6 +20,7 @@ uses
   main in 'main.pas' {FrmMain},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
   server in 'server.pas',
+  spam in 'spam.pas' {FrmSpam},  
   thread in 'thread.pas',
   transaction in 'transaction.pas',
   untransferable in 'untransferable.pas' {FrmUntransferable},

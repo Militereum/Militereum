@@ -1,0 +1,88 @@
+inherited FrmSpam: TFrmSpam
+  ActiveControl = btnBlock
+  ClientHeight = 271
+  ClientWidth = 736
+  DesignerMasterStyle = 0
+  inherited imgMilitereum: TImage
+    Position.X = 330.000000000000000000
+  end
+  inherited imgWarning: TImage
+    Position.X = 374.000000000000000000
+  end
+  object lblTitle: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 8.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    Text = 'You are about to transact with a suspicious contract.'
+    TabOrder = 1
+  end
+  object lblContractTitle: TLabel
+    Position.X = 8.000000000000000000
+    Position.Y = 134.000000000000000000
+    Size.Width = 224.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
+    Text = 'Contract:'
+    TabOrder = 2
+  end
+  object btnAllow: TButton
+    Position.X = 372.000000000000000000
+    Position.Y = 233.000000000000000000
+    TabOrder = 3
+    Text = 'Allow'
+    OnClick = btnAllowClick
+  end
+  object btnBlock: TButton
+    Default = True
+    Position.X = 284.000000000000000000
+    Position.Y = 233.000000000000000000
+    TabOrder = 4
+    Text = 'Block'
+    OnClick = btnBlockClick
+  end
+  object lblContractText: TLabel
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 240.000000000000000000
+    Position.Y = 134.000000000000000000
+    Size.Width = 488.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    Text = '0x0000000000000000000000000000000000000000'
+    TabOrder = 5
+    OnClick = lblContractTextClick
+  end
+  object Label1: TLabel
+    Position.X = 8.000000000000000000
+    Position.Y = 167.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = 
+      'This contract contains a lot of duplicate NFTs, or the contract ' +
+      'lies about its own token supply.'
+    TabOrder = 6
+  end
+  object Label2: TLabel
+    Position.X = 8.000000000000000000
+    Position.Y = 192.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = 
+      'Running totalSupply() on the contract is vastly different from t' +
+      'he empirical number of tokens in circulation.'
+    TabOrder = 7
+  end
+end
