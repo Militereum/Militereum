@@ -54,6 +54,8 @@ Besides token allowances, Militereum will block...
 6. transfers of non-transferable tokens that are designed to pump but you cannot sell [➹](assets/untransferable.png), and
 7. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
+In addition to blocking suspicious transactions, Militereum will simulate your transaction and show you exactly what tokens are about to exit your wallet before you allow for the transaction to leave your device.
+
 ## License
 
 Distributed under the [GNU AGP v3.0](https://github.com/svanas/Militereum/blob/master/LICENSE) with [Commons Clause](https://commonsclause.com/) license.
