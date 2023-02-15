@@ -181,6 +181,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.HorzAlign = Trailing
+      TextSettings.WordWrap = False
       Text = 'Ethereum:'
       TabOrder = 0
     end
@@ -193,6 +194,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.FontColor = claDodgerblue
+      TextSettings.WordWrap = False
       Text = 'http://localhost:1'
       TabOrder = 6
     end
@@ -218,6 +220,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.HorzAlign = Trailing
+      TextSettings.WordWrap = False
       Text = 'Goerli:'
       TabOrder = 7
     end
@@ -230,6 +233,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.FontColor = claDodgerblue
+      TextSettings.WordWrap = False
       Text = 'http://localhost:5'
       TabOrder = 8
     end
@@ -255,6 +259,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.HorzAlign = Trailing
+      TextSettings.WordWrap = False
       Text = 'Polygon:'
       TabOrder = 9
     end
@@ -267,6 +272,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.FontColor = claDodgerblue
+      TextSettings.WordWrap = False
       Text = 'http://localhost:137'
       TabOrder = 10
     end
@@ -292,6 +298,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.HorzAlign = Trailing
+      TextSettings.WordWrap = False
       Text = 'Arbitrum:'
       TabOrder = 11
     end
@@ -304,6 +311,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.FontColor = claDodgerblue
+      TextSettings.WordWrap = False
       Text = 'http://localhost:42161'
       TabOrder = 12
     end
@@ -329,6 +337,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.HorzAlign = Trailing
+      TextSettings.WordWrap = False
       Text = 'Optimism:'
       TabOrder = 13
     end
@@ -341,6 +350,7 @@ object FrmMain: TFrmMain
       Size.Height = 30.000000000000000000
       Size.PlatformDefault = False
       TextSettings.FontColor = claDodgerblue
+      TextSettings.WordWrap = False
       Text = 'http://localhost:10'
       TabOrder = 14
     end

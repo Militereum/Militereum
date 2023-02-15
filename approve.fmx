@@ -28,6 +28,7 @@ inherited FrmApprove: TFrmApprove
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 'You are about to allow someone else to spend your money.'
     TabOrder = 1
   end
@@ -38,6 +39,7 @@ inherited FrmApprove: TFrmApprove
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Token:'
     TabOrder = 2
   end
@@ -48,6 +50,7 @@ inherited FrmApprove: TFrmApprove
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Spender:'
     TabOrder = 3
   end
@@ -77,6 +80,7 @@ inherited FrmApprove: TFrmApprove
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 6
     OnClick = lblSpenderTextClick
@@ -92,6 +96,7 @@ inherited FrmApprove: TFrmApprove
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
     Text = '(unknown)'
     TabOrder = 7
     OnClick = lblTokenTextClick
@@ -103,6 +108,7 @@ inherited FrmApprove: TFrmApprove
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Amount:'
     TabOrder = 8
   end
@@ -112,6 +118,7 @@ inherited FrmApprove: TFrmApprove
     Size.Width = 387.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
+    TextSettings.WordWrap = False
     Text = '(calculating...)'
     TabOrder = 9
   end

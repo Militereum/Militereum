@@ -18,6 +18,7 @@ inherited FrmSpam: TFrmSpam
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 'You are about to transact with a suspicious contract.'
     TabOrder = 1
   end
@@ -28,6 +29,7 @@ inherited FrmSpam: TFrmSpam
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Contract:'
     TabOrder = 2
   end
@@ -57,6 +59,7 @@ inherited FrmSpam: TFrmSpam
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 5
     OnClick = lblContractTextClick
@@ -68,6 +71,7 @@ inherited FrmSpam: TFrmSpam
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 
       'This contract contains a lot of duplicate NFTs, or the contract ' +
       'lies about its own token supply.'
@@ -80,6 +84,7 @@ inherited FrmSpam: TFrmSpam
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 
       'Running totalSupply() on the contract is vastly different from t' +
       'he empirical number of tokens in circulation.'

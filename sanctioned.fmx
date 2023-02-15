@@ -18,6 +18,7 @@ inherited FrmSanctioned: TFrmSanctioned
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 'You are about to transact with a sanctioned address.'
     TabOrder = 1
   end
@@ -28,6 +29,7 @@ inherited FrmSanctioned: TFrmSanctioned
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Address:'
     TabOrder = 2
   end
@@ -57,6 +59,7 @@ inherited FrmSanctioned: TFrmSanctioned
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 5
     OnClick = lblAddressTextClick
@@ -68,6 +71,7 @@ inherited FrmSanctioned: TFrmSanctioned
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 
       'This address is sanctioned by the U.S. Department of the Treasur' +
       'y'#8217's Office of Foreign Assets Control (OFAC).'
@@ -80,6 +84,7 @@ inherited FrmSanctioned: TFrmSanctioned
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 
       'Worst case scenario and depending on your jurisdiction, you migh' +
       't incur in penalty or fines by the U.S. Department of Treasury.'
