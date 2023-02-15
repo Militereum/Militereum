@@ -18,6 +18,7 @@ inherited FrmFirstTime: TFrmFirstTime
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 'You have not transacted with this address before.'
     TabOrder = 1
   end
@@ -28,6 +29,7 @@ inherited FrmFirstTime: TFrmFirstTime
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Address:'
     TabOrder = 2
   end
@@ -57,6 +59,7 @@ inherited FrmFirstTime: TFrmFirstTime
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 5
     OnClick = lblAddressTextClick
@@ -68,9 +71,10 @@ inherited FrmFirstTime: TFrmFirstTime
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 
       'Your transaction might be perfectly legit, or you are being phis' +
-      'hed. Make sure what you are doing.'
+      'hed. Double check what you are doing.'
     TabOrder = 6
   end
 end

@@ -18,6 +18,7 @@ inherited FrmUnverified: TFrmUnverified
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 'You are about to transact with an unverified contract.'
     TabOrder = 1
   end
@@ -28,6 +29,7 @@ inherited FrmUnverified: TFrmUnverified
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
     Text = 'Contract:'
     TabOrder = 2
   end
@@ -57,6 +59,7 @@ inherited FrmUnverified: TFrmUnverified
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 5
     OnClick = lblContractTextClick
@@ -68,6 +71,7 @@ inherited FrmUnverified: TFrmUnverified
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 'This contract isn'#8217't necessarily insecure, but it is suspicious.'
     TabOrder = 6
   end
@@ -78,6 +82,7 @@ inherited FrmUnverified: TFrmUnverified
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
     Text = 
       'There is no guarantee that this contract actually does what it i' +
       's supposed to do.'
