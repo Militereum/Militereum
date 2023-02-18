@@ -1,20 +1,14 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
 
+* simulates your transaction and shows you exactly what tokens are about to exit you wallet BEFORE the transaction leaves your device
 * blocks suspicious transactions
-* works with every EVM-compatible wallet, including browser-based and native desktop wallets
+* works with every EVM-compatible wallet, including browser-based ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) and native desktop ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) wallets
 * no cookie warnings, no ads
-* not susceptible to phishing (there is no web site to visit)
 * not susceptible to copycat extensions (there is no browser extension)
+* non-custodial, 100% uptime (there is no remote infrastructure)
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
+* auditable open source code
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
-
-| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) | [Eagle<br>RPC](https://harpie.io/rpc/) | [Blowfish<br>Protect](https://extension.blowfish.xyz/) | [Nefture](https://www.nefture.com/) |
-|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc)       | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| works with native desktop wallets ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| blocks transactions BEFORE they leave your device                                                                 | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 100% uptime (there is no remote server)                                                                           | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
-| auditable open source code                                                                                        | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ## Setup
 
