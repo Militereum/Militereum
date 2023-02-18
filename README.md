@@ -1,13 +1,13 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
 
-* simulates your transaction and shows you exactly what tokens are about to exit you wallet BEFORE the transaction leaves your device
-* blocks suspicious transactions
-* works with every EVM-compatible wallet, including browser-based ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) and native desktop ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) wallets
-* no cookie warnings, no ads
-* not susceptible to copycat extensions (there is no browser extension)
-* non-custodial, 100% uptime (there is no remote infrastructure)
-* supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
-* auditable open source code
+* simulates your transaction, and
+* shows you exactly what tokens are about to exit you wallet BEFORE the transaction leaves your device, and
+* blocks suspicious transactions, and
+* works with every EVM-compatible wallet, including browser-based ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) and native desktop ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) wallets, and
+* not susceptible to copycat extensions (there is no browser extension), and
+* non-custodial, 100% uptime (there is no remote infrastructure), and
+* supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/), and
+* auditable open source code, and
 * available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 
 ## Setup
