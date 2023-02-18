@@ -1,6 +1,6 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
 
-* simulates your transaction, and
+* simulates your transactions, and
 * shows you exactly what tokens are about to exit your wallet BEFORE the transaction leaves your device, and
 * blocks suspicious transactions, and
 * works with every EVM-compatible wallet, including browser-based ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) and native desktop ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) wallets, and
