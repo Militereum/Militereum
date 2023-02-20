@@ -7,8 +7,8 @@
 * not susceptible to copycat extensions (there is no browser extension), and
 * non-custodial, 100% uptime (there is no remote infrastructure), and
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/), and
-* auditable open source code, and
-* available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
+* available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip), and
+* auditable open source code
 
 ## Setup
 
