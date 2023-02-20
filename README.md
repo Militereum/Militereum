@@ -3,7 +3,7 @@
 * simulates your transactions, and
 * shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device, and
 * blocks suspicious transactions, and
-* works with every EVM-compatible wallet, including browser-based ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc) and native desktop ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) wallets, and
+* works with every EVM-compatible wallet, including browser-based (eg. [MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/)) and native desktop (eg. [Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb)) wallets, and
 * not susceptible to copycat extensions (there is no browser extension), and
 * non-custodial, 100% uptime (there is no remote infrastructure), and
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/), and
