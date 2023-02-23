@@ -146,14 +146,14 @@ begin
   Self.Caption := Self.Caption + ' ' + VERSION;
 
   const ports = server.ports(NUM_CHAINS);
-  if ports.IsErr then
+  if ports.isErr then
   begin
     terminate;
     EXIT;
   end;
 
   const server = server.start(ports.Value);
-  if server.IsErr then
+  if server.isErr then
   begin
     terminate;
     EXIT;
@@ -206,11 +206,11 @@ end;
 procedure TFrmMain.Notify(port: TIdPort; chain: TChain; tx: transaction.ITransaction);
 begin
   FServer.apiKey(port)
-    .IfErr(procedure(_: IError)
+    .ifErr(procedure(_: IError)
     begin
       Self.Notify('Approved your transaction')
     end)
-    .&Else(procedure(apiKey: string)
+    .&else(procedure(apiKey: string)
     begin
       tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
       begin
@@ -278,7 +278,7 @@ end;
 procedure TFrmMain.Step1(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .&And(function(func: TFourBytes): Boolean
+    .&and(function(func: TFourBytes): Boolean
     begin
       Result := SameText(fourBytestoHex(func), '0x095EA7B3')
     end,
@@ -286,7 +286,7 @@ begin
     procedure(_: TFourBytes)
     begin
       getTransactionArgs(tx.Data)
-        .&And(function(args: TArray<TArg>): Boolean
+        .&and(function(args: TArray<TArg>): Boolean
         begin
           Result := Length(args) > 0
         end,
@@ -329,7 +329,7 @@ end;
 procedure TFrmMain.Step2(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .&And(function(func: TFourBytes): Boolean
+    .&and(function(func: TFourBytes): Boolean
     begin
       Result := SameText(fourBytestoHex(func), '0xA9059CBB')
     end,
@@ -337,7 +337,7 @@ begin
     procedure(_: TFourBytes)
     begin
       getTransactionArgs(tx.Data)
-        .&And(function(args: TArray<TArg>): Boolean
+        .&and(function(args: TArray<TArg>): Boolean
         begin
           Result := Length(args) > 1
         end,
@@ -347,7 +347,7 @@ begin
           const quantity = args[1].toUInt256;
           if quantity > 0 then
           begin
-            FServer.apiKey(port).IfOk(procedure(apiKey: string)
+            FServer.apiKey(port).ifOk(procedure(apiKey: string)
             begin
               tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
               begin
@@ -391,7 +391,7 @@ end;
 // are we transacting with (a) smart contract and (b) not verified with etherscan?
 procedure TFrmMain.Step3(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
-  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
+  tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
     if Assigned(err) or isEOA then
       next(checked)
@@ -419,7 +419,7 @@ end;
 procedure TFrmMain.Step4(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .&And(function(func: TFourBytes): Boolean
+    .&and(function(func: TFourBytes): Boolean
     begin
       Result := SameText(fourBytestoHex(func), '0xA9059CBB')
     end,
@@ -427,7 +427,7 @@ begin
     procedure(_: TFourBytes)
     begin
       getTransactionArgs(tx.Data)
-        .&And(function(args: TArray<TArg>): Boolean
+        .&and(function(args: TArray<TArg>): Boolean
         begin
           Result := Length(args) > 1
         end,
@@ -503,17 +503,17 @@ end;
 // are we transacting with a spam contract?
 procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
-  tx.ToEOA(chain, procedure(isEOA: Boolean; err: IError)
+  tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
     if Assigned(err) or isEOA then
       next(checked)
     else
       FServer.apiKey(port)
-        .IfErr(procedure(_: IError)
+        .ifErr(procedure(_: IError)
         begin
           next(checked)
         end)
-        .&Else(procedure(apiKey: string)
+        .&else(procedure(apiKey: string)
         begin
           web3.eth.alchemy.api.detect(apiKey, chain, tx.&To, procedure(contractType: TContractType; _: IError)
           begin
@@ -552,11 +552,11 @@ end;
 procedure TFrmMain.Step7(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
   tx.From
-    .IfErr(procedure(_: IError)
+    .ifErr(procedure(_: IError)
     begin
       next(checked)
     end)
-    .&Else(procedure(from: TAddress)
+    .&else(procedure(from: TAddress)
     begin
       etherscan.getTransactions(from, procedure(txs: ITransactions; _: IError)
       begin
@@ -609,9 +609,9 @@ end;
 // simulate transaction
 procedure TFrmMain.Step9(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
-  FServer.apiKey(port).IfOk(procedure(apiKey: string)
+  FServer.apiKey(port).ifOk(procedure(apiKey: string)
   begin
-    tx.From.IfOk(procedure(from: TAddress)
+    tx.From.ifOk(procedure(from: TAddress)
     begin
       tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
       begin
@@ -693,7 +693,7 @@ begin
     if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
     begin
       const tx = decodeRawTransaction(web3.utils.fromHex(TJsonString(aPayload.Params[0]).Value));
-      if tx.IsOk then
+      if tx.isOk then
       begin
         const chain = FServer.chain(aContext.Binding.Port);
         if Assigned(chain) then

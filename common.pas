@@ -78,7 +78,7 @@ begin
   if Assigned(Result) then
   begin
     const endpoint = endpoint(port);
-    if endpoint.IsOk then
+    if endpoint.isOk then
       Result^.SetRPC(endpoint.Value);
   end;
 end;
@@ -167,12 +167,7 @@ end;
 
 procedure Symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
 begin
-  const erc20 = TERC20.Create(TWeb3.Create(chain), token);
-  try
-    erc20.Symbol(callback);
-  finally
-    erc20.Free;
-  end;
+  web3.eth.erc20.create(TWeb3.Create(chain), token).Symbol(callback);
 end;
 
 procedure initialize;
