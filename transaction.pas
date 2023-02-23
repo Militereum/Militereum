@@ -16,7 +16,7 @@ type
     function &To  : TAddress;
     function Value: TWei;
     function Data : TBytes;
-    procedure ToEOA(chain: TChain; callback: TProc<Boolean, IError>);
+    procedure ToIsEOA(chain: TChain; callback: TProc<Boolean, IError>);
     procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
   end;
 
@@ -51,12 +51,12 @@ type
     type
       TIsEOA = (Unknown, Yes, No);
     var
-      FRaw  : TBytes;
-      FNonce: BigInteger;
-      FTo   : TAddress;
-      FToEOA: TIsEOA;
-      FValue: TWei;
-      FData : TBytes;
+      FRaw      : TBytes;
+      FNonce    : BigInteger;
+      FTo       : TAddress;
+      FToIsEOA  : TIsEOA;
+      FValue    : TWei;
+      FData     : TBytes;
       FSimulated: IAssetChanges;
   public
     constructor Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
@@ -64,18 +64,18 @@ type
     function &To  : TAddress;
     function Value: TWei;
     function Data : TBytes;
-    procedure ToEOA(chain: TChain; callback: TProc<Boolean, IError>);
+    procedure ToIsEOA(chain: TChain; callback: TProc<Boolean, IError>);
     procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
   end;
 
 constructor TTransaction.Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
 begin
-  Self.FRaw   := raw;
-  Self.FNonce := nonce;
-  Self.FTo    := &to;
-  Self.FToEOA := Unknown;
-  Self.FValue := value;
-  Self.FData  := data;
+  Self.FRaw     := raw;
+  Self.FNonce   := nonce;
+  Self.FTo      := &to;
+  Self.FToIsEOA := Unknown;
+  Self.FValue   := value;
+  Self.FData    := data;
 end;
 
 function TTransaction.From: IResult<TAddress>;
@@ -98,38 +98,38 @@ begin
   Result := FData;
 end;
 
-procedure TTransaction.ToEOA(chain: TChain; callback: TProc<Boolean, IError>);
+procedure TTransaction.ToIsEOA(chain: TChain; callback: TProc<Boolean, IError>);
 begin
-  if FToEOA = Unknown then
+  if FToIsEOA = Unknown then
   begin
     Self.&To.IsEOA(TWeb3.Create(chain), procedure(isEOA: Boolean; err: IError)
     begin
-      if (err = nil) then if isEOA then Self.FToEOA := Yes else Self.FToEOA := No;
+      if (err = nil) then if isEOA then Self.FToIsEOA := Yes else Self.FToIsEOA := No;
       callback(isEOA, err);
     end);
     EXIT;
   end;
-  if FToEOA = Yes then callback(True, nil) else callback(False, nil);
+  if FToIsEOA = Yes then callback(True, nil) else callback(False, nil);
 end;
 
 procedure TTransaction.Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
 begin
   if Assigned(FSimulated) then
-  begin
-    callback(FSimulated, nil);
-    EXIT;
-  end;
-  const from = Self.From;
-  if from.IsErr then
-  begin
-    callback(nil, TError.Create('cannot recover signer from signature: %s', [from.Error.Message]));
-    EXIT;
-  end;
-  web3.eth.alchemy.api.simulate(apiKey, chain, from.Value, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
-  begin
-    Self.FSimulated := changes;
-    callback(changes, err);
-  end);
+    callback(FSimulated, nil)
+  else
+    Self.From
+      .ifErr(procedure(err: IError)
+      begin
+        callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
+      end)
+      .&else(procedure(from: TAddress)
+      begin
+        web3.eth.alchemy.api.simulate(apiKey, chain, from, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
+        begin
+          Self.FSimulated := changes;
+          callback(changes, err);
+        end);
+      end);
 end;
 
 // input the JSON-RPC "params", returns the transaction
@@ -145,7 +145,7 @@ function decodeRawTransaction(encoded: TBytes): IResult<ITransaction>;
 
 begin
   const decoded = web3.rlp.decode(encoded);
-  if decoded.IsErr then
+  if decoded.isErr then
   begin
     Result := TResult<ITransaction>.Err(nil, decoded.Error);
     EXIT;
@@ -159,7 +159,7 @@ begin
     if (Length(i0.Bytes) = 1) and (i0.Bytes[0] >= 2) and (i1.DataType = dtList) then
     begin
       const signature = web3.rlp.decode(i1.Bytes);
-      if signature.IsErr then
+      if signature.isErr then
       begin
         Result := TResult<ITransaction>.Err(nil, signature.Error);
         EXIT;
@@ -182,7 +182,7 @@ begin
   if (Length(decoded.Value) = 1) and (decoded.Value[0].DataType = dtList) then
   begin
     const signature = web3.rlp.decode(decoded.Value[0].Bytes);
-    if signature.IsErr then
+    if signature.isErr then
     begin
       Result := TResult<ITransaction>.Err(nil, signature.Error);
       EXIT;
@@ -229,7 +229,7 @@ end;
 function getTransactionArgs(const data: TBytes): IResult<TArray<TArg>>;
 begin
   const func = getTransactionFourBytes(data);
-  if func.IsErr then
+  if func.isErr then
   begin
     Result := TResult<TArray<TArg>>.Err([], func.Error);
     EXIT;
