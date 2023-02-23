@@ -1,20 +1,13 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip)
 
-* blocks suspicious transactions
-* works with every EVM-compatible wallet, including browser-based and native desktop wallets
-* no cookie warnings, no ads
-* not susceptible to phishing (there is no web site to visit)
-* not susceptible to copycat extensions (there is no browser extension)
-* supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/)
-* available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
-
-| | Militereum | [Harpie](https://harpie.io/) | [Fire](https://www.joinfire.xyz/) | [Pocket<br>Universe](https://www.pocketuniverse.app/) | [Stelo](https://stelolabs.com/) | [Eagle<br>RPC](https://twitter.com/harpieio/status/1615454753672286209) | [Blowfish<br>Protect](https://extension.blowfish.xyz/) | [Nefture](https://www.nefture.com/) |
-|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| works with browser-based wallets ([MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/), etc)       | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| works with native desktop wallets ([Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb), etc) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| blocks transactions BEFORE they leave your device                                                                 | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 100% uptime (there is no remote server)                                                                           | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
-| auditable open source code                                                                                        | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+* simulates your transactions, and
+* shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device, and
+* blocks suspicious transactions, and
+* works with every EVM-compatible wallet, including browser-based (eg. [MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/)) and native desktop (eg. [Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb)) wallets, and
+* non-custodial, 100% uptime. you do not depend on our infrastructure because there isn't any, and
+* supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/), and
+* available for [Windows](https://github.com/svanas/Militereum/releases/latest/download/Windows.zip) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip), and
+* auditable open source code
 
 ## Setup
 
@@ -51,7 +44,7 @@ Besides token allowances, Militereum will block...
 3. transactions to a smart contract that has not been [etherscan](https://etherscan.io/)-verified [➹](assets/unverified.png), and
 4. transactions to an address you have not transacted with before [➹](assets/firsttime.png), and
 5. transactions to a smart contract that lies about its own token supply [➹](assets/spam.png), and
-6. transfers of non-transferable tokens that are designed to pump but you cannot sell [➹](assets/untransferable.png), and
+6. transfers of honeypot tokens that are designed to pump but you cannot sell [➹](assets/untransferable.png), and
 7. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 In addition to blocking suspicious transactions, Militereum will simulate your transaction and show you exactly what tokens are about to exit your wallet BEFORE you allow for the transaction to leave your device.
