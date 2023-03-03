@@ -116,7 +116,7 @@ uses
   web3.utils,
   // project
   airdrop,
-  approve,
+  asset,
   common,
   firsttime,
   honeypot,
@@ -317,7 +317,7 @@ begin
               else
                 thread.synchronize(procedure
                 begin
-                  approve.show(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
+                  asset.show(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
                   begin
                     if allow then
                       next(checked + [TChangeType.Approve])
@@ -368,7 +368,7 @@ begin
                 if (index > -1) and (changes.Item(index).Amount > 0) then
                   thread.synchronize(procedure
                   begin
-                    approve.show(chain, changes.Item(index), procedure(allow: Boolean)
+                    asset.show(chain, changes.Item(index), procedure(allow: Boolean)
                     begin
                       if allow then
                         next(checked + [TChangeType.Transfer])
@@ -658,7 +658,7 @@ begin
               else
                 thread.synchronize(procedure
                 begin
-                  approve.show(chain, changes.Item(index), procedure(allow: Boolean)
+                  asset.show(chain, changes.Item(index), procedure(allow: Boolean)
                   begin
                     if allow then
                       step(index + 1, done)

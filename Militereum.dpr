@@ -11,7 +11,7 @@ uses
   common.win in 'common.win.pas',
 {$ENDIF}
   airdrop in 'airdrop.pas' {FrmAirdrop},
-  approve in 'approve.pas' {FrmApprove},
+  asset in 'asset.pas' {FrmAsset},
   base in 'base.pas' {FrmBase},
   common in 'common.pas',
   firsttime in 'firsttime.pas' {FrmFirstTime},
