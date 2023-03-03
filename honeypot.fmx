@@ -1,4 +1,4 @@
-inherited FrmUntransferable: TFrmUntransferable
+inherited FrmHoneypot: TFrmHoneypot
   ActiveControl = btnBlock
   ClientHeight = 271
   ClientWidth = 500
@@ -19,8 +19,8 @@ inherited FrmUntransferable: TFrmUntransferable
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You cannot transfer this token.'
-    TabOrder = 2
+    Text = 'You cannot sell this token.'
+    TabOrder = 4
   end
   object lblTokenTitle: TLabel
     Position.X = 8.000000000000000000
@@ -31,7 +31,7 @@ inherited FrmUntransferable: TFrmUntransferable
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Token:'
-    TabOrder = 3
+    TabOrder = 5
   end
   object lblRecipientTitle: TLabel
     Position.X = 8.000000000000000000
@@ -42,12 +42,12 @@ inherited FrmUntransferable: TFrmUntransferable
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 4
+    TabOrder = 6
   end
   object btnAllow: TButton
     Position.X = 254.000000000000000000
     Position.Y = 233.000000000000000000
-    TabOrder = 5
+    TabOrder = 7
     Text = 'Allow'
     OnClick = btnAllowClick
   end
@@ -55,7 +55,7 @@ inherited FrmUntransferable: TFrmUntransferable
     Default = True
     Position.X = 166.000000000000000000
     Position.Y = 233.000000000000000000
-    TabOrder = 6
+    TabOrder = 8
     Text = 'Block'
     OnClick = btnBlockClick
   end
@@ -72,7 +72,7 @@ inherited FrmUntransferable: TFrmUntransferable
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 7
+    TabOrder = 9
     OnClick = lblRecipientTextClick
   end
   object lblTokenText: TLabel
@@ -88,7 +88,7 @@ inherited FrmUntransferable: TFrmUntransferable
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '(unknown)'
-    TabOrder = 8
+    TabOrder = 10
     OnClick = lblTokenTextClick
   end
   object lblFooter: TLabel
@@ -100,7 +100,9 @@ inherited FrmUntransferable: TFrmUntransferable
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'This token is possibly a scam. You will waste money on gas.'
+    Text = 
+      'This token is probably a honeypot. You will be unable to cash ou' +
+      't.'
     TabOrder = 1
   end
 end
