@@ -1,4 +1,4 @@
-inherited FrmApprove: TFrmApprove
+inherited FrmAsset: TFrmAsset
   ActiveControl = btnBlock
   ClientHeight = 263
   ClientWidth = 569

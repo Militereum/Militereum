@@ -69,7 +69,7 @@ begin
   frmHoneypot.Show;
 end;
 
-{ TFrmUntransferable }
+{ TFrmHoneypot }
 
 procedure TFrmHoneypot.SetToken(value: TAddress);
 begin

@@ -1,4 +1,4 @@
-unit approve;
+unit asset;
 
 interface
 
@@ -22,7 +22,7 @@ uses
   base;
 
 type
-  TFrmApprove = class(TFrmBase)
+  TFrmAsset = class(TFrmBase)
     imgLogo: TImage;
     lblTitle: TLabel;
     lblTokenTitle: TLabel;
@@ -80,27 +80,27 @@ uses
 
 procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
 begin
-  const frmApprove = TFrmApprove.Create(Application);
-  frmApprove.Chain := chain;
-  frmApprove.Token := token;
-  frmApprove.Spender := spender;
-  frmApprove.Amount(token.Symbol, quantity, token.Decimals);
-  frmApprove.Callback := callback;
-  frmApprove.Show;
+  const frmAsset = TFrmAsset.Create(Application);
+  frmAsset.Chain := chain;
+  frmAsset.Token := token;
+  frmAsset.Spender := spender;
+  frmAsset.Amount(token.Symbol, quantity, token.Decimals);
+  frmAsset.Callback := callback;
+  frmAsset.Show;
 end;
 
 procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>);
 begin
-  const frmApprove = TFrmApprove.Create(Application);
+  const frmApprove = TFrmAsset.Create(Application);
   frmApprove.Chain := chain;
   frmApprove.Change := change;
   frmApprove.Callback := callback;
   frmApprove.Show;
 end;
 
-{ TFrmApprove }
+{ TFrmAsset }
 
-procedure TFrmApprove.SetKind(value: TChangeType);
+procedure TFrmAsset.SetKind(value: TChangeType);
 begin
   if value = Transfer then
   begin
@@ -109,7 +109,7 @@ begin
   end;
 end;
 
-procedure TFrmApprove.SetToken(value: IToken);
+procedure TFrmAsset.SetToken(value: IToken);
 begin
   FToken := value.Address;
 
@@ -124,7 +124,7 @@ begin
   Self.Logo := value.Logo;
 end;
 
-procedure TFrmApprove.SetChange(value: IAssetChange);
+procedure TFrmAsset.SetChange(value: IAssetChange);
 begin
   FToken := value.Contract;
 
@@ -142,7 +142,7 @@ begin
   Self.Amount(value.Symbol, value.Amount, value.Decimals);
 end;
 
-procedure TFrmApprove.SetLogo(value: TURL);
+procedure TFrmAsset.SetLogo(value: TURL);
 begin
   if value <> '' then
     web3.http.get(value, [], procedure(img: IHttpResponse; err: IError)
@@ -157,7 +157,7 @@ begin
     end);
 end;
 
-procedure TFrmApprove.SetSpender(value: TAddress);
+procedure TFrmAsset.SetSpender(value: TAddress);
 begin
   lblSpenderText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
@@ -170,7 +170,7 @@ begin
   end);
 end;
 
-procedure TFrmApprove.Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
+procedure TFrmAsset.Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
 begin
   if quantity = web3.Infinite then
     lblAmountText.Text := 'Unlimited'
@@ -187,12 +187,12 @@ begin
     end);
 end;
 
-procedure TFrmApprove.lblTokenTextClick(Sender: TObject);
+procedure TFrmAsset.lblTokenTextClick(Sender: TObject);
 begin
   common.Open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
 end;
 
-procedure TFrmApprove.lblSpenderTextClick(Sender: TObject);
+procedure TFrmAsset.lblSpenderTextClick(Sender: TObject);
 begin
   TAddress.Create(TWeb3.Create(common.Ethereum), lblSpenderText.Text, procedure(address: TAddress; err: IError)
   begin
@@ -203,13 +203,13 @@ begin
   end);
 end;
 
-procedure TFrmApprove.btnBlockClick(Sender: TObject);
+procedure TFrmAsset.btnBlockClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(False);
   Self.Close;
 end;
 
-procedure TFrmApprove.btnAllowClick(Sender: TObject);
+procedure TFrmAsset.btnAllowClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
