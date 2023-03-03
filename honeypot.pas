@@ -1,4 +1,4 @@
-unit untransferable;
+unit honeypot;
 
 interface
 
@@ -18,7 +18,7 @@ uses
   base;
 
 type
-  TFrmUntransferable = class(TFrmBase)
+  TFrmHoneypot = class(TFrmBase)
     lblHeader: TLabel;
     lblTokenTitle: TLabel;
     lblRecipientTitle: TLabel;
@@ -61,17 +61,17 @@ uses
 
 procedure show(chain: TChain; token, recipient: TAddress; callback: TProc<Boolean>);
 begin
-  const frmUntransferable = TFrmUntransferable.Create(Application);
-  frmUntransferable.Chain := chain;
-  frmUntransferable.Token := token;
-  frmUntransferable.Recipient := recipient;
-  frmUntransferable.Callback := callback;
-  frmUntransferable.Show;
+  const frmHoneypot = TFrmHoneypot.Create(Application);
+  frmHoneypot.Chain := chain;
+  frmHoneypot.Token := token;
+  frmHoneypot.Recipient := recipient;
+  frmHoneypot.Callback := callback;
+  frmHoneypot.Show;
 end;
 
 { TFrmUntransferable }
 
-procedure TFrmUntransferable.SetToken(value: TAddress);
+procedure TFrmHoneypot.SetToken(value: TAddress);
 begin
   FToken := value;
   if not FToken.IsZero then
@@ -84,7 +84,7 @@ begin
     end);
 end;
 
-procedure TFrmUntransferable.SetRecipient(value: TAddress);
+procedure TFrmHoneypot.SetRecipient(value: TAddress);
 begin
   lblRecipientText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
@@ -97,12 +97,12 @@ begin
   end);
 end;
 
-procedure TFrmUntransferable.lblTokenTextClick(Sender: TObject);
+procedure TFrmHoneypot.lblTokenTextClick(Sender: TObject);
 begin
   common.Open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
 end;
 
-procedure TFrmUntransferable.lblRecipientTextClick(Sender: TObject);
+procedure TFrmHoneypot.lblRecipientTextClick(Sender: TObject);
 begin
   TAddress.Create(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
   begin
@@ -113,13 +113,13 @@ begin
   end);
 end;
 
-procedure TFrmUntransferable.btnBlockClick(Sender: TObject);
+procedure TFrmHoneypot.btnBlockClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(False);
   Self.Close;
 end;
 
-procedure TFrmUntransferable.btnAllowClick(Sender: TObject);
+procedure TFrmHoneypot.btnAllowClick(Sender: TObject);
 begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;

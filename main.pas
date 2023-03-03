@@ -119,11 +119,11 @@ uses
   approve,
   common,
   firsttime,
+  honeypot,
   limit,
   sanctioned,
   spam,
   thread,
-  untransferable,
   unverified;
 
 {$I Militereum.version}
@@ -214,11 +214,20 @@ begin
     begin
       tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
       begin
-        if (changes = nil) or (changes.Count = 0) or (changes.Item(0).Change <> Transfer) or (changes.Item(0).Amount = 0) then
+        const item = (function: IAssetChange
+        begin
+          if Assigned(changes) then
+            for var I := 0 to Pred(changes.Count) do
+              if (changes.Item(I).Change = Transfer) and (changes.Item(I).Amount > 0) then
+              begin
+                Result := changes.Item(I);
+                EXIT;
+              end;
+          Result := nil;
+        end)();
+        if not Assigned(item) then
           Self.Notify('Approved your transaction')
         else
-        begin
-          const item = changes.Item(0);
           item.&To.ToString(TWeb3.Create(common.Ethereum), procedure(name: string; err: IError)
           begin
             Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(item.Unscale), (function: string
@@ -229,7 +238,6 @@ begin
                 Result := name;
             end)()]));
           end, True);
-        end;
       end);
     end);
 end;
@@ -371,7 +379,7 @@ begin
                 else
                   thread.synchronize(procedure
                   begin
-                    untransferable.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                    honeypot.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
                     begin
                       if allow then
                         next(checked)
@@ -638,6 +646,7 @@ begin
           if index >= changes.Count then
             done
           else
+            // ignore incoming transactions
             if (changes.Item(index).Amount = 0) or from.SameAs(changes.Item(index).&To) then
               step(index + 1, done)
             else

@@ -15,15 +15,15 @@ uses
   base in 'base.pas' {FrmBase},
   common in 'common.pas',
   firsttime in 'firsttime.pas' {FrmFirstTime},
+  honeypot in 'honeypot.pas' {FrmHoneypot},
   limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},
   main in 'main.pas' {FrmMain},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
   server in 'server.pas',
-  spam in 'spam.pas' {FrmSpam},  
+  spam in 'spam.pas' {FrmSpam},
   thread in 'thread.pas',
   transaction in 'transaction.pas',
-  untransferable in 'untransferable.pas' {FrmUntransferable},
   unverified in 'unverified.pas' {FrmUnverified};
 
 {$R *.res}
