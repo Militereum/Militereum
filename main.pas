@@ -317,7 +317,7 @@ begin
               else
                 thread.synchronize(procedure
                 begin
-                  asset.show(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
+                  asset.approve(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
                   begin
                     if allow then
                       next(checked + [TChangeType.Approve])
@@ -508,22 +508,24 @@ begin
   next(checked);
 end;
 
-// are we transacting with a spam contract?
+// are we transacting with a spam contract, or receiving spam tokens?
 procedure TFrmMain.Step6(port: TIdPort; chain: TChain; tx: transaction.ITransaction; etherscan: IEtherscan; checked: TChecked; block: TProc; next: TProc<TChecked>);
 begin
-  tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
-  begin
-    if Assigned(err) or isEOA then
+  FServer.apiKey(port)
+    .ifErr(procedure(_: IError)
+    begin
       next(checked)
-    else
-      FServer.apiKey(port)
-        .ifErr(procedure(_: IError)
-        begin
-          next(checked)
-        end)
-        .&else(procedure(apiKey: string)
-        begin
-          web3.eth.alchemy.api.detect(apiKey, chain, tx.&To, procedure(contractType: TContractType; _: IError)
+    end)
+    .&else(procedure(apiKey: string)
+    begin
+      var detect: TProc<TArray<TAddress>, Integer, TProc>;
+
+      detect := procedure(contracts: TArray<TAddress>; index: Integer; done: TProc)
+      begin
+        if index >= Length(contracts) then
+          done
+        else
+          web3.eth.alchemy.api.detect(apiKey, chain, contracts[index], procedure(contractType: TContractType; _: IError)
           begin
             case contractType of
               TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
@@ -532,7 +534,7 @@ begin
                   airdrop.show(chain, tx.&To, procedure(allow: Boolean)
                   begin
                     if allow then
-                      next(checked)
+                      detect(contracts, index + 1, done)
                     else
                       block;
                   end);
@@ -543,17 +545,63 @@ begin
                   spam.show(chain, tx.&To, procedure(allow: Boolean)
                   begin
                     if allow then
-                      next(checked)
+                      detect(contracts, index + 1, done)
                     else
                       block;
                   end);
                 end);
             else
-              next(checked);
+              detect(contracts, index + 1, done);
             end;
           end);
+      end;
+
+      const step1 = procedure(done: TProc) // tx.To
+      begin
+        tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
+        begin
+          if Assigned(err) or isEOA then
+            done
+          else
+            detect([tx.&To], 0, procedure
+            begin
+              done;
+            end);
         end);
-  end);
+      end;
+
+      const step2 = procedure(done: TProc) // incoming tokens
+      begin
+        tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
+        begin
+          if not Assigned(changes) then
+            done
+          else
+            tx.From
+              .ifErr(procedure(_: IError)
+              begin
+                done
+              end)
+              .&else(procedure(from: TAddress)
+              begin
+                detect((function(incoming: IAssetChanges): TArray<TAddress>
+                begin
+                  Result := [];
+                  for var I := 0 to Pred(incoming.Count) do
+                    if incoming.Item(I).Contract.SameAs(tx.&To) then
+                      // ignore tx.To
+                    else
+                      Result := Result + [incoming.Item(I).Contract];
+                end)(changes.Incoming(from)), 0, procedure
+                begin
+                  done;
+                end);
+              end);
+        end);
+      end;
+
+      step1(procedure begin step2(procedure begin next(checked) end) end);
+    end);
 end;
 
 // have we transacted with this address before?
@@ -728,11 +776,11 @@ begin
           end;
 
           next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9], 0, web3.eth.etherscan.create(chain^, ''), [],
-            procedure
+            procedure // block
             begin
               done(False);
             end,
-            procedure
+            procedure // allow
             begin
               Self.Notify(aContext.Binding.Port, chain^, tx.Value);
               done(True);
