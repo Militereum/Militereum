@@ -57,8 +57,8 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>); overload;
-procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>); overload;
+procedure approve(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
+procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>);
 
 implementation
 
@@ -78,7 +78,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
+procedure approve(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
 begin
   const frmAsset = TFrmAsset.Create(Application);
   frmAsset.Chain := chain;
