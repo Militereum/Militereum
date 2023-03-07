@@ -286,114 +286,124 @@ end;
 procedure TFrmMain.Step1(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .&and(function(func: TFourBytes): Boolean
+    .ifErr(procedure(_: IError)
     begin
-      Result := SameText(fourBytestoHex(func), '0x095EA7B3')
-    end,
-    // then
-    procedure(_: TFourBytes)
+      next(checked)
+    end)
+    .&else(procedure(func: TFourBytes)
     begin
-      getTransactionArgs(tx.Data)
-        .&and(function(args: TArray<TArg>): Boolean
-        begin
-          Result := Length(args) > 0
-        end,
-        // then
-        procedure(args: TArray<TArg>)
-        begin
-          const value = (function(const args: TArray<TArg>): BigInteger
+      if not SameText(fourBytestoHex(func), '0x095EA7B3') then
+        next(checked)
+      else
+        getTransactionArgs(tx.Data)
+          .ifErr(procedure(_: IError)
           begin
-            if Length(args) > 1 then
-              Result := args[1].toUInt256
-            else
-              Result := web3.Infinite;
-          end)(args);
-          if value > 0 then
+            next(checked)
+          end)
+          .&else(procedure(args: TArray<TArg>)
           begin
-            web3.eth.tokenlists.token(chain, tx.&To, procedure(token: IToken; _: IError)
-            begin
-              if not Assigned(token) then
+            if Length(args) = 0 then
+              next(checked)
+            else begin
+              const value = (function(const args: TArray<TArg>): BigInteger
+              begin
+                if Length(args) > 1 then
+                  Result := args[1].toUInt256
+                else
+                  Result := web3.Infinite;
+              end)(args);
+              if value = 0 then
                 next(checked)
               else
-                thread.synchronize(procedure
+                web3.eth.tokenlists.token(chain, tx.&To, procedure(token: IToken; _: IError)
                 begin
-                  asset.approve(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
-                  begin
-                    if allow then
-                      next(checked + [TChangeType.Approve])
-                    else
-                      block;
-                  end);
+                  if not Assigned(token) then
+                    next(checked)
+                  else
+                    thread.synchronize(procedure
+                    begin
+                      asset.approve(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
+                      begin
+                        if allow then
+                          next(checked + [TChangeType.Approve])
+                        else
+                          block;
+                      end);
+                    end);
                 end);
-            end);
-            EXIT;
-          end;
-        end);
+            end;
+          end);
     end);
-  next(checked);
 end;
 
 // transfer(address,uint256)
 procedure TFrmMain.Step2(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .&and(function(func: TFourBytes): Boolean
+    .ifErr(procedure(_: IError)
     begin
-      Result := SameText(fourBytestoHex(func), '0xA9059CBB')
-    end,
-    // then
-    procedure(_: TFourBytes)
+      next(checked)
+    end)
+    .&else(procedure(func: TFourBytes)
     begin
-      getTransactionArgs(tx.Data)
-        .&and(function(args: TArray<TArg>): Boolean
-        begin
-          Result := Length(args) > 1
-        end,
-        // then
-        procedure(args: TArray<TArg>)
-        begin
-          const quantity = args[1].toUInt256;
-          if quantity > 0 then
+      if not SameText(fourBytestoHex(func), '0xA9059CBB') then
+        next(checked)
+      else
+        getTransactionArgs(tx.Data)
+          .ifErr(procedure(_: IError)
           begin
-            FServer.apiKey(port).ifOk(procedure(apiKey: string)
-            begin
-              tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
-              begin
-                if not Assigned(changes) then
-                begin
-                  next(checked);
-                  EXIT;
-                end;
-                const index = changes.IndexOf(tx.&To);
-                if (index > -1) and (changes.Item(index).Amount > 0) then
-                  thread.synchronize(procedure
+            next(checked)
+          end)
+          .&else(procedure(args: TArray<TArg>)
+          begin
+            if Length(args) = 0 then
+              next(checked)
+            else begin
+              const quantity = args[1].toUInt256;
+              if quantity = 0 then
+                next(checked)
+              else
+                FServer.apiKey(port)
+                  .ifErr(procedure(_: IError)
                   begin
-                    asset.show(chain, changes.Item(index), procedure(allow: Boolean)
-                    begin
-                      if allow then
-                        next(checked + [TChangeType.Transfer])
-                      else
-                        block;
-                    end);
+                    next(checked)
                   end)
-                else
-                  thread.synchronize(procedure
+                  .&else(procedure(apiKey: string)
                   begin
-                    honeypot.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                    tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
                     begin
-                      if allow then
+                      if not Assigned(changes) then
                         next(checked)
-                      else
-                        block;
+                      else begin
+                        const index = changes.IndexOf(tx.&To);
+                        if (index > -1) and (changes.Item(index).Amount > 0) then
+                          thread.synchronize(procedure
+                          begin
+                            asset.show(chain, changes.Item(index), procedure(allow: Boolean)
+                            begin
+                              if allow then
+                                next(checked + [TChangeType.Transfer])
+                              else
+                                block;
+                            end);
+                          end)
+                        else
+                          thread.synchronize(procedure
+                          begin
+                            honeypot.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                            begin
+                              if allow then
+                                next(checked)
+                              else
+                                block;
+                            end);
+                          end);
+                      end;
                     end);
                   end);
-              end);
-              EXIT;
-            end);
-          end;
-        end);
+            end;
+          end);
     end);
-  next(checked);
 end;
 
 // are we transacting with (a) smart contract and (b) not verified with etherscan?
@@ -435,60 +445,64 @@ end;
 procedure TFrmMain.Step4(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .&and(function(func: TFourBytes): Boolean
+    .ifErr(procedure(_: IError)
     begin
-      Result := SameText(fourBytestoHex(func), '0xA9059CBB')
-    end,
-    // then
-    procedure(_: TFourBytes)
+      next(checked)
+    end)
+    .&else(procedure(func: TFourBytes)
     begin
-      getTransactionArgs(tx.Data)
-        .&and(function(args: TArray<TArg>): Boolean
-        begin
-          Result := Length(args) > 1
-        end,
-        // then
-        procedure(args: TArray<TArg>)
-        begin
-          const quantity = args[1].toUInt256;
-          if quantity > 0 then
+      if not SameText(fourBytestoHex(func), '0xA9059CBB') then
+        next(checked)
+      else
+        getTransactionArgs(tx.Data)
+          .ifErr(procedure(_: IError)
           begin
-            web3.defillama.price(chain, tx.&To, procedure(price: Double; _: IError)
-            begin
-              if (price = 0) or (quantity.BitLength > 64) then
+            next(checked)
+          end)
+          .&else(procedure(args: TArray<TArg>)
+          begin
+            if Length(args) = 0 then
+              next(checked)
+            else begin
+              const quantity = args[1].toUInt256;
+              if quantity = 0 then
                 next(checked)
-              else begin
-                const amount = quantity.AsUInt64 * price;
-                if amount < common.LIMIT then
-                  next(checked)
-                else
-                  common.Symbol(chain, tx.&To, procedure(symbol: string; _: IError)
-                  begin
-                    thread.synchronize(procedure
-                    begin
-                      limit.show(chain, symbol, args[0].ToAddress, amount, procedure(allow: Boolean)
+              else
+                web3.defillama.price(chain, tx.&To, procedure(price: Double; _: IError)
+                begin
+                  if (price = 0) or (quantity.BitLength > 64) then
+                    next(checked)
+                  else begin
+                    const amount = quantity.AsUInt64 * price;
+                    if amount < common.LIMIT then
+                      next(checked)
+                    else
+                      common.Symbol(chain, tx.&To, procedure(symbol: string; _: IError)
                       begin
-                        if allow then
-                          next(checked)
-                        else
-                          block;
+                        thread.synchronize(procedure
+                        begin
+                          limit.show(chain, symbol, args[0].ToAddress, amount, procedure(allow: Boolean)
+                          begin
+                            if allow then
+                              next(checked)
+                            else
+                              block;
+                          end);
+                        end);
                       end);
-                    end);
-                  end);
-              end;
-            end);
-            EXIT;
-          end
-        end);
+                  end;
+                end);
+            end;
+          end);
     end);
-  next(checked);
 end;
 
 // are we sending more than $5k in ETH, translated to USD?
 procedure TFrmMain.Step5(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
-  if tx.Value > 0 then
-  begin
+  if tx.Value = 0 then
+    next(checked)
+  else begin
     const client: IWeb3 = TWeb3.Create(chain);
     client.LatestPrice(procedure(price: Double; _: IError)
     begin
@@ -511,9 +525,7 @@ begin
           end);
       end;
     end);
-    EXIT;
   end;
-  next(checked);
 end;
 
 // are we transacting with a spam contract, or receiving spam tokens?
@@ -633,26 +645,23 @@ begin
           etherscan.getTransactions(from, procedure(txs: ITransactions; _: IError)
           begin
             if not Assigned(txs) then
-            begin
-              next(checked);
-              EXIT;
+              next(checked)
+            else begin
+              txs.FilterBy(tx.&To);
+              if txs.Count > 0 then
+                next(checked)
+              else
+                thread.synchronize(procedure
+                begin
+                  firsttime.show(chain, tx.&To, procedure(allow: Boolean)
+                  begin
+                    if allow then
+                      next(checked)
+                    else
+                      block;
+                  end);
+                end);
             end;
-            txs.FilterBy(tx.&To);
-            if txs.Count > 0 then
-            begin
-              next(checked);
-              EXIT;
-            end;
-            thread.synchronize(procedure
-            begin
-              firsttime.show(chain, tx.&To, procedure(allow: Boolean)
-              begin
-                if allow then
-                  next(checked)
-                else
-                  block;
-              end);
-            end);
           end);
         end);
     end);
@@ -684,65 +693,72 @@ procedure TFrmMain.Step9(const port: TIdPort; const chain: TChain; const tx: tra
 type
   TStep = reference to procedure(const changes: IAssetChanges; const index: Integer; const done: TProc);
 begin
-  FServer.apiKey(port).ifOk(procedure(apiKey: string)
-  begin
-    tx.From.ifOk(procedure(from: TAddress)
+  FServer.apiKey(port)
+    .ifErr(procedure(err: IError)
     begin
-      tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
-      begin
-        if not Assigned(changes) then
+      next(checked)
+    end)
+    .&else(procedure(apiKey: string)
+    begin
+      tx.From
+        .ifErr(procedure(_: IError)
         begin
-          next(checked);
-          EXIT;
-        end;
-        const approvals = (function(const changes: IAssetChanges): Integer
+          next(checked)
+        end)
+        .&else(procedure(from: TAddress)
         begin
-          Result := 0;
-          for var I := 0 to Pred(changes.Count) do
-            if changes.Item(I).Change = TChangeType.Approve then Inc(Result);
-        end)(changes);
-        const transfers = (function(const changes: IAssetChanges): Integer
-        begin
-          Result := 0;
-          for var I := 0 to Pred(changes.Count) do
-            if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
-        end)(changes);
-        var step: TStep;
-        step := procedure(const changes: IAssetChanges; const index: Integer; const done: TProc)
-        begin
-          if index >= changes.Count then
-            done
-          else
-            // ignore incoming transactions
-            if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
-              step(changes, index + 1, done)
-            else
-              // if we have prompted for this approval before in step 1
-              if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TChangeType.Approve in checked))
-              // or we have prompted for this transfer before in step 2
-              or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TChangeType.Transfer in checked)) then
-                step(changes, index + 1, done)
-              else
-                thread.synchronize(procedure
-                begin
-                  asset.show(chain, changes.Item(index), procedure(allow: Boolean)
-                  begin
-                    if allow then
+          tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
+          begin
+            if not Assigned(changes) then
+              next(checked)
+            else begin
+              const approvals = (function(const changes: IAssetChanges): Integer
+              begin
+                Result := 0;
+                for var I := 0 to Pred(changes.Count) do
+                  if changes.Item(I).Change = TChangeType.Approve then Inc(Result);
+              end)(changes);
+              const transfers = (function(const changes: IAssetChanges): Integer
+              begin
+                Result := 0;
+                for var I := 0 to Pred(changes.Count) do
+                  if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
+              end)(changes);
+              var step: TStep;
+              step := procedure(const changes: IAssetChanges; const index: Integer; const done: TProc)
+              begin
+                if index >= changes.Count then
+                  done
+                else
+                  // ignore incoming transactions
+                  if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
+                    step(changes, index + 1, done)
+                  else
+                    // if we have prompted for this approval before in step 1
+                    if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TChangeType.Approve in checked))
+                    // or we have prompted for this transfer before in step 2
+                    or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TChangeType.Transfer in checked)) then
                       step(changes, index + 1, done)
                     else
-                      block;
-                  end);
-                end);
-        end;
-        step(changes, 0, procedure
-        begin
-          next(checked);
+                      thread.synchronize(procedure
+                      begin
+                        asset.show(chain, changes.Item(index), procedure(allow: Boolean)
+                        begin
+                          if allow then
+                            step(changes, index + 1, done)
+                          else
+                            block;
+                        end);
+                      end);
+              end;
+              step(changes, 0, procedure
+              begin
+                next(checked);
+              end);
+            end;
+          end);
         end);
-      end);
-      EXIT;
     end);
-  end);
-  next(checked);
 end;
 
 // include this step if you want every transaction to fail (debug only)
