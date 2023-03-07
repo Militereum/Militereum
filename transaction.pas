@@ -36,6 +36,8 @@ function getTransactionArgs(const data: TBytes): IResult<TArray<TArg>>;
 implementation
 
 uses
+  // Delphi
+  System.Threading,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
@@ -115,12 +117,18 @@ end;
 procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
 begin
   if Assigned(FSimulated) then
-    callback(FSimulated, nil)
+    TTask.Create(procedure
+    begin
+      callback(FSimulated, nil)
+    end).Start
   else
     Self.From
       .ifErr(procedure(err: IError)
       begin
-        callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
+        TTask.Create(procedure
+        begin
+          callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
+        end).Start
       end)
       .&else(procedure(from: TAddress)
       begin
