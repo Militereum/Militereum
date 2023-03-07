@@ -44,7 +44,7 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; token, recipient: TAddress; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const token, recipient: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -59,7 +59,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; token, recipient: TAddress; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const token, recipient: TAddress; const callback: TProc<Boolean>);
 begin
   const frmHoneypot = TFrmHoneypot.Create(Application);
   frmHoneypot.Chain := chain;

@@ -16,12 +16,12 @@ type
     function &To  : TAddress;
     function Value: TWei;
     function Data : TBytes;
-    procedure ToIsEOA(chain: TChain; callback: TProc<Boolean, IError>);
-    procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
+    procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
+    procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
 // input the JSON-RPC "params", returns the transaction
-function decodeRawTransaction(encoded: TBytes): IResult<ITransaction>;
+function decodeRawTransaction(const encoded: TBytes): IResult<ITransaction>;
 
 type
   TFourBytes = array[0..3] of Byte;
@@ -59,16 +59,16 @@ type
       FData     : TBytes;
       FSimulated: IAssetChanges;
   public
-    constructor Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
+    constructor Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
     function From : IResult<TAddress>;
     function &To  : TAddress;
     function Value: TWei;
     function Data : TBytes;
-    procedure ToIsEOA(chain: TChain; callback: TProc<Boolean, IError>);
-    procedure Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
+    procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
+    procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
-constructor TTransaction.Create(raw: TBytes; nonce: BigInteger; &to: TAddress; value: TWei; data: TBytes);
+constructor TTransaction.Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
 begin
   Self.FRaw     := raw;
   Self.FNonce   := nonce;
@@ -98,7 +98,7 @@ begin
   Result := FData;
 end;
 
-procedure TTransaction.ToIsEOA(chain: TChain; callback: TProc<Boolean, IError>);
+procedure TTransaction.ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
 begin
   if FToIsEOA = Unknown then
   begin
@@ -112,7 +112,7 @@ begin
   if FToIsEOA = Yes then callback(True, nil) else callback(False, nil);
 end;
 
-procedure TTransaction.Simulate(const apiKey: string; chain: TChain; callback: TProc<IAssetChanges, IError>);
+procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
 begin
   if Assigned(FSimulated) then
     callback(FSimulated, nil)
@@ -133,7 +133,7 @@ begin
 end;
 
 // input the JSON-RPC "params", returns the transaction
-function decodeRawTransaction(encoded: TBytes): IResult<ITransaction>;
+function decodeRawTransaction(const encoded: TBytes): IResult<ITransaction>;
 
   function toBigInt(const bytes: TBytes): BigInteger; inline;
   begin

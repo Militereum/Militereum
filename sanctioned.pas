@@ -39,7 +39,7 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; address: TAddress; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const address: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -54,7 +54,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; address: TAddress; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const address: TAddress; const callback: TProc<Boolean>);
 begin
   const frmSanctioned = TFrmSanctioned.Create(Application);
   frmSanctioned.Chain := chain;

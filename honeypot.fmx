@@ -20,7 +20,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'You cannot sell this token.'
-    TabOrder = 4
+    TabOrder = 5
   end
   object lblTokenTitle: TLabel
     Position.X = 8.000000000000000000
@@ -31,7 +31,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Token:'
-    TabOrder = 5
+    TabOrder = 6
   end
   object lblRecipientTitle: TLabel
     Position.X = 8.000000000000000000
@@ -42,12 +42,12 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 6
+    TabOrder = 7
   end
   object btnAllow: TButton
     Position.X = 254.000000000000000000
     Position.Y = 233.000000000000000000
-    TabOrder = 7
+    TabOrder = 8
     Text = 'Allow'
     OnClick = btnAllowClick
   end
@@ -55,7 +55,7 @@ inherited FrmHoneypot: TFrmHoneypot
     Default = True
     Position.X = 166.000000000000000000
     Position.Y = 233.000000000000000000
-    TabOrder = 8
+    TabOrder = 9
     Text = 'Block'
     OnClick = btnBlockClick
   end
@@ -72,7 +72,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 9
+    TabOrder = 10
     OnClick = lblRecipientTextClick
   end
   object lblTokenText: TLabel
@@ -88,7 +88,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '(unknown)'
-    TabOrder = 10
+    TabOrder = 11
     OnClick = lblTokenTextClick
   end
   object lblFooter: TLabel

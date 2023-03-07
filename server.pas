@@ -24,9 +24,9 @@ type
   end;
 
   TOnRPC = procedure(
-    aContext: TIdContext;
-    aPayload: IPayload;
-    callback: TProc<Boolean>) of object;
+    const aContext: TIdContext;
+    const aPayload: IPayload;
+    const callback: TProc<Boolean>) of object;
   TOnLog = procedure(const request, response: string) of object;
 
   TEthereumRPCServer = class(TIdCustomHTTPServer)
@@ -34,19 +34,19 @@ type
     FOnRPC: TOnRPC;
     FOnLog: TOnLog;
     procedure Block(
-      aPayload: IPayload;
-      aResponseInfo: TIdHTTPResponseInfo);
+      const aPayload: IPayload;
+      const aResponseInfo: TIdHTTPResponseInfo);
     procedure Forward(
-      aContext: TIdContext;
+      const aContext: TIdContext;
       const aRequest: string;
-      aResponseInfo: TIdHTTPResponseInfo);
+      const aResponseInfo: TIdHTTPResponseInfo);
   strict protected
     procedure DoCommandGet(
       aContext: TIdContext;
       aRequestInfo: TIdHTTPRequestInfo;
       aResponseInfo: TIdHTTPResponseInfo); override;
   public
-    class function URL(port: TIdPort): string;
+    class function URL(const port: TIdPort): string;
     property OnRPC: TOnRPC read FOnRPC write FOnRPC;
     property OnLog: TOnLog read FOnLog write FOnLog;
   end;
@@ -54,8 +54,8 @@ type
 function ports(num: Integer): IResult<TArray<TIdPort>>;
 
 function start: IResult<TEthereumRPCServer>; overload;
-function start(port: TIdPort): IResult<TEthereumRPCServer>; overload;
-function start(ports: TArray<TIdPort>): IResult<TEthereumRPCServer>; overload;
+function start(const port: TIdPort): IResult<TEthereumRPCServer>; overload;
+function start(const ports: TArray<TIdPort>): IResult<TEthereumRPCServer>; overload;
 
 implementation
 
@@ -153,7 +153,7 @@ begin
   end;
 end;
 
-function start(port: TIdPort): IResult<TEthereumRPCServer>;
+function start(const port: TIdPort): IResult<TEthereumRPCServer>;
 begin
   const server = TEthereumRPCServer.Create;
   server.DefaultPort := port;
@@ -169,7 +169,7 @@ begin
   Result := TResult<TEthereumRPCServer>.Ok(server);
 end;
 
-function start(ports: TArray<TIdPort>): IResult<TEthereumRPCServer>;
+function start(const ports: TArray<TIdPort>): IResult<TEthereumRPCServer>;
 begin
   if Length(ports) = 0 then
   begin
@@ -249,8 +249,9 @@ procedure TEthereumRPCServer.DoCommandGet(
 type
   TForward = (Allow, Wait, Block);
 begin
-  const body = (function: string
+  const body = (function(const aRequestInfo: TIdHTTPRequestInfo): string
   begin
+    Result := '';
     if not Assigned(aRequestInfo.PostStream) then
       EXIT;
     const SS = TStringStream.Create;
@@ -260,7 +261,7 @@ begin
     finally
       SS.Free;
     end;
-  end)();
+  end)(aRequestInfo);
 
   const &object = web3.json.unmarshal(body);
   if Assigned(&object) then
@@ -293,17 +294,17 @@ begin
 end;
 
 procedure TEthereumRPCServer.Block(
-  aPayload: IPayload;
-  aResponseInfo: TIdHTTPResponseInfo);
+  const aPayload: IPayload;
+  const aResponseInfo: TIdHTTPResponseInfo);
 begin
   aResponseInfo.ResponseNo  := 405;
   aResponseInfo.ContentText := System.SysUtils.Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
 end;
 
 procedure TEthereumRPCServer.Forward(
-  aContext: TIdContext;
+  const aContext: TIdContext;
   const aRequest: string;
-  aResponseInfo: TIdHTTPResponseInfo);
+  const aResponseInfo: TIdHTTPResponseInfo);
 begin
   const endpoint = Self.endpoint(aContext.Binding.Port);
   if endpoint.isErr then
@@ -320,7 +321,7 @@ begin
   end;
 end;
 
-class function TEthereumRPCServer.URL(port: TIdPort): string;
+class function TEthereumRPCServer.URL(const port: TIdPort): string;
 begin
   Result := System.SysUtils.Format('http://%s:%d', [IndyComputerName.ToLower, port]);
 end;
