@@ -57,8 +57,8 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure approve(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
-procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>);
+procedure approve(const chain: TChain; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const change: IAssetChange; const callback: TProc<Boolean>);
 
 implementation
 
@@ -78,7 +78,7 @@ uses
 
 {$R *.fmx}
 
-procedure approve(chain: TChain; const token: IToken; spender: TAddress; quantity: BigInteger; callback: TProc<Boolean>);
+procedure approve(const chain: TChain; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
 begin
   const frmAsset = TFrmAsset.Create(Application);
   frmAsset.Chain := chain;
@@ -89,7 +89,7 @@ begin
   frmAsset.Show;
 end;
 
-procedure show(chain: TChain; const change: IAssetChange; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const change: IAssetChange; const callback: TProc<Boolean>);
 begin
   const frmApprove = TFrmAsset.Create(Application);
   frmApprove.Chain := chain;
@@ -113,13 +113,13 @@ procedure TFrmAsset.SetToken(value: IToken);
 begin
   FToken := value.Address;
 
-  lblTokenText.Text := (function: string
+  lblTokenText.Text := (function(const value: IToken): string
   begin
     if value.Name <> '' then
       Result := value.Name
     else
       Result := string(value.Address);
-  end)();
+  end)(value);
 
   Self.Logo := value.Logo;
 end;
@@ -128,13 +128,13 @@ procedure TFrmAsset.SetChange(value: IAssetChange);
 begin
   FToken := value.Contract;
 
-  lblTokenText.Text := (function: string
+  lblTokenText.Text := (function(const value: IAssetChange): string
   begin
     if value.Name <> '' then
       Result := value.Name
     else
       Result := string(value.Contract);
-  end)();
+  end)(value);
 
   Self.Kind := value.Change;
   Self.Logo := value.Logo;

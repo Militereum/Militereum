@@ -46,7 +46,7 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; const symbol: string; recipient: TAddress; amount: Double; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
 
 implementation
 
@@ -61,7 +61,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; const symbol: string; recipient: TAddress; amount: Double; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
 begin
   const frmLimit = TFrmLimit.Create(Application);
   frmLimit.Chain := chain;

@@ -39,7 +39,7 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
-procedure show(chain: TChain; token: TAddress; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const token: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -54,7 +54,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(chain: TChain; token: TAddress; callback: TProc<Boolean>);
+procedure show(const chain: TChain; const token: TAddress; const callback: TProc<Boolean>);
 begin
   const frmAirdrop = TFrmAirdrop.Create(Application);
   frmAirdrop.Chain := chain;

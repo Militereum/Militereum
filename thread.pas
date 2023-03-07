@@ -6,11 +6,11 @@ uses
   // Delphi
   System.Classes;
 
-procedure synchronize(P: TThreadProcedure);
+procedure synchronize(const P: TThreadProcedure);
 
 implementation
 
-procedure synchronize(P: TThreadProcedure);
+procedure synchronize(const P: TThreadProcedure);
 begin
   if TThread.CurrentThread.ThreadID = MainThreadId then
     P

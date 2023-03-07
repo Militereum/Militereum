@@ -10,6 +10,7 @@ uses
   IdGlobal,
   // web3
   web3,
+  web3.eth.etherscan,
   // project
   server;
 
@@ -20,18 +21,19 @@ const
 type
   TEthereumRPCServerHelper = class helper for TEthereumRPCServer
   public
-    function chain(port: TIdPort): PChain;
-    function port(chain: TChain): IResult<TIdPort>;
-    function apiKey(port: TIdPort): IResult<string>;
-    function endpoint(port: TIdPort): IResult<string>;
+    function chain(const port: TIdPort): PChain;
+    function port(const chain: TChain): IResult<TIdPort>;
+    function apiKey(const port: TIdPort): IResult<string>;
+    function endpoint(const port: TIdPort): IResult<string>;
   end;
 
 function Debug: Boolean;
 function Ethereum: TChain;
-function Format(value: Double): string;
+function Etherscan(const chain: TChain): IResult<IEtherscan>;
+function Format(const value: Double): string;
 function Headers: TNetHeaders;
 procedure Open(const URL: string);
-procedure Symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
+procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 
 procedure initialize;
 procedure finalize;
@@ -60,8 +62,9 @@ uses
   web3.eth.erc20;
 
 {$I alchemy.api.key}
+{$I etherscan.api.key}
 
-function TEthereumRPCServerHelper.chain(port: TIdPort): PChain;
+function TEthereumRPCServerHelper.chain(const port: TIdPort): PChain;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
     Result := @web3.Ethereum
@@ -83,7 +86,7 @@ begin
   end;
 end;
 
-function TEthereumRPCServerHelper.port(chain: TChain): IResult<TIdPort>;
+function TEthereumRPCServerHelper.port(const chain: TChain): IResult<TIdPort>;
 begin
   if (chain = web3.Ethereum) and (Self.Bindings.Count > 0) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[0].Port)
@@ -99,7 +102,7 @@ begin
     Result := TResult<TIdPort>.Err(0, System.SysUtils.Format('invalid chain: %s', [chain.Name]));
 end;
 
-function TEthereumRPCServerHelper.apiKey(port: TIdPort): IResult<string>;
+function TEthereumRPCServerHelper.apiKey(const port: TIdPort): IResult<string>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_ETHEREUM)
@@ -115,7 +118,7 @@ begin
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
-function TEthereumRPCServerHelper.endpoint(port: TIdPort): IResult<string>;
+function TEthereumRPCServerHelper.endpoint(const port: TIdPort): IResult<string>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM)
@@ -141,7 +144,23 @@ begin
   Result := web3.Ethereum.SetRPC(web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM).Value);
 end;
 
-function Format(value: Double): string;
+function Etherscan(const chain: TChain): IResult<IEtherscan>;
+begin
+  if chain = web3.Ethereum then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ETHEREUM))
+  else if chain = web3.Goerli then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_GOERLI))
+  else if chain = web3.Polygon then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_POLYGON))
+  else if chain = web3.Arbitrum then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ARBITRUM))
+  else if chain = web3.Optimism then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_OPTIMISM))
+  else
+    Result := TResult<IEtherscan>.Err(nil, System.SysUtils.Format('not supported on %s', [chain.Name]));
+end;
+
+function Format(const value: Double): string;
 begin
   Result := System.SysUtils.Format('%.6f', [value]);
   while (Length(Result) > 0) and (Result[High(Result)] = '0') do
@@ -165,7 +184,7 @@ begin
 {$ENDIF POSIX}
 end;
 
-procedure Symbol(chain: TChain; token: TAddress; callback: TProc<string, IError>);
+procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 begin
   web3.eth.erc20.create(TWeb3.Create(chain), token).Symbol(callback);
 end;
