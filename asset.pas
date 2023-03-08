@@ -47,7 +47,7 @@ type
     procedure SetLogo(value: TURL);
     procedure SetSpender(value: TAddress);
   public
-    procedure Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
+    procedure Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
     property Chain: TChain write FChain;
     property Kind: TChangeType write SetKind;
     property Token: IToken write SetToken;
@@ -170,7 +170,7 @@ begin
   end);
 end;
 
-procedure TFrmAsset.Amount(const symbol: string; quantity: BigInteger; decimals: Integer);
+procedure TFrmAsset.Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
 begin
   if quantity = web3.Infinite then
     lblAmountText.Text := 'Unlimited'
@@ -180,7 +180,7 @@ begin
       thread.synchronize(procedure
       begin
         if (price > 0) and (quantity.BitLength <= 64) then
-          lblAmountText.Text := System.SysUtils.Format('$ %.2f', [quantity.AsUInt64 * price])
+          lblAmountText.Text := System.SysUtils.Format('$ %s', [common.Format(quantity.AsUInt64 * price)])
         else
           lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.Format(quantity.AsDouble / Round(Power(10, decimals)))]);
       end);

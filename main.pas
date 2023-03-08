@@ -204,40 +204,46 @@ end;
 
 // notify the user when we allow (not block) a transaction
 procedure TFrmMain.Notify(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction);
+resourcestring
+  RS_APPROVED_YOUR_TX = 'Approved your transaction';
 begin
   FServer.apiKey(port)
-    .ifErr(procedure(_: IError)
-    begin
-      Self.Notify('Approved your transaction')
-    end)
+    .ifErr(procedure(_: IError) begin Self.Notify(RS_APPROVED_YOUR_TX) end)
     .&else(procedure(apiKey: string)
     begin
       tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
       begin
-        const item = (function(const changes: IAssetChanges): IAssetChange
-        begin
-          if Assigned(changes) then
-            for var I := 0 to Pred(changes.Count) do
-              if (changes.Item(I).Change = Transfer) and (changes.Item(I).Amount > 0) then
-              begin
-                Result := changes.Item(I);
-                EXIT;
-              end;
-          Result := nil;
-        end)(changes);
-        if not Assigned(item) then
-          Self.Notify('Approved your transaction')
+        if not Assigned(changes) then
+          Self.Notify(RS_APPROVED_YOUR_TX)
         else
-          item.&To.ToString(TWeb3.Create(common.Ethereum), procedure(name: string; err: IError)
-          begin
-            Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(item.Unscale), (function: string
+          tx.From
+            .ifErr(procedure(_: IError) begin Self.Notify(RS_APPROVED_YOUR_TX) end)
+            .&else(procedure(from: TAddress)
             begin
-              if Assigned(err) then
-                Result := string(item.&To)
+              const item = (function(const outgoing: IAssetChanges): IAssetChange
+              begin
+                if Assigned(outgoing) then for var I := 0 to Pred(outgoing.Count) do
+                  if (outgoing.Item(I).Change = Transfer) and (outgoing.Item(I).Amount > 0) then
+                  begin
+                    Result := outgoing.Item(I);
+                    EXIT;
+                  end;
+                Result := nil;
+              end)(changes.Outgoing(from));
+              if not Assigned(item) then
+                Self.Notify(RS_APPROVED_YOUR_TX)
               else
-                Result := name;
-            end)()]));
-          end, True);
+                item.&To.ToString(TWeb3.Create(common.Ethereum), procedure(name: string; err: IError)
+                begin
+                  Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(item.Unscale), (function: string
+                  begin
+                    if Assigned(err) then
+                      Result := string(item.&To)
+                    else
+                      Result := name;
+                  end)()]));
+                end, True);
+            end);
       end);
     end);
 end;
@@ -286,20 +292,14 @@ end;
 procedure TFrmMain.Step1(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError)
-    begin
-      next(checked)
-    end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0x095EA7B3') then
         next(checked)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(_: IError)
-          begin
-            next(checked)
-          end)
+          .ifErr(procedure(_: IError) begin next(checked) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -340,20 +340,14 @@ end;
 procedure TFrmMain.Step2(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError)
-    begin
-      next(checked)
-    end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
         next(checked)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(_: IError)
-          begin
-            next(checked)
-          end)
+          .ifErr(procedure(_: IError) begin next(checked) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -364,10 +358,7 @@ begin
                 next(checked)
               else
                 FServer.apiKey(port)
-                  .ifErr(procedure(_: IError)
-                  begin
-                    next(checked)
-                  end)
+                  .ifErr(procedure(_: IError) begin next(checked) end)
                   .&else(procedure(apiKey: string)
                   begin
                     tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
@@ -414,11 +405,8 @@ begin
     if Assigned(err) or isEOA then
       next(checked)
     else
-      common.Etherscan(chain)
-        .ifErr(procedure(_: IError)
-        begin
-          next(checked)
-        end)
+      common.Etherscan(chain).
+        ifErr(procedure(_: IError) begin next(checked) end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
@@ -445,20 +433,14 @@ end;
 procedure TFrmMain.Step4(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError)
-    begin
-      next(checked)
-    end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
         next(checked)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(_: IError)
-          begin
-            next(checked)
-          end)
+          .ifErr(procedure(_: IError) begin next(checked) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -534,10 +516,7 @@ type
   TDetect = reference to procedure(const contracts: TArray<TAddress>; const index: Integer; const done: TProc);
 begin
   FServer.apiKey(port)
-    .ifErr(procedure(_: IError)
-    begin
-      next(checked)
-    end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(apiKey: string)
     begin
       var detect: TDetect;
@@ -599,10 +578,7 @@ begin
             done
           else
             tx.From
-              .ifErr(procedure(_: IError)
-              begin
-                done
-              end)
+              .ifErr(procedure(_: IError) begin done end)
               .&else(procedure(from: TAddress)
               begin
                 detect((function(const incoming: IAssetChanges): TArray<TAddress>
@@ -629,17 +605,11 @@ end;
 procedure TFrmMain.Step7(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 begin
   tx.From
-    .ifErr(procedure(_: IError)
-    begin
-      next(checked)
-    end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(from: TAddress)
     begin
       common.Etherscan(chain)
-        .ifErr(procedure(_: IError)
-        begin
-          next(checked)
-        end)
+        .ifErr(procedure(_: IError) begin next(checked) end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getTransactions(from, procedure(txs: ITransactions; _: IError)
@@ -694,17 +664,11 @@ type
   TStep = reference to procedure(const changes: IAssetChanges; const index: Integer; const done: TProc);
 begin
   FServer.apiKey(port)
-    .ifErr(procedure(err: IError)
-    begin
-      next(checked)
-    end)
+    .ifErr(procedure(err: IError) begin next(checked) end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
-        .ifErr(procedure(_: IError)
-        begin
-          next(checked)
-        end)
+        .ifErr(procedure(_: IError) begin next(checked) end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
