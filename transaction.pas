@@ -37,6 +37,7 @@ implementation
 
 uses
   // Delphi
+  System.Classes,
   System.Threading,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
