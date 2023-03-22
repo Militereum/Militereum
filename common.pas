@@ -121,15 +121,15 @@ end;
 function TEthereumRPCServerHelper.endpoint(const port: TIdPort): IResult<string>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM)
+    Result := web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM, core)
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Goerli, ALCHEMY_API_KEY_GOERLI)
+    Result := web3.eth.alchemy.endpoint(web3.Goerli, ALCHEMY_API_KEY_GOERLI, core)
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Polygon, ALCHEMY_API_KEY_POLYGON)
+    Result := web3.eth.alchemy.endpoint(web3.Polygon, ALCHEMY_API_KEY_POLYGON, core)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Arbitrum, ALCHEMY_API_KEY_ARBITRUM)
+    Result := web3.eth.alchemy.endpoint(web3.Arbitrum, ALCHEMY_API_KEY_ARBITRUM, core)
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM)
+    Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM, core)
   else
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
@@ -141,7 +141,9 @@ end;
 
 function Ethereum: TChain;
 begin
-  Result := web3.Ethereum.SetRPC(web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM).Value);
+  Result := web3.Ethereum.SetRPC(
+    web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM, core).Value
+  );
 end;
 
 function Etherscan(const chain: TChain): IResult<IEtherscan>;

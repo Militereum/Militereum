@@ -22,18 +22,13 @@ type
     lblTitle: TLabel;
     lblAssetTitle: TLabel;
     lblRecipientTitle: TLabel;
-    btnAllow: TButton;
-    btnBlock: TButton;
     lblRecipientText: TLabel;
     lblAssetText: TLabel;
     lblAmountTitle: TLabel;
     lblAmountText: TLabel;
-    procedure btnBlockClick(Sender: TObject);
-    procedure btnAllowClick(Sender: TObject);
     procedure lblRecipientTextClick(Sender: TObject);
   strict private
     FChain: TChain;
-    FCallback: TProc<Boolean>;
     procedure SetSymbol(const value: string);
     procedure SetRecipient(value: TAddress);
     procedure SetAmount(value: Double);
@@ -43,7 +38,6 @@ type
     property Symbol: string write SetSymbol;
     property Recipient: TAddress write SetRecipient;
     property Amount: Double write SetAmount;
-    property Callback: TProc<Boolean> write FCallback;
   end;
 
 procedure show(const chain: TChain; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
@@ -112,18 +106,6 @@ begin
     else
       common.Open(Self.FChain.BlockExplorer + '/address/' + lblRecipientText.Text);
   end);
-end;
-
-procedure TFrmLimit.btnBlockClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(False);
-  Self.Close;
-end;
-
-procedure TFrmLimit.btnAllowClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(True);
-  Self.Close;
 end;
 
 end.

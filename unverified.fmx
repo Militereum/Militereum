@@ -1,84 +1,70 @@
 inherited FrmUnverified: TFrmUnverified
-  ActiveControl = btnBlock
   ClientHeight = 271
-  ClientWidth = 569
   DesignerMasterStyle = 0
-  inherited imgMilitereum: TImage
-    Position.X = 247.000000000000000000
+  inherited btnBlock: TButton
+    Position.Y = 233.000000000000000000
+    TabOrder = 5
   end
-  inherited imgWarning: TImage
-    Position.X = 291.000000000000000000
+  inherited btnAllow: TButton
+    Position.Y = 233.000000000000000000
+    TabOrder = 6
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 553.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'You are about to transact with an unverified contract.'
-    TabOrder = 1
+    TabOrder = 0
   end
   object lblContractTitle: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 158.000000000000000000
+    Size.Width = 121.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Contract:'
-    TabOrder = 2
-  end
-  object btnAllow: TButton
-    Position.X = 288.000000000000000000
-    Position.Y = 233.000000000000000000
-    TabOrder = 3
-    Text = 'Allow'
-    OnClick = btnAllowClick
-  end
-  object btnBlock: TButton
-    Default = True
-    Position.X = 200.000000000000000000
-    Position.Y = 233.000000000000000000
-    TabOrder = 4
-    Text = 'Block'
-    OnClick = btnBlockClick
+    TabOrder = 1
   end
   object lblContractText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 174.000000000000000000
+    Position.X = 137.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 387.000000000000000000
+    Size.Width = 347.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 5
+    TabOrder = 2
     OnClick = lblContractTextClick
   end
   object Label1: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 167.000000000000000000
-    Size.Width = 553.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'This contract isn'#8217't necessarily insecure, but it is suspicious.'
-    TabOrder = 6
+    TabOrder = 3
   end
   object Label2: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 192.000000000000000000
-    Size.Width = 553.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
@@ -86,6 +72,6 @@ inherited FrmUnverified: TFrmUnverified
     Text = 
       'There is no guarantee that this contract actually does what it i' +
       's supposed to do.'
-    TabOrder = 7
+    TabOrder = 4
   end
 end

@@ -21,21 +21,15 @@ type
   TFrmFirstTime = class(TFrmBase)
     lblTitle: TLabel;
     lblAddressTitle: TLabel;
-    btnAllow: TButton;
-    btnBlock: TButton;
     lblAddressText: TLabel;
     Label1: TLabel;
-    procedure btnBlockClick(Sender: TObject);
-    procedure btnAllowClick(Sender: TObject);
     procedure lblAddressTextClick(Sender: TObject);
   strict private
     FChain: TChain;
-    FCallback: TProc<Boolean>;
     procedure SetAddress(value: TAddress);
   public
     property Chain: TChain write FChain;
     property Address: TAddress write SetAddress;
-    property Callback: TProc<Boolean> write FCallback;
   end;
 
 procedure show(const chain: TChain; const address: TAddress; const callback: TProc<Boolean>);
@@ -86,18 +80,6 @@ begin
     else
       common.Open(Self.FChain.BlockExplorer + '/address/' + lblAddressText.Text);
   end);
-end;
-
-procedure TFrmFirstTime.btnBlockClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(False);
-  Self.Close;
-end;
-
-procedure TFrmFirstTime.btnAllowClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(True);
-  Self.Close;
 end;
 
 end.

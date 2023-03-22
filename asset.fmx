@@ -1,13 +1,11 @@
 inherited FrmAsset: TFrmAsset
-  ActiveControl = btnBlock
   ClientHeight = 263
-  ClientWidth = 569
   DesignerMasterStyle = 0
-  inherited imgMilitereum: TImage
-    Position.X = 247.000000000000000000
+  inherited btnBlock: TButton
+    TabOrder = 7
   end
-  inherited imgWarning: TImage
-    Position.X = 291.000000000000000000
+  inherited btnAllow: TButton
+    TabOrder = 8
   end
   object imgLogo: TImage
     MultiResBitmap = <
@@ -21,16 +19,16 @@ inherited FrmAsset: TFrmAsset
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 553.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'You are about to allow someone else to spend your money.'
-    TabOrder = 1
+    TabOrder = 0
   end
   object lblTokenTitle: TLabel
     Position.X = 98.000000000000000000
@@ -41,7 +39,7 @@ inherited FrmAsset: TFrmAsset
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Token:'
-    TabOrder = 2
+    TabOrder = 1
   end
   object lblSpenderTitle: TLabel
     Position.X = 98.000000000000000000
@@ -54,51 +52,38 @@ inherited FrmAsset: TFrmAsset
     Text = 'Spender:'
     TabOrder = 3
   end
-  object btnAllow: TButton
-    Position.X = 288.000000000000000000
-    Position.Y = 225.000000000000000000
-    TabOrder = 4
-    Text = 'Allow'
-    OnClick = btnAllowClick
-  end
-  object btnBlock: TButton
-    Default = True
-    Position.X = 200.000000000000000000
-    Position.Y = 225.000000000000000000
-    TabOrder = 5
-    Text = 'Block'
-    OnClick = btnBlockClick
-  end
   object lblSpenderText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 174.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 387.000000000000000000
+    Size.Width = 310.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 6
+    TabOrder = 4
     OnClick = lblSpenderTextClick
   end
   object lblTokenText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 174.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 387.000000000000000000
+    Size.Width = 310.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '(unknown)'
-    TabOrder = 7
+    TabOrder = 2
     OnClick = lblTokenTextClick
   end
   object lblAmountTitle: TLabel
@@ -110,16 +95,17 @@ inherited FrmAsset: TFrmAsset
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Amount:'
-    TabOrder = 8
+    TabOrder = 5
   end
   object lblAmountText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Position.X = 174.000000000000000000
     Position.Y = 184.000000000000000000
-    Size.Width = 387.000000000000000000
+    Size.Width = 310.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.WordWrap = False
     Text = '(calculating...)'
-    TabOrder = 9
+    TabOrder = 6
   end
 end
