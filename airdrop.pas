@@ -21,22 +21,16 @@ type
   TFrmAirdrop = class(TFrmBase)
     lblTitle: TLabel;
     lblTokenTitle: TLabel;
-    btnAllow: TButton;
-    btnBlock: TButton;
     lblTokenText: TLabel;
     Label1: TLabel;
     Label2: TLabel;
-    procedure btnBlockClick(Sender: TObject);
-    procedure btnAllowClick(Sender: TObject);
     procedure lblTokenTextClick(Sender: TObject);
   strict private
     FChain: TChain;
-    FCallback: TProc<Boolean>;
     procedure SetToken(value: TAddress);
   public
     property Chain: TChain write FChain;
     property Token: TAddress write SetToken;
-    property Callback: TProc<Boolean> write FCallback;
   end;
 
 procedure show(const chain: TChain; const token: TAddress; const callback: TProc<Boolean>);
@@ -87,18 +81,6 @@ begin
     else
       common.Open(Self.FChain.BlockExplorer + '/token/' + lblTokenText.Text);
   end);
-end;
-
-procedure TFrmAirdrop.btnBlockClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(False);
-  Self.Close;
-end;
-
-procedure TFrmAirdrop.btnAllowClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(True);
-  Self.Close;
 end;
 
 end.

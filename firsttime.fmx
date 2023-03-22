@@ -1,73 +1,59 @@
 inherited FrmFirstTime: TFrmFirstTime
-  ActiveControl = btnBlock
   ClientHeight = 246
-  ClientWidth = 632
   DesignerMasterStyle = 0
-  inherited imgMilitereum: TImage
-    Position.X = 278.000000000000000000
+  inherited btnBlock: TButton
+    Position.Y = 208.000000000000000000
+    TabOrder = 4
   end
-  inherited imgWarning: TImage
-    Position.X = 322.000000000000000000
+  inherited btnAllow: TButton
+    Position.Y = 208.000000000000000000
+    TabOrder = 5
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 616.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'You have not transacted with this address before.'
-    TabOrder = 1
+    TabOrder = 0
   end
   object lblAddressTitle: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 177.000000000000000000
+    Size.Width = 153.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Address:'
-    TabOrder = 2
-  end
-  object btnAllow: TButton
-    Position.X = 320.000000000000000000
-    Position.Y = 208.000000000000000000
-    TabOrder = 3
-    Text = 'Allow'
-    OnClick = btnAllowClick
-  end
-  object btnBlock: TButton
-    Default = True
-    Position.X = 232.000000000000000000
-    Position.Y = 208.000000000000000000
-    TabOrder = 4
-    Text = 'Block'
-    OnClick = btnBlockClick
+    TabOrder = 1
   end
   object lblAddressText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 193.000000000000000000
+    Position.X = 177.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 399.000000000000000000
+    Size.Width = 307.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 5
+    TabOrder = 2
     OnClick = lblAddressTextClick
   end
   object Label1: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 167.000000000000000000
-    Size.Width = 616.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
@@ -75,6 +61,6 @@ inherited FrmFirstTime: TFrmFirstTime
     Text = 
       'Your transaction might be perfectly legit, or you are being phis' +
       'hed. Double check what you are doing.'
-    TabOrder = 6
+    TabOrder = 3
   end
 end

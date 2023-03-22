@@ -1,11 +1,12 @@
 object FrmBase: TFrmBase
   Left = 0
   Top = 0
+  ActiveControl = btnBlock
   BorderIcons = [biSystemMenu]
   BorderStyle = Single
   Caption = 'Militereum'
-  ClientHeight = 480
-  ClientWidth = 640
+  ClientHeight = 375
+  ClientWidth = 500
   Position = ScreenCenter
   FormStyle = StayOnTop
   FormFactor.Width = 320
@@ -210,7 +211,8 @@ object FrmBase: TFrmBase
           22AB6ED3AA0547B99D836AF5AEE9EA4C69BD8F88FE0FA7C6712CE116EE0C0000
           000049454E44AE426082}
       end>
-    Position.X = 282.000000000000000000
+    Anchors = [akLeft, akTop, akRight]
+    Position.X = 212.000000000000000000
     Position.Y = 16.000000000000000000
     Size.Width = 64.000000000000000000
     Size.Height = 64.000000000000000000
@@ -255,10 +257,26 @@ object FrmBase: TFrmBase
           6DC0C2E5E26CE502EEBBA8B8FAA800F80F9BA71EFBC1FF0F590000000049454E
           44AE426082}
       end>
-    Position.X = 326.000000000000000000
+    Anchors = [akLeft, akTop, akRight]
+    Position.X = 256.000000000000000000
     Position.Y = 50.000000000000000000
     Size.Width = 32.000000000000000000
     Size.Height = 32.000000000000000000
     Size.PlatformDefault = False
+  end
+  object btnBlock: TButton
+    Default = True
+    Position.X = 166.000000000000000000
+    Position.Y = 225.000000000000000000
+    TabOrder = 0
+    Text = 'Block'
+    OnClick = btnBlockClick
+  end
+  object btnAllow: TButton
+    Position.X = 254.000000000000000000
+    Position.Y = 225.000000000000000000
+    TabOrder = 1
+    Text = 'Allow'
+    OnClick = btnAllowClick
   end
 end

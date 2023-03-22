@@ -1,100 +1,87 @@
 inherited FrmHoneypot: TFrmHoneypot
-  ActiveControl = btnBlock
   ClientHeight = 271
-  ClientWidth = 500
   DesignerMasterStyle = 0
-  inherited imgMilitereum: TImage
-    Position.X = 212.000000000000000000
+  inherited btnBlock: TButton
+    Position.Y = 233.000000000000000000
+    TabOrder = 11
   end
-  inherited imgWarning: TImage
-    Position.X = 256.000000000000000000
+  inherited btnAllow: TButton
+    Position.Y = 233.000000000000000000
+    TabOrder = 13
   end
   object lblHeader: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 484.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 'You cannot sell this token.'
-    TabOrder = 5
+    TabOrder = 0
   end
   object lblTokenTitle: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 129.000000000000000000
+    Size.Width = 121.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Token:'
-    TabOrder = 6
+    TabOrder = 1
   end
   object lblRecipientTitle: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 129.000000000000000000
+    Size.Width = 121.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 7
-  end
-  object btnAllow: TButton
-    Position.X = 254.000000000000000000
-    Position.Y = 233.000000000000000000
-    TabOrder = 8
-    Text = 'Allow'
-    OnClick = btnAllowClick
-  end
-  object btnBlock: TButton
-    Default = True
-    Position.X = 166.000000000000000000
-    Position.Y = 233.000000000000000000
-    TabOrder = 9
-    Text = 'Block'
-    OnClick = btnBlockClick
+    TabOrder = 4
   end
   object lblRecipientText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 145.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 347.000000000000000000
+    Size.Width = 339.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 10
+    TabOrder = 6
     OnClick = lblRecipientTextClick
   end
   object lblTokenText: TLabel
+    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 145.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 347.000000000000000000
+    Size.Width = 339.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '(unknown)'
-    TabOrder = 11
+    TabOrder = 2
     OnClick = lblTokenTextClick
   end
   object lblFooter: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 16.000000000000000000
     Position.Y = 192.000000000000000000
-    Size.Width = 484.000000000000000000
+    Size.Width = 468.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
@@ -103,6 +90,6 @@ inherited FrmHoneypot: TFrmHoneypot
     Text = 
       'This token is probably a honeypot. You will be unable to cash ou' +
       't.'
-    TabOrder = 1
+    TabOrder = 5
   end
 end

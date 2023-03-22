@@ -27,20 +27,15 @@ type
     lblTitle: TLabel;
     lblTokenTitle: TLabel;
     lblSpenderTitle: TLabel;
-    btnAllow: TButton;
-    btnBlock: TButton;
     lblSpenderText: TLabel;
     lblTokenText: TLabel;
     lblAmountTitle: TLabel;
     lblAmountText: TLabel;
-    procedure btnBlockClick(Sender: TObject);
-    procedure btnAllowClick(Sender: TObject);
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblSpenderTextClick(Sender: TObject);
   strict private
     FChain: TChain;
     FToken: TAddress;
-    FCallback: TProc<Boolean>;
     procedure SetKind(value: TChangeType);
     procedure SetToken(value: IToken);
     procedure SetChange(value: IAssetChange);
@@ -54,7 +49,6 @@ type
     property Change: IAssetChange write SetChange;
     property Logo: TURL write SetLogo;
     property Spender: TAddress write SetSpender;
-    property Callback: TProc<Boolean> write FCallback;
   end;
 
 procedure approve(const chain: TChain; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
@@ -201,18 +195,6 @@ begin
     else
       common.Open(Self.FChain.BlockExplorer + '/address/' + lblSpenderText.Text);
   end);
-end;
-
-procedure TFrmAsset.btnBlockClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(False);
-  Self.Close;
-end;
-
-procedure TFrmAsset.btnAllowClick(Sender: TObject);
-begin
-  if Assigned(Self.FCallback) then Self.FCallback(True);
-  Self.Close;
 end;
 
 end.
