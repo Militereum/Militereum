@@ -57,6 +57,8 @@ Distributed under the [GNU AGP v3.0](https://github.com/svanas/Militereum/blob/m
 
 This project received a [WAGBI grant](https://www.alchemy.com/developer-grant-program) from alchemy.com and is featured in [Alchemy’s Dapp Store](https://www.alchemy.com/dapps/militereum).
 
+<img style="width:240px;height:53px" src="https://static.alchemyapi.io/images/marketing/badgeLight.png"/>
+
 ## Disclaimer
 
 Militereum is provided free of charge. There is no warranty. The authors do not assume any responsibility for bugs, vulnerabilities, or any other technical defects. Use at your own risk.
