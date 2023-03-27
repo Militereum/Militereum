@@ -2,10 +2,10 @@ inherited FrmAsset: TFrmAsset
   ClientHeight = 263
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
-    TabOrder = 7
+    TabOrder = 17
   end
   inherited btnAllow: TButton
-    TabOrder = 8
+    TabOrder = 20
   end
   object imgLogo: TImage
     MultiResBitmap = <
@@ -19,15 +19,15 @@ inherited FrmAsset: TFrmAsset
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You are about to allow someone else to spend your money.'
+    Text = 'You are about to allow someone else to spend your money'
     TabOrder = 0
   end
   object lblTokenTitle: TLabel
@@ -50,7 +50,7 @@ inherited FrmAsset: TFrmAsset
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Spender:'
-    TabOrder = 3
+    TabOrder = 7
   end
   object lblSpenderText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -59,14 +59,14 @@ inherited FrmAsset: TFrmAsset
     HitTest = True
     Position.X = 174.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 310.000000000000000000
+    Size.Width = 302.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 4
+    TabOrder = 10
     OnClick = lblSpenderTextClick
   end
   object lblTokenText: TLabel
@@ -76,7 +76,7 @@ inherited FrmAsset: TFrmAsset
     HitTest = True
     Position.X = 174.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 310.000000000000000000
+    Size.Width = 302.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -101,7 +101,7 @@ inherited FrmAsset: TFrmAsset
     Anchors = [akLeft, akTop, akRight]
     Position.X = 174.000000000000000000
     Position.Y = 184.000000000000000000
-    Size.Width = 310.000000000000000000
+    Size.Width = 302.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.WordWrap = False

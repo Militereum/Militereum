@@ -98,7 +98,7 @@ procedure TFrmAsset.SetKind(value: TChangeType);
 begin
   if value = Transfer then
   begin
-    lblTitle.Text := 'The following token is about to leave your wallet.';
+    lblTitle.Text := 'The following token is about to leave your wallet';
     lblSpenderTitle.Text := 'Recipient';
   end;
 end;

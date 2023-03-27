@@ -3,29 +3,29 @@ inherited FrmHoneypot: TFrmHoneypot
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 11
+    TabOrder = 14
   end
   inherited btnAllow: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 13
+    TabOrder = 17
   end
   object lblHeader: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You cannot sell this token.'
+    Text = 'You cannot sell this token'
     TabOrder = 0
   end
   object lblTokenTitle: TLabel
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 121.000000000000000000
+    Size.Width = 113.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -34,15 +34,15 @@ inherited FrmHoneypot: TFrmHoneypot
     TabOrder = 1
   end
   object lblRecipientTitle: TLabel
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 121.000000000000000000
+    Size.Width = 113.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 4
+    TabOrder = 6
   end
   object lblRecipientText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -51,14 +51,14 @@ inherited FrmHoneypot: TFrmHoneypot
     HitTest = True
     Position.X = 145.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 339.000000000000000000
+    Size.Width = 331.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 6
+    TabOrder = 8
     OnClick = lblRecipientTextClick
   end
   object lblTokenText: TLabel
@@ -68,7 +68,7 @@ inherited FrmHoneypot: TFrmHoneypot
     HitTest = True
     Position.X = 145.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 339.000000000000000000
+    Size.Width = 331.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -79,9 +79,9 @@ inherited FrmHoneypot: TFrmHoneypot
     OnClick = lblTokenTextClick
   end
   object lblFooter: TLabel
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 192.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000

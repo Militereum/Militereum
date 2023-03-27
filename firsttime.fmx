@@ -3,29 +3,29 @@ inherited FrmFirstTime: TFrmFirstTime
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
     Position.Y = 208.000000000000000000
-    TabOrder = 4
+    TabOrder = 10
   end
   inherited btnAllow: TButton
     Position.Y = 208.000000000000000000
-    TabOrder = 5
+    TabOrder = 13
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You have not transacted with this address before.'
+    Text = 'You have not transacted with this address before'
     TabOrder = 0
   end
   object lblAddressTitle: TLabel
-    Position.X = 16.000000000000000000
-    Position.Y = 134.000000000000000000
-    Size.Width = 153.000000000000000000
+    Position.X = 24.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 145.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -39,8 +39,8 @@ inherited FrmFirstTime: TFrmFirstTime
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 177.000000000000000000
-    Position.Y = 134.000000000000000000
-    Size.Width = 307.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 299.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -51,9 +51,9 @@ inherited FrmFirstTime: TFrmFirstTime
     OnClick = lblAddressTextClick
   end
   object Label1: TLabel
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 167.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
