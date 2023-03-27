@@ -3,29 +3,29 @@ inherited FrmUnverified: TFrmUnverified
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 5
+    TabOrder = 9
   end
   inherited btnAllow: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 6
+    TabOrder = 11
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You are about to transact with an unverified contract.'
+    Text = 'You are about to transact with an unverified contract'
     TabOrder = 0
   end
   object lblContractTitle: TLabel
-    Position.X = 8.000000000000000000
-    Position.Y = 134.000000000000000000
-    Size.Width = 121.000000000000000000
+    Position.X = 24.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 105.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -39,8 +39,8 @@ inherited FrmUnverified: TFrmUnverified
     StyledSettings = [Family, Size]
     HitTest = True
     Position.X = 137.000000000000000000
-    Position.Y = 134.000000000000000000
-    Size.Width = 347.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 339.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
@@ -51,9 +51,9 @@ inherited FrmUnverified: TFrmUnverified
     OnClick = lblContractTextClick
   end
   object Label1: TLabel
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 167.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
@@ -62,9 +62,9 @@ inherited FrmUnverified: TFrmUnverified
     TabOrder = 3
   end
   object Label2: TLabel
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 192.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center

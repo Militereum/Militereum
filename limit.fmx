@@ -2,16 +2,16 @@ inherited FrmLimit: TFrmLimit
   ClientHeight = 263
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
-    TabOrder = 7
+    TabOrder = 13
   end
   inherited btnAllow: TButton
-    TabOrder = 8
+    TabOrder = 15
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
-    Position.X = 16.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 96.000000000000000000
-    Size.Width = 468.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 20.000000000000000000
@@ -21,9 +21,9 @@ inherited FrmLimit: TFrmLimit
     TabOrder = 0
   end
   object lblAssetTitle: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 129.000000000000000000
+    Size.Width = 113.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -32,15 +32,15 @@ inherited FrmLimit: TFrmLimit
     TabOrder = 1
   end
   object lblRecipientTitle: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 129.000000000000000000
+    Size.Width = 113.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 3
+    TabOrder = 4
   end
   object lblRecipientText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -49,21 +49,21 @@ inherited FrmLimit: TFrmLimit
     HitTest = True
     Position.X = 145.000000000000000000
     Position.Y = 159.000000000000000000
-    Size.Width = 339.000000000000000000
+    Size.Width = 331.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 4
+    TabOrder = 7
     OnClick = lblRecipientTextClick
   end
   object lblAssetText: TLabel
     Anchors = [akLeft, akTop, akRight]
     Position.X = 145.000000000000000000
     Position.Y = 134.000000000000000000
-    Size.Width = 339.000000000000000000
+    Size.Width = 331.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.WordWrap = False
@@ -71,9 +71,9 @@ inherited FrmLimit: TFrmLimit
     TabOrder = 2
   end
   object lblAmountTitle: TLabel
-    Position.X = 8.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 184.000000000000000000
-    Size.Width = 129.000000000000000000
+    Size.Width = 113.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Trailing
@@ -85,7 +85,7 @@ inherited FrmLimit: TFrmLimit
     Anchors = [akLeft, akTop, akRight]
     Position.X = 145.000000000000000000
     Position.Y = 184.000000000000000000
-    Size.Width = 339.000000000000000000
+    Size.Width = 331.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.FontColor = claBrown
