@@ -20,7 +20,6 @@ uses
 type
   TFrmSanctioned = class(TFrmBase)
     lblTitle: TLabel;
-    lblAddressTitle: TLabel;
     lblAddressText: TLabel;
     Label1: TLabel;
     Label2: TLabel;
