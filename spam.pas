@@ -20,7 +20,6 @@ uses
 type
   TFrmSpam = class(TFrmBase)
     lblTitle: TLabel;
-    lblContractTitle: TLabel;
     lblContractText: TLabel;
     Label1: TLabel;
     Label2: TLabel;

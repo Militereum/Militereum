@@ -20,7 +20,6 @@ uses
 type
   TFrmUnverified = class(TFrmBase)
     lblTitle: TLabel;
-    lblContractTitle: TLabel;
     lblContractText: TLabel;
     Label1: TLabel;
     Label2: TLabel;

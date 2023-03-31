@@ -20,7 +20,6 @@ uses
 type
   TFrmAirdrop = class(TFrmBase)
     lblTitle: TLabel;
-    lblTokenTitle: TLabel;
     lblTokenText: TLabel;
     Label1: TLabel;
     Label2: TLabel;

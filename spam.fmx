@@ -3,11 +3,11 @@ inherited FrmSpam: TFrmSpam
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 9
+    TabOrder = 12
   end
   inherited btnAllow: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 11
+    TabOrder = 15
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
@@ -22,32 +22,21 @@ inherited FrmSpam: TFrmSpam
     Text = 'You are about to transact with a suspicious contract'
     TabOrder = 0
   end
-  object lblContractTitle: TLabel
-    Position.X = 24.000000000000000000
-    Position.Y = 135.000000000000000000
-    Size.Width = 153.000000000000000000
-    Size.Height = 17.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.HorzAlign = Trailing
-    TextSettings.WordWrap = False
-    Text = 'Contract:'
-    TabOrder = 1
-  end
   object lblContractText: TLabel
-    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 185.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 135.000000000000000000
-    Size.Width = 291.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 2
+    TabOrder = 1
     OnClick = lblContractTextClick
   end
   object Label1: TLabel
@@ -61,7 +50,7 @@ inherited FrmSpam: TFrmSpam
     Text = 
       'This contract contains a lot of duplicate NFTs, or the contract ' +
       'lies about its own token supply.'
-    TabOrder = 3
+    TabOrder = 2
   end
   object Label2: TLabel
     Position.X = 24.000000000000000000
@@ -74,6 +63,6 @@ inherited FrmSpam: TFrmSpam
     Text = 
       'Running totalSupply() on the contract is vastly different from t' +
       'he empirical number of tokens in circulation.'
-    TabOrder = 4
+    TabOrder = 3
   end
 end

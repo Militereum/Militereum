@@ -13,6 +13,7 @@ uses
   airdrop in 'airdrop.pas' {FrmAirdrop},
   asset in 'asset.pas' {FrmAsset},
   base in 'base.pas' {FrmBase},
+  checks in 'checks.pas',
   common in 'common.pas',
   firsttime in 'firsttime.pas' {FrmFirstTime},
   honeypot in 'honeypot.pas' {FrmHoneypot},

@@ -20,7 +20,6 @@ uses
 type
   TFrmFirstTime = class(TFrmBase)
     lblTitle: TLabel;
-    lblAddressTitle: TLabel;
     lblAddressText: TLabel;
     Label1: TLabel;
     procedure lblAddressTextClick(Sender: TObject);

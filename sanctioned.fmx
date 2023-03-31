@@ -3,11 +3,11 @@ inherited FrmSanctioned: TFrmSanctioned
   DesignerMasterStyle = 0
   inherited btnBlock: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 9
+    TabOrder = 12
   end
   inherited btnAllow: TButton
     Position.Y = 233.000000000000000000
-    TabOrder = 11
+    TabOrder = 15
   end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
@@ -22,32 +22,21 @@ inherited FrmSanctioned: TFrmSanctioned
     Text = 'You are about to transact with a sanctioned address'
     TabOrder = 0
   end
-  object lblAddressTitle: TLabel
-    Position.X = 16.000000000000000000
-    Position.Y = 135.000000000000000000
-    Size.Width = 217.000000000000000000
-    Size.Height = 17.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.HorzAlign = Trailing
-    TextSettings.WordWrap = False
-    Text = 'Address:'
-    TabOrder = 1
-  end
   object lblAddressText: TLabel
-    Anchors = [akLeft, akTop, akRight]
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 241.000000000000000000
+    Position.X = 24.000000000000000000
     Position.Y = 135.000000000000000000
-    Size.Width = 235.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 2
+    TabOrder = 1
     OnClick = lblAddressTextClick
   end
   object Label1: TLabel
@@ -61,7 +50,7 @@ inherited FrmSanctioned: TFrmSanctioned
     Text = 
       'This address is sanctioned by the U.S. Department of the Treasur' +
       'y'#8217's Office of Foreign Assets Control (OFAC).'
-    TabOrder = 3
+    TabOrder = 2
   end
   object Label2: TLabel
     Position.X = 24.000000000000000000
@@ -74,6 +63,6 @@ inherited FrmSanctioned: TFrmSanctioned
     Text = 
       'Worst case scenario and depending on your jurisdiction, you migh' +
       't incur in penalty or fines by the U.S. Department of Treasury.'
-    TabOrder = 4
+    TabOrder = 3
   end
 end
