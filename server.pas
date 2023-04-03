@@ -323,7 +323,13 @@ end;
 
 class function TEthereumRPCServer.URL(const port: TIdPort): string;
 begin
-  Result := System.SysUtils.Format('http://%s:%d', [IndyComputerName.ToLower, port]);
+  Result := System.SysUtils.Format('http://%s:%d', [(function: string
+  begin
+    if IndyComputerName <> '' then
+      Result := IndyComputerName.ToLower
+    else
+      Result := 'localhost';
+  end)(), port]);
 end;
 
 end.
