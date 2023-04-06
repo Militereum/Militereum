@@ -17,16 +17,17 @@ uses
 type
   TChecked = set of TChangeType;
 
-procedure Step1(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step2(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step3(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step4(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step6(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-procedure Block(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step1 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step2 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step3 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step4 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step5 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step6 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step7 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step8 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
 
 implementation
 
@@ -39,6 +40,7 @@ uses
   web3.eth.etherscan,
   web3.eth.tokenlists,
   web3.eth.types,
+  web3.utils,
   // project
   airdrop,
   asset,
@@ -421,13 +423,54 @@ begin
   end);
 end;
 
-// simulate transaction
+// are we buying a honeypot token?
 procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
-type
-  TStep = reference to procedure(const changes: IAssetChanges; const index: Integer; const done: TProc);
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(checked) end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
+    .&else(procedure(apiKey: string)
+    begin
+      tx.From
+        .ifErr(procedure(_: IError) begin next(checked) end)
+        .&else(procedure(from: TAddress)
+        begin
+          web3.eth.alchemy.api.honeypots(apiKey, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
+          begin
+            if (err <> nil) or (honeypots = nil) or (honeypots.Count = 0) then
+              next(checked)
+            else begin
+              var step: TProc<Integer, TProc>; // (index, done)
+              step := procedure(index: Integer; done: TProc)
+              begin
+                if index >= honeypots.Count then
+                  done
+                else
+                  thread.synchronize(procedure
+                  begin
+                    honeypot.show(chain, honeypots.Item(index).Contract, from, procedure(allow: Boolean)
+                    begin
+                      if allow then
+                        step(index + 1, done)
+                      else
+                        block;
+                    end);
+                  end);
+              end;
+              step(0, procedure
+              begin
+                next(checked);
+              end);
+            end;
+          end);
+        end);
+    end);
+end;
+
+// simulate transaction
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+begin
+  server.apiKey(port)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
@@ -451,34 +494,34 @@ begin
                 for var I := 0 to Pred(changes.Count) do
                   if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
               end)(changes);
-              var step: TStep;
-              step := procedure(const changes: IAssetChanges; const index: Integer; const done: TProc)
+              var step: TProc<Integer, TProc>; // (index, done)
+              step := procedure(index: Integer; done: TProc)
               begin
                 if index >= changes.Count then
                   done
                 else
                   // ignore incoming transactions
                   if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
-                    step(changes, index + 1, done)
+                    step(index + 1, done)
                   else
                     // if we have prompted for this approval before in step 1
                     if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TChangeType.Approve in checked))
                     // or we have prompted for this transfer before in step 2
                     or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TChangeType.Transfer in checked)) then
-                      step(changes, index + 1, done)
+                      step(index + 1, done)
                     else
                       thread.synchronize(procedure
                       begin
                         asset.show(chain, changes.Item(index), procedure(allow: Boolean)
                         begin
                           if allow then
-                            step(changes, index + 1, done)
+                            step(index + 1, done)
                           else
                             block;
                         end);
                       end);
               end;
-              step(changes, 0, procedure
+              step(0, procedure
               begin
                 next(checked);
               end);
