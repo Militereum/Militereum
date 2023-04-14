@@ -170,8 +170,8 @@ begin
     if Assigned(err) or isEOA then
       next(checked)
     else
-      common.Etherscan(chain).
-        ifErr(procedure(_: IError) begin next(checked) end)
+      common.Etherscan(chain)
+        .ifErr(procedure(_: IError) begin next(checked) end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getContractSourceCode(tx.&To, procedure(src: string; _: IError)
