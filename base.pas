@@ -39,6 +39,7 @@ type
   private
     FCallback: TProc<Boolean>;
   protected
+    procedure DoShow; override;
     procedure Resize; override;
   public
     property Callback: TProc<Boolean> write FCallback;
@@ -53,17 +54,7 @@ uses
   System.Math,
   System.Types;
 
-{ TLabel }
-
-procedure TLabel.ApplyStyle;
-
-  function GetParentForm: TCommonCustomForm;
-  begin
-    if (Self.Root <> nil) and (Self.Root.GetObject is TCommonCustomForm) then
-      Result := TCommonCustomForm(Self.Root.GetObject)
-    else
-      Result := nil;
-  end;
+procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
 
   function FitInRect(const aValue: TRectF; const aMaxRect: TRectF): TRectF;
   begin
@@ -78,15 +69,29 @@ procedure TLabel.ApplyStyle;
       Result.Offset(aMaxRect.Right - Result.Right, 0);
   end;
 
+begin
+  const display = Screen.DisplayFromPoint(Screen.MousePos);
+  const R = TRectF.Create(display.WorkAreaRect.TopLeft, display.WorkAreaRect.Width, display.WorkAreaRect.Height);
+  const N = TRectF.Create(TPointF.Create(R.Left + (R.Width - F.Width) / 2, R.Top + (R.Height - F.Height) / 2), F.Bounds.Width, F.Bounds.Height);
+  F.SetBoundsF(FitInRect(N, Screen.DesktopRect));
+end;
+
+{ TLabel }
+
+procedure TLabel.ApplyStyle;
+
+  function GetParentForm: TCommonCustomForm;
+  begin
+    if (Self.Root <> nil) and (Self.Root.GetObject is TCommonCustomForm) then
+      Result := TCommonCustomForm(Self.Root.GetObject)
+    else
+      Result := nil;
+  end;
+
   procedure CenterParentForm;
   begin
     const F = GetParentForm;
-    if Assigned(F) then
-    begin
-      const R = TRectF.Create(Screen.WorkAreaRect.TopLeft, Screen.WorkAreaRect.Width, Screen.WorkAreaRect.Height);
-      const N = TRectF.Create(TPointF.Create(R.Left + (R.Width - F.Width) / 2, R.Top + (R.Height - F.Height) / 2), F.Bounds.Width, F.Bounds.Height);
-      F.SetBoundsF(FitInRect(N, Screen.DesktopRect));
-    end;
+    if Assigned(F) then CenterOnDisplayUnderMouseCursor(F);
   end;
 
 begin
@@ -116,6 +121,12 @@ begin
 end;
 
 { TFrmBase }
+
+procedure TFrmBase.DoShow;
+begin
+  CenterOnDisplayUnderMouseCursor(Self);
+  inherited DoShow;
+end;
 
 procedure TFrmBase.Resize;
 begin
