@@ -46,6 +46,11 @@ type
     lblWelcome: TLabel;
     imgMilitereum: TImage;
     lblTitle: TLabel;
+    imgArbitrum1: TImage;
+    imgOptimism1: TImage;
+    imgPolygon1: TImage;
+    imgGoerli1: TImage;
+    imgEthereum1: TImage;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -256,12 +261,29 @@ begin
 end;
 
 procedure TFrmMain.btnNetworkClick(Sender: TObject);
+
+  procedure updateImage(const button: TSpeedButton);
+  begin
+    for var I := 0 to Pred(button.ChildrenCount) do
+    begin
+      const child = button.Children[I];
+      if child is TImage then
+        TImage(child).Visible := (button.StaysPressed and (TImage(child).Tag = 1))
+                              or ((TImage(child).Tag = 0) and not button.StaysPressed);
+    end;
+  end;
+
 begin
   for var I := 0 to Pred(Self.ComponentCount) do
     if Self.Components[I] is TSpeedButton and (Self.Components[I] <> Sender) then
-      TSpeedButton(Self.Components[I]).StaysPressed := False;
+    begin
+      const other = TSpeedButton(Self.Components[I]);
+      other.StaysPressed := False;
+      updateImage(other);
+    end;
 
   TSpeedButton(Sender).StaysPressed := True;
+  updateImage(TSpeedButton(Sender));
 
   const chain = Self.GetChain;
   edtCopy.Visible := Assigned(chain);
