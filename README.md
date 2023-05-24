@@ -1,4 +1,4 @@
-# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://www.microsoft.com/store/apps/9MVF9Z4SWKDR)
+# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR)
 
 * simulates your transactions, and
 * shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device, and
@@ -6,12 +6,12 @@
 * works with every EVM-compatible wallet, including browser-based (eg. [MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/)) and native desktop (eg. [Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb)) wallets, and
 * non-custodial, 100% uptime. you do not depend on our infrastructure because there isn't any, and
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/), and
-* available for [Windows](https://www.microsoft.com/store/apps/9MVF9Z4SWKDR) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip), and
+* available for [Windows](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip), and
 * auditable open source code
 
 ## Setup
 
-1. Download Militereum for [Windows](https://www.microsoft.com/store/apps/9MVF9Z4SWKDR) or [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
+1. Download Militereum for [Windows](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR) or [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip)
 2. Launch Militereum. The following window appears. Click on `Copy`
 
 ![image](assets/main.png)
