@@ -96,17 +96,17 @@ end;
 
 procedure TFrmHoneypot.lblTokenTextClick(Sender: TObject);
 begin
-  common.Open(Self.FChain.BlockExplorer + '/token/' + string(FToken));
+  common.Open(Self.FChain.Explorer + '/token/' + string(FToken));
 end;
 
 procedure TFrmHoneypot.lblRecipientTextClick(Sender: TObject);
 begin
-  TAddress.Create(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
+  TAddress.FromName(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+      common.Open(Self.FChain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.BlockExplorer + '/address/' + lblRecipientText.Text);
+      common.Open(Self.FChain.Explorer + '/address/' + lblRecipientText.Text);
   end);
 end;
 

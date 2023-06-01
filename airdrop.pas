@@ -73,12 +73,12 @@ end;
 
 procedure TFrmAirdrop.lblTokenTextClick(Sender: TObject);
 begin
-  TAddress.Create(TWeb3.Create(common.Ethereum), lblTokenText.Text, procedure(address: TAddress; err: IError)
+  TAddress.FromName(TWeb3.Create(common.Ethereum), lblTokenText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.BlockExplorer + '/token/' + string(address))
+      common.Open(Self.FChain.Explorer + '/token/' + string(address))
     else
-      common.Open(Self.FChain.BlockExplorer + '/token/' + lblTokenText.Text);
+      common.Open(Self.FChain.Explorer + '/token/' + lblTokenText.Text);
   end);
 end;
 

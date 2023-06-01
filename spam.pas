@@ -73,12 +73,12 @@ end;
 
 procedure TFrmSpam.lblContractTextClick(Sender: TObject);
 begin
-  TAddress.Create(TWeb3.Create(common.Ethereum), lblContractText.Text, procedure(address: TAddress; err: IError)
+  TAddress.FromName(TWeb3.Create(common.Ethereum), lblContractText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+      common.Open(Self.FChain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.BlockExplorer + '/address/' + lblContractText.Text);
+      common.Open(Self.FChain.Explorer + '/address/' + lblContractText.Text);
   end);
 end;
 

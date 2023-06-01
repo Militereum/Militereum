@@ -72,12 +72,12 @@ end;
 
 procedure TFrmFirstTime.lblAddressTextClick(Sender: TObject);
 begin
-  TAddress.Create(TWeb3.Create(common.Ethereum), lblAddressText.Text, procedure(address: TAddress; err: IError)
+  TAddress.FromName(TWeb3.Create(common.Ethereum), lblAddressText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.BlockExplorer + '/address/' + string(address))
+      common.Open(Self.FChain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.BlockExplorer + '/address/' + lblAddressText.Text);
+      common.Open(Self.FChain.Explorer + '/address/' + lblAddressText.Text);
   end);
 end;
 
