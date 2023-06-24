@@ -27,12 +27,27 @@ type
     function endpoint(const port: TIdPort): IResult<string>;
   end;
 
+type
+  TSemVer = record
+  private
+    Major: Integer;
+    Minor: Integer;
+    Patch: Integer;
+  public
+    constructor Create(const aMajor, aMinor, aPatch: Integer);
+    class operator Equal(const A, B: TSemVer): Boolean;
+    class operator GreaterThan(const A, B: TSemVer): Boolean;
+    class operator GreaterThanOrEqual(const A, B: TSemVer): Boolean;
+  end;
+
 function Debug: Boolean;
 function Ethereum: TChain;
 function Etherscan(const chain: TChain): IResult<IEtherscan>;
 function Format(const value: Double): string;
+function GetTempFileName: string;
 function Headers: TNetHeaders;
 procedure Open(const URL: string);
+function ParseSemVer(const version: string): TSemVer;
 procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 
 procedure initialize;
@@ -45,7 +60,9 @@ implementation
 
 uses
   // Delphi
+  System.Character,
   System.Classes,
+  System.IOUtils,
 {$IFDEF MACOS}
   common.mac,
 {$ENDIF MACOS}
@@ -134,6 +151,30 @@ begin
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
+constructor TSemVer.Create(const aMajor, aMinor, aPatch: Integer);
+begin
+  Self.Major := aMajor;
+  Self.Minor := aMinor;
+  Self.Patch := aPatch;
+end;
+
+class operator TSemVer.Equal(const A, B: TSemVer): Boolean;
+begin
+  Result := (A.Major = B.Major) and (A.Minor = B.Minor) and (A.Patch = B.Patch);
+end;
+
+class operator TSemVer.GreaterThan(const A, B: TSemVer): Boolean;
+begin
+  Result := (A.Major > B.Major)
+        or ((A.Major = B.Major) and (A.Minor > B.Minor))
+        or ((A.Major = B.Major) and (A.Minor = B.Minor) and (A.Patch > B.Patch));
+end;
+
+class operator TSemVer.GreaterThanOrEqual(const A, B: TSemVer): Boolean;
+begin
+  Result := (A > B) or (A = B);
+end;
+
 function Debug: Boolean;
 begin
   Result := FindCmdLineSwitch('debug');
@@ -171,6 +212,12 @@ begin
     Delete(Result, High(Result), 1);
 end;
 
+function GetTempFileName: string;
+begin
+  Result := TPath.GetTempFileName;
+  System.SysUtils.DeleteFile(Result);
+end;
+
 function Headers: TNetHeaders;
 begin
   Result := [TNetHeader.Create('Content-Type', 'application/json')];
@@ -184,6 +231,37 @@ begin
 {$IFDEF POSIX}
   _system(PAnsiChar('open ' + AnsiString(URL)));
 {$ENDIF POSIX}
+end;
+
+function ParseSemVer(const version: string): TSemVer;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  const SL = TStringList.Create;
+  try
+    SL.Delimiter := '.';
+    SL.StrictDelimiter := True;
+    SL.DelimitedText := version;
+    for var i := 0 to Pred(SL.Count) do
+    begin
+      var S := SL[i];
+      var n := Low(S);
+      while n <= High(S) do
+        if S[n].IsNumber then
+          Inc(n)
+        else
+          if (S <> '') and S[Low(S)].IsNumber then
+            Delete(S, n, Length(S) - n + 1)
+          else
+            Delete(S, n, 1);
+      case I of
+        0: Result.Major := StrToIntDef(S, 0);
+        1: Result.Minor := StrToIntDef(S, 0);
+        2: Result.Patch := StrToIntDef(S, 0);
+      end;
+    end;
+  finally
+    SL.Free;
+  end;
 end;
 
 procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);

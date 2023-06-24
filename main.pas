@@ -57,6 +57,7 @@ type
     procedure btnCopyClick(Sender: TObject);
   strict private
     FCanNotify: Boolean;
+    FFirstTime: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
     FKnownTransactions: TStrings;
@@ -98,6 +99,7 @@ uses
   // project
   checks,
   common,
+  docker,
   thread;
 
 {$I Militereum.version}
@@ -117,6 +119,7 @@ constructor TFrmMain.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
 
+  FFirstTime := True;
   Self.Caption := Self.Caption + ' ' + VERSION;
 
   edtCopy.Visible := False;
@@ -297,7 +300,28 @@ end;
 procedure TFrmMain.DoShow;
 begin
   inherited DoShow;
+
+  if FFirstTime then
+    FFirstTime := False
+  else
+    EXIT;
+
   if common.Debug then ShowLogWindow;
+
+  if docker.supported and not docker.installed then
+  begin
+    const frmDocker = TFrmDocker.Create(Application);
+    try
+      docker.callback := function: TFrmDocker begin Result := frmDocker; end;
+      try
+        frmDocker.ShowModal;
+      finally
+        docker.callback := nil;
+      end;
+    finally
+      frmDocker.Free;
+    end;
+  end;
 end;
 
 procedure TFrmMain.NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);

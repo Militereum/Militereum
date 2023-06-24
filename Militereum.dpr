@@ -5,16 +5,19 @@ uses
   FMX.Forms,
 {$IFDEF MACOS}
   common.mac in 'common.mac.pas',
+  docker.mac in 'docker.mac.pas',
 {$ENDIF MACOS}
 {$IFDEF MSWINDOWS}
   WinAPI.Windows,
   common.win in 'common.win.pas',
+  docker.win in 'docker.win.pas',
 {$ENDIF}
   airdrop in 'airdrop.pas' {FrmAirdrop},
   asset in 'asset.pas' {FrmAsset},
   base in 'base.pas' {FrmBase},
   checks in 'checks.pas',
   common in 'common.pas',
+  docker in 'docker.pas' {FrmDocker},
   firsttime in 'firsttime.pas' {FrmFirstTime},
   honeypot in 'honeypot.pas' {FrmHoneypot},
   limit in 'limit.pas' {FrmLimit},
