@@ -45,6 +45,8 @@ type
     property Callback: TProc<Boolean> write FCallback;
   end;
 
+procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
+
 implementation
 
 {$R *.fmx}
