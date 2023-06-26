@@ -62,6 +62,7 @@ type
     FServer: TEthereumRPCServer;
     FKnownTransactions: TStrings;
     procedure Dismiss;
+    procedure Log(const err: IError);
     procedure Notify(const body: string); overload;
     procedure Notify(const port: TIdPort; const chain: TChain; const tx: ITransaction); overload;
     procedure ShowLogWindow;
@@ -331,7 +332,7 @@ end;
 
 procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
 type
-  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TProc<TChecked>);
+  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
   TSteps = array of TStep;
   TNext  = reference to procedure(const steps: TSteps; const index: Integer; const checked: TChecked; const block: TProc; const done: TProc);
 begin
@@ -362,8 +363,9 @@ begin
               if index >= Length(steps) then
                 done
               else
-                steps[index](FServer, aContext.Binding.Port, chain^, tx.Value, input, block, procedure(output: TChecked)
+                steps[index](FServer, aContext.Binding.Port, chain^, tx.Value, input, block, procedure(const output: TChecked; const err: IError)
                 begin
+                  if Assigned(err) then Log(err);
                   next(steps, index + 1, output, block, done)
                 end);
             end;
@@ -400,11 +402,21 @@ begin
     begin
       FFrmLog.Memo.Lines.BeginUpdate;
       try
-        FFrmLog.Memo.Lines.Add('REQUEST : ' + request);
-        FFrmLog.Memo.Lines.Add('RESPONSE: ' + response);
+        FFrmLog.Memo.Lines.Add('[REQUEST]  ' + request);
+        FFrmLog.Memo.Lines.Add('[RESPONSE] ' + response);
       finally
         FFrmLog.Memo.Lines.EndUpdate;
       end;
+      FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
+    end);
+end;
+
+procedure TFrmMain.Log(const err: IError);
+begin
+  if Assigned(FFrmLog) then
+    thread.synchronize(procedure
+    begin
+      FFrmLog.Memo.Lines.Add('[ERROR]    ' + err.Message);
       FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
     end);
 end;
