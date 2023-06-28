@@ -94,6 +94,7 @@ uses
   FMX.Platform,
   FMX.Text,
   // web3
+  web3.bip39,
   web3.eth.alchemy.api,
   web3.eth.types,
   web3.utils,
@@ -159,7 +160,12 @@ begin
   finally
     FServer.Free;
   end;
+
+  const id = docker.getContainerId(RPCh_CONTAINER_NAME);
+  if id <> '' then docker.stop(id);
+
   if Assigned(FKnownTransactions) then FKnownTransactions.Free;
+
   inherited Destroy;
 end;
 
@@ -343,6 +349,36 @@ begin
   end;
 
   Self.Dismiss;
+
+  if docker.installed then
+    if docker.running or (function: Boolean
+    begin
+      Result := docker.start;
+      if Result then
+      repeat
+        Sleep(100);
+      until docker.running;
+    end)() then
+    if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
+      if docker.pull(RPCh_DOCKER_IMAGE) then
+        docker.run(RPCh_CONTAINER_NAME, '-e DEBUG="rpch*,-*metrics" ' +
+          '-e RESPONSE_TIMEOUT=5000 ' +
+          '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://staging.discovery.rpch.tech ' +
+          '-e PORT=8080 ' +
+          '-e DATA_DIR=app ' +
+          '-e CLIENT=' + (function: string
+          begin
+            Result := '';
+            const english = TMnemonic.English;
+            System.Randomize;
+            for var _ := 0 to 4 do // 5 words
+            begin
+              if Result <> '' then Result := Result + '-';
+              Result := Result + english.Get(System.Random(english.Count));
+            end;
+          end)() + ' ' +
+          '-p 8080:8080 ' +
+          '--rm ' + RPCh_DOCKER_IMAGE);
 
   if SameText(aPayload.Method, 'eth_sendRawTransaction') then
     if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then

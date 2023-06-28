@@ -76,7 +76,9 @@ uses
 {$ENDIF POSIX}
   // web3
   web3.eth.alchemy,
-  web3.eth.erc20;
+  web3.eth.erc20,
+  // project
+  docker;
 
 {$I alchemy.api.key}
 {$I etherscan.api.key}
@@ -149,6 +151,9 @@ begin
     Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM, core)
   else
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
+  if Result.isOk then
+    if docker.getContainerId(RPCh_CONTAINER_NAME) <> '' then
+      Result := TResult<string>.Ok('http://localhost:8080/?exit-provider=' + Result.Value);
 end;
 
 constructor TSemVer.Create(const aMajor, aMinor, aPatch: Integer);

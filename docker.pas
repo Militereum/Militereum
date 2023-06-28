@@ -33,8 +33,18 @@ type
 var
   callback: TFunc<TFrmDocker>;
 
-function supported: Boolean;
-function installed: Boolean;
+function supported: Boolean; // returns true if Docker Engine can run, otherwise false
+function installed: Boolean; // returns true if Docker Engine is installed, otherwise false
+function running: Boolean;   // retruns true if Docker Engine is running, otherwise false
+function start: Boolean;
+function pull(const image: string): Boolean;
+function run(const containerName, command: string): Boolean;
+function getContainerId(const name: string): string;
+function stop(const containerId: string): Boolean;
+
+const
+  RPCh_DOCKER_IMAGE   = 'europe-west6-docker.pkg.dev/rpch-375921/rpch/rpc-server:6b9862f';
+  RPCh_CONTAINER_NAME = 'rpc-server';
 
 implementation
 
@@ -87,6 +97,66 @@ begin
 {$ENDIF MACOS}
 {$IFDEF MSWINDOWS}
   Result := docker.win.installer;
+{$ENDIF MSWINDOWS}
+end;
+
+function running: Boolean;
+begin
+{$IFDEF MACOS}
+  Result := docker.mac.running;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := docker.win.running;
+{$ENDIF MSWINDOWS}
+end;
+
+function start: Boolean;
+begin
+{$IFDEF MACOS}
+  Result := docker.mac.start;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := docker.win.start;
+{$ENDIF MSWINDOWS}
+end;
+
+function pull(const image: string): Boolean;
+begin
+{$IFDEF MACOS}
+  Result := docker.mac.pull(image);
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := docker.win.pull(image);
+{$ENDIF MSWINDOWS}
+end;
+
+function run(const containerName, command: string): Boolean;
+begin
+{$IFDEF MACOS}
+  Result := docker.mac.run(containerName, command);
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := docker.win.run(containerName, command);
+{$ENDIF MSWINDOWS}
+end;
+
+function getContainerId(const name: string): string;
+begin
+{$IFDEF MACOS}
+  Result := docker.mac.getContainerId(name);
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := docker.win.getContainerId(name);
+{$ENDIF MSWINDOWS}
+end;
+
+function stop(const containerId: string): Boolean;
+begin
+{$IFDEF MACOS}
+  Result := docker.mac.stop(containerId);
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := docker.win.stop(containerId);
 {$ENDIF MSWINDOWS}
 end;
 
