@@ -5,12 +5,20 @@ interface
 function supported: Boolean;
 function installed: Boolean;
 function installer: string;
+function running: Boolean;
+function start: Boolean;
+function pull(const image: string): Boolean;
+function run(const name, command: string): Boolean;
+function getContainerId(const name: string): string;
+function stop(const containerId: string): Boolean;
 
 implementation
 
 uses
   // Delphi
+  System.Character,
   System.Classes,
+  System.Generics.Collections,
   System.IOUtils,
   WinAPI.ShellAPI,
   System.SysUtils,
@@ -153,6 +161,88 @@ begin
   end;
 
   Result := 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe';
+end;
+
+function running: Boolean;
+begin
+  Result := getExitCode('docker', 'ps');
+end;
+
+function start: Boolean;
+
+  function desktop: string; inline;
+  begin
+    Result := GetEnvironmentVariable('ProgramW6432');
+    if (Result <> '') and (Result[High(Result)] <> '\') then Result := Result + '\';
+    Result := Result + 'Docker\Docker\Docker Desktop.exe';
+  end;
+
+begin
+  Result := ShellExecute(0, 'open', PChar(desktop), nil, nil, SW_HIDE) > 32;
+end;
+
+function pull(const image: string): Boolean;
+begin
+  Result := getExitCode('docker', 'pull ' + image);
+end;
+
+function run(const name, command: string): Boolean;
+begin
+  Result := ShellExecute(0, 'open', 'docker', PChar('run --name ' + name + ' ' + command), nil, SW_HIDE) > 32;
+end;
+
+function ps: TDictionary<string, string>; // <container name, container id>
+begin
+  Result := nil;
+  const rows = TStringList.Create;
+  try
+    rows.Text := getStdOutput('docker ps');
+    if rows.Count > 1 then
+    begin
+      Result := TDictionary<string, string>.Create;
+      for var R := 1 to Pred(rows.Count) do
+      begin
+        var C: Integer;
+        // get the value (aka the docker container id)
+        var V := rows[R];
+        C := Low(V);
+        while C <= High(V) do
+          if not V[C].IsWhiteSpace then
+            Inc(C)
+          else
+            Delete(V, C, Length(V) - C + 1);
+        // get the key (aka the docker container name);
+        var K := rows[R];
+        C := Length(K);
+        repeat
+          Dec(C);
+        until K[C].IsWhiteSpace;
+        Delete(K, Low(K), C - Low(K) + 1);
+        // add <name, id>
+        Result.Add(K, V);
+      end;
+    end;
+  finally
+    rows.Free;
+  end;
+end;
+
+function getContainerId(const name: string): string;
+begin
+  Result := '';
+  const containers = ps;
+  if Assigned(containers) then
+  try
+    var id: string;
+    if containers.TryGetValue(name, id) then Result := id;
+  finally
+    containers.Free;
+  end;
+end;
+
+function stop(const containerId: string): Boolean;
+begin
+  Result := getExitCode('docker', 'stop ' + containerId);
 end;
 
 end.
