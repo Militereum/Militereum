@@ -5,6 +5,7 @@ interface
 uses
   // Delphi
   System.Classes,
+  System.Generics.Collections,
   System.Notification,
   System.SysUtils,
   // FireMonkey
@@ -60,17 +61,18 @@ type
     FFirstTime: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
-    FKnownTransactions: TStrings;
+    FKnownTransactions: TThreadList<string>;
     procedure Dismiss;
-    procedure Log(const err: IError);
+    procedure Log(const err: IError); overload;
+    procedure Log(const info: string); overload;
     procedure Notify(const body: string); overload;
     procedure Notify(const port: TIdPort; const chain: TChain; const tx: ITransaction); overload;
     procedure ShowLogWindow;
   strict protected
     procedure DoShow; override;
     procedure DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
-    procedure DoLog(const request, response: string);
-    function  KnownTransactions: TStrings;
+    procedure DoLog(const request, response: string; const success: Boolean);
+    function  KnownTransactions: TThreadList<string>;
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
@@ -86,7 +88,6 @@ implementation
 
 uses
   // Delphi
-  System.Generics.Collections,
   System.JSON,
   System.UITypes,
   // FireMonkey
@@ -94,7 +95,6 @@ uses
   FMX.Platform,
   FMX.Text,
   // web3
-  web3.bip39,
   web3.eth.alchemy.api,
   web3.eth.types,
   web3.utils,
@@ -169,9 +169,9 @@ begin
   inherited Destroy;
 end;
 
-function TFrmMain.KnownTransactions: TStrings;
+function TFrmMain.KnownTransactions: TThreadList<string>;
 begin
-  if not Assigned(FKnownTransactions) then FKnownTransactions := TStringList.Create;
+  if not Assigned(FKnownTransactions) then FKnownTransactions := TThreadList<string>.Create;
   Result := FKnownTransactions;
 end;
 
@@ -350,39 +350,42 @@ begin
 
   Self.Dismiss;
 
-  if docker.installed then
+  if docker.installed then thread.lock(Self, procedure
+  begin
     if docker.running or (function: Boolean
     begin
       Result := docker.start;
       if Result then
       repeat
-        Sleep(100);
+        TThread.Sleep(100);
       until docker.running;
     end)() then
     if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
       if docker.pull(RPCh_DOCKER_IMAGE) then
-        docker.run(RPCh_CONTAINER_NAME, '-e DEBUG="rpch*,-*metrics" ' +
+        if docker.run(RPCh_CONTAINER_NAME, '-e DEBUG="rpch*,-*metrics" ' +
           '-e RESPONSE_TIMEOUT=5000 ' +
           '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://staging.discovery.rpch.tech ' +
           '-e PORT=8080 ' +
           '-e DATA_DIR=app ' +
-          '-e CLIENT=' + (function: string
-          begin
-            Result := '';
-            const english = TMnemonic.English;
-            System.Randomize;
-            for var _ := 0 to 4 do // 5 words
-            begin
-              if Result <> '' then Result := Result + '-';
-              Result := Result + english.Get(System.Random(english.Count));
-            end;
-          end)() + ' ' +
+          '-e CLIENT=' + {$I hopr.api.key} + ' ' +
           '-p 8080:8080 ' +
-          '--rm ' + RPCh_DOCKER_IMAGE);
+          '--rm ' + RPCh_DOCKER_IMAGE) then
+          repeat
+            TThread.Sleep(100);
+          until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
+  end);
 
   if SameText(aPayload.Method, 'eth_sendRawTransaction') then
     if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
-      if Self.KnownTransactions.IndexOf(TJsonString(aPayload.Params[0]).Value) = -1 then
+      if (function(const tx: string): Integer
+      begin
+        const L = Self.KnownTransactions.LockList;
+        try
+          Result := L.IndexOf(TJsonString(aPayload.Params[0]).Value);
+        finally
+          Self.KnownTransactions.UnlockList;
+        end;
+      end)(TJsonString(aPayload.Params[0]).Value) = -1 then
       begin
         const tx = decodeRawTransaction(web3.utils.fromHex(TJsonString(aPayload.Params[0]).Value));
         if tx.isOk then
@@ -431,7 +434,7 @@ begin
   callback(True);
 end;
 
-procedure TFrmMain.DoLog(const request: string; const response: string);
+procedure TFrmMain.DoLog(const request, response: string; const success: Boolean);
 begin
   if Assigned(FFrmLog) then
     thread.synchronize(procedure
@@ -439,7 +442,10 @@ begin
       FFrmLog.Memo.Lines.BeginUpdate;
       try
         FFrmLog.Memo.Lines.Add('[REQUEST]  ' + request);
-        FFrmLog.Memo.Lines.Add('[RESPONSE] ' + response);
+        if success then
+          FFrmLog.Memo.Lines.Add('[RESPONSE] ' + response)
+        else
+          FFrmLog.Memo.Lines.Add('[ERROR]    ' + response);
       finally
         FFrmLog.Memo.Lines.EndUpdate;
       end;
@@ -453,6 +459,16 @@ begin
     thread.synchronize(procedure
     begin
       FFrmLog.Memo.Lines.Add('[ERROR]    ' + err.Message);
+      FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
+    end);
+end;
+
+procedure TFrmMain.Log(const info: string);
+begin
+  if Assigned(FFrmLog) then
+    thread.synchronize(procedure
+    begin
+      FFrmLog.Memo.Lines.Add('[INFO]     ' + info);
       FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
     end);
 end;
