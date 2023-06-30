@@ -178,7 +178,7 @@ function start: Boolean;
   end;
 
 begin
-  Result := ShellExecute(0, 'open', PChar(desktop), nil, nil, SW_HIDE) > 32;
+  Result := ShellExecute(0, 'open', PChar(desktop), nil, nil, SW_SHOW) > 32;
 end;
 
 function pull(const image: string): Boolean;

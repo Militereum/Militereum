@@ -27,7 +27,7 @@ type
     const aContext: TIdContext;
     const aPayload: IPayload;
     const callback: TProc<Boolean>) of object;
-  TOnLog = procedure(const request, response: string) of object;
+  TOnLog = procedure(const request, response: string; const success: Boolean) of object;
 
   TEthereumRPCServer = class(TIdCustomHTTPServer)
   strict private
@@ -36,10 +36,10 @@ type
     procedure Block(
       const aPayload: IPayload;
       const aResponseInfo: TIdHTTPResponseInfo);
-    procedure Forward(
+    function Forward(
       const aContext: TIdContext;
       const aRequest: string;
-      const aResponseInfo: TIdHTTPResponseInfo);
+      const aResponseInfo: TIdHTTPResponseInfo): Boolean;
   strict protected
     procedure DoCommandGet(
       aContext: TIdContext;
@@ -249,6 +249,8 @@ procedure TEthereumRPCServer.DoCommandGet(
 type
   TForward = (Allow, Wait, Block);
 begin
+  var status := TForward.Allow;
+
   const body = (function(const aRequestInfo: TIdHTTPRequestInfo): string
   begin
     Result := '';
@@ -267,11 +269,12 @@ begin
   if Assigned(&object) then
   try
     if web3.json.getPropAsStr(&object, 'jsonrpc') <> '' then
+    begin
+      const payload: IPayload = TPayload.Create(&object);
+
       if Assigned(FOnRPC) then
       begin
-        const payload: IPayload = TPayload.Create(&object);
-
-        var status := TForward.Wait;
+        status := TForward.Wait;
         FOnRPC(aContext, payload, procedure(allow: Boolean)
         begin
           if allow then
@@ -279,18 +282,24 @@ begin
           else
             status := TForward.Block;
         end);
-        while status = TForward.Wait do TThread.Sleep(500);
-
-        if status = TForward.Block then
-          Self.Block(payload, aResponseInfo)
-        else
-          Self.Forward(aContext, body, aResponseInfo);
+        while status = TForward.Wait do TThread.Sleep(100);
       end;
+
+      if status = TForward.Block then Self.Block(payload, aResponseInfo);
+    end;
   finally
     &object.Free;
   end;
 
-  if Assigned(FOnLog) then FOnLog(body, aResponseInfo.ContentText);
+  const success = (function: Boolean
+  begin
+    if status = TForward.Allow then
+      Result := Self.Forward(aContext, body, aResponseInfo)
+    else
+      Result := True;
+  end)();
+
+  if Assigned(FOnLog) then FOnLog(body, aResponseInfo.ContentText, success);
 end;
 
 procedure TEthereumRPCServer.Block(
@@ -301,22 +310,31 @@ begin
   aResponseInfo.ContentText := System.SysUtils.Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
 end;
 
-procedure TEthereumRPCServer.Forward(
+function TEthereumRPCServer.Forward(
   const aContext: TIdContext;
   const aRequest: string;
-  const aResponseInfo: TIdHTTPResponseInfo);
+  const aResponseInfo: TIdHTTPResponseInfo): Boolean;
 begin
   const endpoint = Self.endpoint(aContext.Binding.Port);
-  if endpoint.isErr then
+  Result := endpoint.isOk;
+  if not Result then
     aResponseInfo.ContentText := endpoint.Error.Message
   else begin
     const response = web3.http.post(endpoint.Value, aRequest, common.Headers);
-    if response.isOk then
-      aResponseInfo.ContentText := response.Value.ContentAsString(TEncoding.UTF8)
-    else begin
+    Result := response.isOk;
+    if not Result then begin
       var err: IHttpError;
       if Supports(response.Error, IHttpError, err) then aResponseInfo.ResponseNo := err.StatusCode;
       aResponseInfo.ContentText := response.Error.Message;
+    end else begin
+      aResponseInfo.ContentText := response.Value.ContentAsString(TEncoding.UTF8);
+      const &object = web3.json.unmarshal(aResponseInfo.ContentText);
+      if Assigned(&object) then
+      try
+        Result := not Assigned(web3.json.getPropAsObj(&object, 'error'));
+      finally
+        &object.Free;
+      end;
     end;
   end;
 end;
