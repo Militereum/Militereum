@@ -30,6 +30,7 @@ procedure Step7 (const server: TEthereumRPCServer; const port: TIdPort; const ch
 procedure Step8 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 
 implementation
@@ -52,6 +53,7 @@ uses
   honeypot,
   limit,
   sanctioned,
+  setApprovalForAll,
   spam,
   thread,
   unverified;
@@ -169,8 +171,50 @@ begin
     end);
 end;
 
-// are we transacting with (a) smart contract and (b) not verified with etherscan?
+// setApprovalForAll(address,bool)
 procedure Step3(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+begin
+  getTransactionFourBytes(tx.Data)
+    .ifErr(procedure(err: IError) begin next(checked, err) end)
+    .&else(procedure(func: TFourBytes)
+    begin
+      if not SameText(fourBytestoHex(func), '0xA22CB465') then
+        next(checked)
+      else
+        getTransactionArgs(tx.Data)
+          .ifErr(procedure(err: IError) begin next(checked, err) end)
+          .&else(procedure(args: TArray<TArg>)
+          begin
+            if Length(args) = 0 then
+              next(checked)
+            else begin
+              const approved = (function(const args: TArray<TArg>): Boolean
+              begin
+                if Length(args) > 1 then
+                  Result := args[1].toBoolean
+                else
+                  Result := False;
+              end)(args);
+              if not approved then
+                next(checked)
+              else
+                thread.synchronize(procedure
+                begin
+                  setApprovalForAll.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                  begin
+                    if allow then
+                      next(checked)
+                    else
+                      block;
+                  end);
+                end);
+            end;
+          end);
+    end);
+end;
+
+// are we transacting with (a) smart contract and (b) not verified with etherscan?
+procedure Step4(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
@@ -206,7 +250,7 @@ begin
 end;
 
 // are we transferring more than $5k in ERC-20, translated to USD?
-procedure Step4(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -261,7 +305,7 @@ begin
 end;
 
 // are we sending more than $5k in ETH, translated to USD?
-procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step6(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   if tx.Value = 0 then
     next(checked)
@@ -294,7 +338,7 @@ begin
 end;
 
 // are we transacting with a spam contract, or receiving spam tokens?
-procedure Step6(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 type
   TDone   = reference to procedure(const err: IError);
   TDetect = reference to procedure(const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
@@ -401,7 +445,7 @@ begin
 end;
 
 // have we transacted with this address before?
-procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   tx.From
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -439,7 +483,7 @@ begin
 end;
 
 // are we transacting with a sanctioned address?
-procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; err: IError)
   begin
@@ -462,7 +506,7 @@ begin
 end;
 
 // are we buying a honeypot token?
-procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -507,7 +551,7 @@ begin
 end;
 
 // simulate transaction
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)

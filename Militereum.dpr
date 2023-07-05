@@ -24,6 +24,7 @@ uses
   log in 'log.pas' {FrmLog},
   main in 'main.pas' {FrmMain},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
+  setApprovalForAll in 'setApprovalForAll.pas' {FrmSetApprovalForAll},
   server in 'server.pas',
   spam in 'spam.pas' {FrmSpam},
   thread in 'thread.pas',
