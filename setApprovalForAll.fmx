@@ -1,0 +1,129 @@
+inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
+  ClientHeight = 328
+  DesignerMasterStyle = 0
+  inherited btnBlock: TButton
+    Position.Y = 290.000000000000000000
+    TabOrder = 34
+  end
+  inherited btnAllow: TButton
+    Position.Y = 290.000000000000000000
+    TabOrder = 43
+  end
+  object lblTitle: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 24.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 'You are about to allow someone else to take all your NFTs'
+    TabOrder = 0
+  end
+  object lblTokenTitle: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 167.000000000000000000
+    Size.Width = 192.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
+    Text = 'Token:'
+    TabOrder = 1
+  end
+  object lblSpenderTitle: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 192.000000000000000000
+    Size.Width = 192.000000000000000000
+    Size.Height = 16.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
+    Text = 'Spender:'
+    TabOrder = 18
+  end
+  object lblSpenderText: TLabel
+    Anchors = [akLeft, akTop, akRight]
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 224.000000000000000000
+    Position.Y = 192.000000000000000000
+    Size.Width = 252.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
+    Text = '0x0000000000000000000000000000000000000000'
+    TabOrder = 21
+    OnClick = lblSpenderTextClick
+  end
+  object lblTokenText: TLabel
+    Anchors = [akLeft, akTop, akRight]
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 224.000000000000000000
+    Position.Y = 167.000000000000000000
+    Size.Width = 252.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    TextSettings.WordWrap = False
+    Text = '(unknown)'
+    TabOrder = 10
+    OnClick = lblTokenTextClick
+  end
+  object lblAmountTitle: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 217.000000000000000000
+    Size.Width = 192.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Trailing
+    TextSettings.WordWrap = False
+    Text = 'Amount:'
+    TabOrder = 13
+  end
+  object lblAmountText: TLabel
+    Anchors = [akLeft, akTop, akRight]
+    Position.X = 224.000000000000000000
+    Position.Y = 217.000000000000000000
+    Size.Width = 252.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.WordWrap = False
+    Text = 'all of them, now and in the future'
+    TabOrder = 14
+  end
+  object Label1: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'When you click on Allow, you are saying '#8220'I trust this spender to' +
+      ' be able to transfer all of my NFTs out of my wallet'#8221
+    TabOrder = 2
+  end
+  object Label2: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 249.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'You should only ever want to do this when you are on a marketpla' +
+      'ce you can trust. Otherwise, you should click on Block.'
+    TabOrder = 3
+  end
+end
