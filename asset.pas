@@ -85,11 +85,11 @@ end;
 
 procedure show(const chain: TChain; const change: IAssetChange; const callback: TProc<Boolean>);
 begin
-  const frmApprove = TFrmAsset.Create(Application);
-  frmApprove.Chain := chain;
-  frmApprove.Change := change;
-  frmApprove.Callback := callback;
-  frmApprove.Show;
+  const frmAsset = TFrmAsset.Create(Application);
+  frmAsset.Chain := chain;
+  frmAsset.Change := change;
+  frmAsset.Callback := callback;
+  frmAsset.Show;
 end;
 
 { TFrmAsset }

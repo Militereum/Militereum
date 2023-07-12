@@ -29,6 +29,7 @@ uses
   spam in 'spam.pas' {FrmSpam},
   thread in 'thread.pas',
   transaction in 'transaction.pas',
+  unsupported in 'unsupported.pas' {FrmUnsupported},
   unverified in 'unverified.pas' {FrmUnverified};
 
 {$R *.res}

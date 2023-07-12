@@ -31,6 +31,7 @@ procedure Step8 (const server: TEthereumRPCServer; const port: TIdPort; const ch
 procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 
 implementation
@@ -48,6 +49,7 @@ uses
   // project
   airdrop,
   asset,
+  base,
   common,
   firsttime,
   honeypot,
@@ -56,6 +58,7 @@ uses
   setApprovalForAll,
   spam,
   thread,
+  unsupported,
   unverified;
 
 // approve(address,uint256)
@@ -337,18 +340,18 @@ begin
   end;
 end;
 
-// are we transacting with a spam contract, or receiving spam tokens?
+// are we transacting with a spam contract or receiving spam tokens?
 procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 type
-  TDone   = reference to procedure(const err: IError);
-  TDetect = reference to procedure(const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
+  TDone    = reference to procedure(const err: IError);
+  TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
     .&else(procedure(apiKey: string)
     begin
-      var detect: TDetect;
-      detect := procedure(const contracts: TArray<TAddress>; const index: Integer; const done: TDone)
+      var foreach: TForEach;
+      foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone)
       begin
         if index >= Length(contracts) then
           done(nil)
@@ -356,15 +359,15 @@ begin
           web3.eth.alchemy.api.detect(apiKey, chain, contracts[index], procedure(contractType: TContractType; err: IError)
           begin
             if Assigned(err) then
-              next(checked, err)
+              done(err)
             else case contractType of
               TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
                 thread.synchronize(procedure
                 begin
-                  airdrop.show(chain, tx.&To, procedure(allow: Boolean)
+                  airdrop.show(action, chain, contracts[index], procedure(allow: Boolean)
                   begin
                     if allow then
-                      detect(contracts, index + 1, done)
+                      foreach(action, contracts, index + 1, done)
                     else
                       block;
                   end);
@@ -372,16 +375,16 @@ begin
               TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
                 thread.synchronize(procedure
                 begin
-                  spam.show(chain, tx.&To, procedure(allow: Boolean)
+                  spam.show(action, chain, contracts[index], procedure(allow: Boolean)
                   begin
                     if allow then
-                      detect(contracts, index + 1, done)
+                      foreach(action, contracts, index + 1, done)
                     else
                       block;
                   end);
                 end);
             else
-              detect(contracts, index + 1, done);
+              foreach(action, contracts, index + 1, done);
             end;
           end);
       end;
@@ -395,10 +398,7 @@ begin
           else if isEOA then
             done(nil)
           else
-            detect([tx.&To], 0, procedure(const err: IError)
-            begin
-              done(err);
-            end);
+            foreach(taTransact, [tx.&To], 0, done);
         end);
       end;
 
@@ -415,7 +415,7 @@ begin
               .ifErr(procedure(err: IError) begin done(err) end)
               .&else(procedure(from: TAddress)
               begin
-                detect((function(const incoming: IAssetChanges): TArray<TAddress>
+                foreach(taReceive, (function(const incoming: IAssetChanges): TArray<TAddress>
                 begin
                   Result := [];
                   for var I := 0 to Pred(incoming.Count) do
@@ -423,24 +423,12 @@ begin
                       // ignore tx.To
                     else
                       Result := Result + [incoming.Item(I).Contract];
-                end)(changes.Incoming(from)), 0, procedure(const err: IError)
-                begin
-                  done(err);
-                end);
+                end)(changes.Incoming(from)), 0, done);
               end);
         end);
       end;
 
-      step1(procedure(const err: IError)
-      begin
-        if Assigned(err) then
-          next(checked, err)
-        else
-          step2(procedure(const err: IError)
-          begin
-            next(checked, err)
-          end)
-      end);
+      step1(procedure(const err: IError) begin if Assigned(err) then next(checked, err) else step2(procedure(const err: IError) begin next(checked, err) end) end);
     end);
 end;
 
@@ -482,8 +470,87 @@ begin
     end);
 end;
 
-// are we transacting with a sanctioned address?
+// are we transacting with an unsupported contract or receiving unsupported tokens?
 procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+type
+  TDone    = reference to procedure(const err: IError);
+  TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
+begin
+  web3.eth.tokenlists.unsupported(chain, procedure(tokens: TTokens; err: IError)
+  begin
+    if Assigned(err) then
+    begin
+      next(checked, err);
+      EXIT;
+    end;
+
+    var foreach: TForEach;
+    foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone)
+    begin
+      if index >= Length(contracts) then
+        done(nil)
+      else
+        if tokens.IndexOf(contracts[index]) = -1 then
+          foreach(action, contracts, index + 1, done)
+        else
+          thread.synchronize(procedure
+          begin
+            unsupported.show(action, chain, contracts[index], procedure(allow: Boolean)
+            begin
+              if allow then
+                foreach(action, contracts, index + 1, done)
+              else
+                block;
+            end);
+          end);
+    end;
+
+    const step1 = procedure(const done: TDone) // tx.To
+    begin
+      tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
+      begin
+        if Assigned(err) or isEOA then
+          done(err)
+        else
+          foreach(taTransact, [tx.&To], 0, done);
+      end);
+    end;
+
+    const step2 = procedure(const done: TDone) // incoming tokens
+    begin
+      server.apiKey(port)
+        .ifErr(procedure(err: IError) begin done(err) end)
+        .&else(procedure(apiKey: string)
+        begin
+          tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
+          begin
+            if Assigned(err) or not Assigned(changes) then
+              done(err)
+            else
+              tx.From
+                .ifErr(procedure(err: IError) begin done(err) end)
+                .&else(procedure(from: TAddress)
+                begin
+                  foreach(taReceive, (function(const incoming: IAssetChanges): TArray<TAddress>
+                  begin
+                    Result := [];
+                    for var I := 0 to Pred(incoming.Count) do
+                      if incoming.Item(I).Contract.SameAs(tx.&To) then
+                        // ignore tx.To
+                      else
+                        Result := Result + [incoming.Item(I).Contract];
+                  end)(changes.Incoming(from)), 0, done);
+                end);
+          end);
+        end);
+    end;
+
+    step1(procedure(const err: IError) begin if Assigned(err) then next(checked, err) else step2(procedure(const err: IError) begin next(checked, err) end) end);
+  end);
+end;
+
+// are we transacting with a sanctioned address?
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; err: IError)
   begin
@@ -506,7 +573,7 @@ begin
 end;
 
 // are we buying a honeypot token?
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -550,8 +617,8 @@ begin
     end);
 end;
 
-// simulate transaction
-procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+// simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet
+procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
