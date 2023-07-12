@@ -15,6 +15,11 @@ uses
   FMX.StdCtrls,
   FMX.Types;
 
+type
+  TTokenAction = (taReceive, taTransact);
+const
+  ActionText: array[TTokenAction] of string =  ('receive', 'transact with');
+
 // 1. Labels with HorzAlign=Center are automatically enlarged until there are no more ellipsis
 // 2. The form is automatically enlarged after (1)
 // 3. The block/allow buttons automatically re-align after (2)

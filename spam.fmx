@@ -19,7 +19,7 @@ inherited FrmSpam: TFrmSpam
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You are about to transact with a suspicious contract'
+    Text = 'You are about to %s a suspicious token'
     TabOrder = 0
   end
   object lblContractText: TLabel

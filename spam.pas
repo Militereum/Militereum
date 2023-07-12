@@ -26,13 +26,15 @@ type
     procedure lblContractTextClick(Sender: TObject);
   strict private
     FChain: TChain;
+    procedure SetAction(value: TTokenAction);
     procedure SetContract(value: TAddress);
   public
+    property Action: TTokenAction write SetAction;
     property Chain: TChain write FChain;
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -47,16 +49,25 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
 begin
   const frmSpam = TFrmSpam.Create(Application);
-  frmSpam.Chain := chain;
+  frmSpam.Action   := action;
+  frmSpam.Chain    := chain;
   frmSpam.Contract := contract;
   frmSpam.Callback := callback;
   frmSpam.Show;
 end;
 
 { TFrmSpam }
+
+procedure TFrmSpam.SetAction(value: TTokenAction);
+begin
+  thread.synchronize(procedure
+  begin
+    lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value]]);
+  end);
+end;
 
 procedure TFrmSpam.SetContract(value: TAddress);
 begin

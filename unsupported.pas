@@ -1,4 +1,4 @@
-unit airdrop;
+unit unsupported;
 
 interface
 
@@ -18,7 +18,7 @@ uses
   base;
 
 type
-  TFrmAirdrop = class(TFrmBase)
+  TFrmUnsupported = class(TFrmBase)
     lblTitle: TLabel;
     lblTokenText: TLabel;
     Label1: TLabel;
@@ -51,17 +51,17 @@ uses
 
 procedure show(const action: TTokenAction; const chain: TChain; const token: TAddress; const callback: TProc<Boolean>);
 begin
-  const frmAirdrop = TFrmAirdrop.Create(Application);
-  frmAirdrop.Action   := action;
-  frmAirdrop.Chain    := chain;
-  frmAirdrop.Token    := token;
-  frmAirdrop.Callback := callback;
-  frmAirdrop.Show;
+  const frmUnsupported = TFrmUnsupported.Create(Application);
+  frmUnsupported.Action   := action;
+  frmUnsupported.Chain    := chain;
+  frmUnsupported.Token    := token;
+  frmUnsupported.Callback := callback;
+  frmUnsupported.Show;
 end;
 
-{ TFrmAirdrop }
+{ TFrmUnsupported }
 
-procedure TFrmAirdrop.SetAction(value: TTokenAction);
+procedure TFrmUnsupported.SetAction(value: TTokenAction);
 begin
   thread.synchronize(procedure
   begin
@@ -69,20 +69,19 @@ begin
   end);
 end;
 
-procedure TFrmAirdrop.SetToken(value: TAddress);
+procedure TFrmUnsupported.SetToken(value: TAddress);
 begin
   lblTokenText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then
-      thread.synchronize(procedure
-      begin
-        lblTokenText.Text := ens;
-      end);
+    if not Assigned(err) then thread.synchronize(procedure
+    begin
+      lblTokenText.Text := ens;
+    end);
   end);
 end;
 
-procedure TFrmAirdrop.lblTokenTextClick(Sender: TObject);
+procedure TFrmUnsupported.lblTokenTextClick(Sender: TObject);
 begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblTokenText.Text, procedure(address: TAddress; err: IError)
   begin
