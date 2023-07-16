@@ -2,6 +2,10 @@ unit common.mac;
 
 interface
 
+function autoRunEnabled: Boolean;
+procedure enableAutoRun;
+procedure disableAutoRun;
+
 procedure initialize;
 
 procedure beforeTransaction;
@@ -15,8 +19,11 @@ uses
   Macapi.CocoaTypes,
   Macapi.Foundation,
   Macapi.ObjectiveC,
+  System.IOUtils,
   System.Messaging,
+  System.SysUtils,
   // FireMonkey
+  FMX.Forms,
   FMX.Helpers.Mac,
   FMX.Platform.Mac,
   // web3
@@ -24,6 +31,56 @@ uses
   // Project
   main,
   thread;
+
+function launchAgents: string;
+begin
+  Result := System.IOUtils.TPath.GetLibraryPath;
+  if (Result <> '') and (Result[Length(Result)] <> '/') then Result := Result + '/';
+  Result := Result + 'LaunchAgents';
+end;
+
+function launchAgent: string;
+begin
+  Result := launchAgents;
+  if (Result <> '') and (Result[Length(Result)] <> '/') then Result := Result + '/';
+  Result := Result + 'com.militereum.agent.plist';
+end;
+
+function autoRunEnabled: Boolean;
+begin
+  Result := System.IOUtils.TFile.Exists(launchAgent);
+end;
+
+procedure enableAutoRun;
+begin
+  System.IOUtils.TFile.WriteAllText(launchagent, System.SysUtils.Format(
+    '<?xml version="1.0" encoding="UTF-8"?>' + #10 +
+    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' + #10 +
+    '<plist version="1.0">' + #10 +
+    '<dict>' + #10 +
+    '	<key>Label</key>' + #10 +
+    '	<string>com.militereum.agent</string>' + #10 +
+    '	<key>LimitLoadToSessionType</key>' + #10 +
+    '	<string>Aqua</string>' + #10 +
+    '	<key>ProgramArguments</key>' + #10 +
+    '	<array>' + #10 +
+    '		<string>%s</string>' + #10 +
+    '		<string>-autorun</string>' + #10 +
+    '	</array>' + #10 +
+    '	<key>ProcessType</key>' + #10 +
+    '	<string>Interactive</string>' + #10 +
+    '	<key>RunAtLoad</key>' + #10 +
+    '	<true/>' + #10 +
+    '	<key>KeepAlive</key>' + #10 +
+    '	<false/>' + #10 +
+    '</dict>' + #10 +
+    '</plist>', [ParamStr(0)]));
+end;
+
+procedure disableAutoRun;
+begin
+  System.IOUtils.TFile.Delete(launchAgent);
+end;
 
 type
   IApplicationDelegate = interface(NSApplicationDelegate)
@@ -34,7 +91,10 @@ type
 
 type
   TApplicationDelegate = class(TOCLocal, IApplicationDelegate)
+  private
+    FFirstBecomeActive: Boolean;
   public
+    constructor Create;
     function applicationShouldTerminate(Notification: NSNotification): NSInteger; cdecl;
     procedure applicationWillTerminate(Notification: NSNotification); cdecl;
     procedure applicationDidFinishLaunching(Notification: NSNotification); cdecl;
@@ -59,6 +119,20 @@ end;
 
 procedure initialize;
 begin
+  if FindCmdLineSwitch('autorun') then
+    TMessageManager.DefaultManager.SubscribeToMessage(TMainFormChangedMessage, procedure(const Sender: TObject; const Msg: TMessage)
+    begin
+      const main = TMainFormChangedMessage(Msg).Value;
+      if Assigned(main) and main.Visible then
+      begin
+        beforeTransaction;
+        try
+          main.Visible := False;
+        finally
+          afterTransaction;
+        end;
+      end;
+    end);
   app := TNSApplication.Wrap(TNSApplication.OCClass.sharedApplication);
   old := app.delegate;
   new := TApplicationDelegate.Create;
@@ -98,6 +172,12 @@ end;
 
 { TApplicationDelegate }
 
+constructor TApplicationDelegate.Create;
+begin
+  inherited Create;
+  FFirstBecomeActive := True;
+end;
+
 function TApplicationDelegate.applicationDockMenu(sender: NSApplication): NSMenu;
 begin
   Result := old.applicationDockMenu(sender);
@@ -135,11 +215,14 @@ end;
 
 procedure TApplicationDelegate.applicationWillBecomeActive(Notification: NSNotification);
 begin
-  if counter.Get = 0 then
-    thread.synchronize(procedure
-    begin
-      if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
-    end);
+  if FFirstBecomeActive then
+    FFirstBecomeActive := False
+  else
+    if counter.Get = 0 then
+      thread.synchronize(procedure
+      begin
+        if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
+      end);
 end;
 
 end.

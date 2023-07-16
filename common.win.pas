@@ -6,6 +6,10 @@ uses
   // Delphi
   WinAPI.Windows;
 
+function autoRunEnabled: Boolean;
+procedure enableAutoRun;
+procedure disableAutoRun;
+
 function activateMainWindow: BOOL;
 procedure initialize;
 procedure finalize;
@@ -15,12 +19,64 @@ implementation
 uses
   // Delphi
   System.Classes,
+  System.SysUtils,
+  System.Win.Registry,
   WinAPI.Messages,
   // FireMonkey
   FMX.Platform.Win,
   // project
   main,
   thread;
+
+function autoRunEnabled: Boolean;
+begin
+  const R = TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKey('Software\Microsoft\Windows\CurrentVersion\Run', False) then
+    try
+      Result := R.ValueExists('Militereum');
+      EXIT;
+    finally
+      R.CloseKey;
+    end;
+  finally
+    R.Free;
+  end;
+  Result := False;
+end;
+
+procedure enableAutoRun;
+begin
+  const R = TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKey('Software\Microsoft\Windows\CurrentVersion\Run', False) then
+    try
+      R.WriteString('Militereum', System.SysUtils.Format('"%s" -autorun', [ParamStr(0)]));
+    finally
+      R.CloseKey;
+    end;
+  finally
+    R.Free;
+  end;
+end;
+
+procedure disableAutoRun;
+begin
+  const R = TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKey('Software\Microsoft\Windows\CurrentVersion\Run', False) then
+    try
+      R.DeleteValue('Militereum');
+    finally
+      R.CloseKey;
+    end;
+  finally
+    R.Free;
+  end;
+end;
 
 const
   CM_SHOW_MAIN_WINDOW    = WM_APP + 1;
@@ -107,6 +163,7 @@ end;
 
 procedure initialize;
 begin
+  if FindCmdLineSwitch('autorun') then System.CmdShow := SW_SHOWMINNOACTIVE;
   msgWindow := allocateHwnd(MessageWindowClassName, TMessageWindow.Create.WndProc);
   appHook := SetWindowsHookEx(WH_CALLWNDPROC, @callWindowHook, 0, GetCurrentThreadId);
 end;
