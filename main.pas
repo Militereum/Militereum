@@ -14,6 +14,7 @@ uses
   FMX.Edit,
   FMX.Forms,
   FMX.Layouts,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
@@ -52,10 +53,16 @@ type
     imgPolygon1: TImage;
     imgGoerli1: TImage;
     imgEthereum1: TImage;
+    btnSettings: TSpeedButton;
+    pmSettings: TPopupMenu;
+    mnuAutoRun: TMenuItem;
+    imgSettings: TImage;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
+    procedure btnSettingsClick(Sender: TObject);
+    procedure mnuAutoRunClick(Sender: TObject);
   strict private
     FCanNotify: Boolean;
     FFirstTime: Boolean;
@@ -89,6 +96,7 @@ implementation
 uses
   // Delphi
   System.JSON,
+  System.Types,
   System.UITypes,
   // FireMonkey
   FMX.Dialogs,
@@ -471,6 +479,22 @@ begin
       FFrmLog.Memo.Lines.Add('[INFO]     ' + info);
       FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
     end);
+end;
+
+procedure TFrmMain.btnSettingsClick(Sender: TObject);
+begin
+  mnuAutoRun.IsChecked := common.AutoRunEnabled;
+  const P = btnSettings.LocalToScreen(PointF(0, btnSettings.Height));
+  pmSettings.Popup(P.X, P.Y);
+end;
+
+procedure TFrmMain.mnuAutoRunClick(Sender: TObject);
+begin
+  mnuAutoRun.IsChecked := not mnuAutoRun.IsChecked;
+  if mnuAutoRun.IsChecked then
+    common.EnableAutoRun
+  else
+    common.DisableAutoRun;
 end;
 
 procedure TFrmMain.btnDismissClick(Sender: TObject);

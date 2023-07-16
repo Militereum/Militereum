@@ -50,6 +50,10 @@ procedure Open(const URL: string);
 function ParseSemVer(const version: string): TSemVer;
 procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 
+function AutoRunEnabled: Boolean;
+procedure EnableAutoRun;
+procedure DisableAutoRun;
+
 procedure initialize;
 procedure finalize;
 
@@ -272,6 +276,36 @@ end;
 procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 begin
   web3.eth.erc20.create(TWeb3.Create(chain), token).Symbol(callback);
+end;
+
+function AutoRunEnabled: Boolean;
+begin
+{$IFDEF MACOS}
+  Result := common.mac.autoRunEnabled;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := common.win.autoRunEnabled;
+{$ENDIF MSWINDOWS}
+end;
+
+procedure EnableAutoRun;
+begin
+{$IFDEF MACOS}
+  common.mac.enableAutoRun;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  common.win.enableAutoRun;
+{$ENDIF MSWINDOWS}
+end;
+
+procedure DisableAutoRun;
+begin
+{$IFDEF MACOS}
+  common.mac.disableAutoRun;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  common.win.disableAutoRun;
+{$ENDIF MSWINDOWS}
 end;
 
 procedure initialize;
