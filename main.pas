@@ -370,9 +370,8 @@ begin
     end)() then
     if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
       if docker.pull(RPCh_DOCKER_IMAGE) then
-        if docker.run(RPCh_CONTAINER_NAME, '-e DEBUG="rpch*,-*metrics" ' +
-          '-e RESPONSE_TIMEOUT=5000 ' +
-          '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://staging.discovery.rpch.tech ' +
+        if docker.run(RPCh_CONTAINER_NAME, '-e RESPONSE_TIMEOUT=10000 ' +
+          '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://production.discovery.rpch.tech ' +
           '-e PORT=8080 ' +
           '-e DATA_DIR=app ' +
           '-e CLIENT=' + {$I hopr.api.key} + ' ' +

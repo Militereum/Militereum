@@ -43,7 +43,7 @@ function getContainerId(const name: string): string;
 function stop(const containerId: string): Boolean;
 
 const
-  RPCh_DOCKER_IMAGE   = 'europe-west6-docker.pkg.dev/rpch-375921/rpch/rpc-server:6b9862f';
+  RPCh_DOCKER_IMAGE   = 'europe-west6-docker.pkg.dev/rpch-375921/rpch/rpc-server:latest';
   RPCh_CONTAINER_NAME = 'rpc-server';
 
 implementation
