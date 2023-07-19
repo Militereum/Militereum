@@ -65,6 +65,7 @@ type
     procedure mnuAutoRunClick(Sender: TObject);
   strict private
     FCanNotify: Boolean;
+    FNotified : Boolean;
     FFirstTime: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
@@ -72,7 +73,8 @@ type
     procedure Dismiss;
     procedure Log(const err: IError); overload;
     procedure Log(const info: string); overload;
-    procedure Notify(const body: string); overload;
+    procedure Notify; overload;
+    function  Notify(const body: string): Boolean; overload;
     procedure Notify(const port: TIdPort; const chain: TChain; const tx: ITransaction); overload;
     procedure ShowLogWindow;
   strict protected
@@ -183,9 +185,15 @@ begin
   Result := FKnownTransactions;
 end;
 
-procedure TFrmMain.Notify(const body: string);
+procedure TFrmMain.Notify;
 begin
-  if FCanNotify then
+  FNotified := Self.Notify('Securing your crypto wallet');
+end;
+
+function TFrmMain.Notify(const body: string): Boolean;
+begin
+  Result := FCanNotify;
+  if Result then
     thread.synchronize(procedure
     begin
       const N = NC.CreateNotification;
@@ -251,8 +259,9 @@ begin
     if Self.Visible then
     begin
       Self.Hide;
-      Self.Notify('Securing your crypto wallet');
+      Self.Notify;
     end;
+    if not Self.FNotified then Self.Notify;
   end);
 end;
 
