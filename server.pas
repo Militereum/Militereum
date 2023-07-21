@@ -46,7 +46,7 @@ type
       aRequestInfo: TIdHTTPRequestInfo;
       aResponseInfo: TIdHTTPResponseInfo); override;
   public
-    class function URL(const port: TIdPort): string;
+    class function URI(const port: TIdPort): string;
     property OnRPC: TOnRPC read FOnRPC write FOnRPC;
     property OnLog: TOnLog read FOnLog write FOnLog;
   end;
@@ -339,7 +339,7 @@ begin
   end;
 end;
 
-class function TEthereumRPCServer.URL(const port: TIdPort): string;
+class function TEthereumRPCServer.URI(const port: TIdPort): string;
 begin
   Result := System.SysUtils.Format('http://%s:%d', [(function: string
   begin

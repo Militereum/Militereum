@@ -157,7 +157,7 @@ begin
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
   if Result.isOk then
     if docker.getContainerId(RPCh_CONTAINER_NAME) <> '' then
-      Result := TResult<string>.Ok('http://localhost:8080/?exit-provider=' + Result.Value);
+      Result := TResult<string>.Ok(Self.URI(8080) + '/?exit-provider=' + Result.Value);
 end;
 
 constructor TSemVer.Create(const aMajor, aMinor, aPatch: Integer);
