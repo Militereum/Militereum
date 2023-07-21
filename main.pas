@@ -318,7 +318,7 @@ begin
   btnCopy.Visible := Assigned(chain);
   btnDismiss.Visible := not Assigned(chain);
 
-  if Assigned(chain) then edtCopy.Text := FServer.URL(FServer.port(chain^).Value);
+  if Assigned(chain) then edtCopy.Text := FServer.URI(FServer.port(chain^).Value);
 end;
 
 procedure TFrmMain.DoShow;
@@ -518,7 +518,7 @@ begin
     const chain = Self.GetChain;
     if Assigned(chain) then
     begin
-      S.SetClipboard(FServer.URL(FServer.port(chain^).Value));
+      S.SetClipboard(FServer.URI(FServer.port(chain^).Value));
       TButton(Sender).Text := 'Copied';
     end;
   end;
