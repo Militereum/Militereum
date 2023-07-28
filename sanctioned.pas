@@ -15,7 +15,8 @@ uses
   // web3
   web3,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmSanctioned = class(TFrmBase)
@@ -25,14 +26,12 @@ type
     Label2: TLabel;
     procedure lblAddressTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     procedure SetAddress(value: TAddress);
   public
-    property Chain: TChain write FChain;
     property Address: TAddress write SetAddress;
   end;
 
-procedure show(const chain: TChain; const address: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -47,12 +46,10 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const address: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>);
 begin
-  const frmSanctioned = TFrmSanctioned.Create(Application);
-  frmSanctioned.Chain := chain;
+  const frmSanctioned = TFrmSanctioned.Create(chain, tx, callback);
   frmSanctioned.Address := address;
-  frmSanctioned.Callback := callback;
   frmSanctioned.Show;
 end;
 
@@ -76,9 +73,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblAddressText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/address/' + string(address))
+      common.Open(Self.Chain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.Explorer + '/address/' + lblAddressText.Text);
+      common.Open(Self.Chain.Explorer + '/address/' + lblAddressText.Text);
   end);
 end;
 

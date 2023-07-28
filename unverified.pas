@@ -15,7 +15,8 @@ uses
   // web3
   web3,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmUnverified = class(TFrmBase)
@@ -25,14 +26,12 @@ type
     Label2: TLabel;
     procedure lblContractTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     procedure SetContract(value: TAddress);
   public
-    property Chain: TChain write FChain;
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -47,12 +46,10 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>);
 begin
-  const frmUnverified = TFrmUnverified.Create(Application);
-  frmUnverified.Chain := chain;
+  const frmUnverified = TFrmUnverified.Create(chain, tx, callback);
   frmUnverified.Contract := contract;
-  frmUnverified.Callback := callback;
   frmUnverified.Show;
 end;
 
@@ -76,9 +73,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblContractText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/address/' + string(address) + '#code')
+      common.Open(Self.Chain.Explorer + '/address/' + string(address) + '#code')
     else
-      common.Open(Self.FChain.Explorer + '/address/' + lblContractText.Text + '#code');
+      common.Open(Self.Chain.Explorer + '/address/' + lblContractText.Text + '#code');
   end);
 end;
 

@@ -13,7 +13,11 @@ uses
   FMX.Forms,
   FMX.Objects,
   FMX.StdCtrls,
-  FMX.Types;
+  FMX.Types,
+  // web3
+  web3,
+  // project
+  transaction;
 
 type
   TTokenAction = (taReceive, taTransact);
@@ -38,16 +42,20 @@ type
     imgWarning: TImage;
     btnBlock: TButton;
     btnAllow: TButton;
+    lblGasFee: TLabel;
+    imgGasFee: TImage;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
-  private
+  strict private
+    FChain: TChain;
     FCallback: TProc<Boolean>;
   protected
     procedure DoShow; override;
     procedure Resize; override;
+    property Chain: TChain read FChain;
   public
-    property Callback: TProc<Boolean> write FCallback;
+    constructor Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>); reintroduce; virtual;
   end;
 
 procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
@@ -59,7 +67,14 @@ implementation
 uses
   // Delphi
   System.Math,
-  System.Types;
+  System.Types,
+  // Velthuis' BigNumbers
+  Velthuis.BigIntegers,
+  // web3
+  web3.eth.gas,
+  web3.eth.utils,
+  // project
+  thread;
 
 procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
 
@@ -128,6 +143,28 @@ begin
 end;
 
 { TFrmBase }
+
+constructor TFrmBase.Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>);
+begin
+  inherited Create(Application);
+
+  FChain    := chain;
+  FCallback := callback;
+
+  if Assigned(tx) then tx.EstimateGas(chain, procedure(qty: BigInteger; err: IError)
+  begin
+    if not Assigned(err) then web3.eth.gas.getGasPrice(TWeb3.Create(chain), procedure(price: TWei; err: IError)
+    begin
+      if not Assigned(err) then TWeb3.Create(chain).LatestPrice(procedure(ticker: Double; err: IError)
+      begin
+        if not Assigned(err) then thread.synchronize(procedure
+        begin
+          lblGasFee.Text := System.SysUtils.Format('$ %.2f', [DotToFloat(fromWei(qty * price, ether)) * ticker]);
+        end);
+      end);
+    end);
+  end);
+end;
 
 procedure TFrmBase.DoShow;
 begin

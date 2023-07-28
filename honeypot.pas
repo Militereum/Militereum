@@ -15,7 +15,8 @@ uses
   // web3
   web3,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmHoneypot = class(TFrmBase)
@@ -28,17 +29,15 @@ type
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblRecipientTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     FToken: TAddress;
     procedure SetToken(value: TAddress);
     procedure SetRecipient(value: TAddress);
   public
-    property Chain: TChain write FChain;
     property Token: TAddress write SetToken;
     property Recipient: TAddress write SetRecipient;
   end;
 
-procedure show(const chain: TChain; const token, recipient: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, recipient: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -54,13 +53,11 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const token, recipient: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, recipient: TAddress; const callback: TProc<Boolean>);
 begin
-  const frmHoneypot = TFrmHoneypot.Create(Application);
-  frmHoneypot.Chain := chain;
-  frmHoneypot.Token := token;
+  const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback);
+  frmHoneypot.Token     := token;
   frmHoneypot.Recipient := recipient;
-  frmHoneypot.Callback := callback;
   frmHoneypot.Show;
 end;
 
@@ -72,7 +69,7 @@ begin
   if not web3.utils.isHex(FToken) then
     lblTokenText.Text := string(FToken)
   else
-    common.Symbol(FChain, FToken, procedure(symbol: string; _: IError)
+    common.Symbol(Self.Chain, FToken, procedure(symbol: string; _: IError)
     begin
       thread.synchronize(procedure
       begin
@@ -96,7 +93,7 @@ end;
 
 procedure TFrmHoneypot.lblTokenTextClick(Sender: TObject);
 begin
-  common.Open(Self.FChain.Explorer + '/token/' + string(FToken));
+  common.Open(Self.Chain.Explorer + '/token/' + string(FToken));
 end;
 
 procedure TFrmHoneypot.lblRecipientTextClick(Sender: TObject);
@@ -104,9 +101,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/address/' + string(address))
+      common.Open(Self.Chain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.Explorer + '/address/' + lblRecipientText.Text);
+      common.Open(Self.Chain.Explorer + '/address/' + lblRecipientText.Text);
   end);
 end;
 

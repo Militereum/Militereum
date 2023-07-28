@@ -19,7 +19,8 @@ uses
   web3.eth.alchemy.api,
   web3.eth.tokenlists,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmAsset = class(TFrmBase)
@@ -34,7 +35,6 @@ type
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblSpenderTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     FToken: TAddress;
     procedure SetKind(value: TChangeType);
     procedure SetToken(value: IToken);
@@ -43,7 +43,6 @@ type
     procedure SetSpender(value: TAddress);
   public
     procedure Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
-    property Chain: TChain write FChain;
     property Kind: TChangeType write SetKind;
     property Token: IToken write SetToken;
     property Change: IAssetChange write SetChange;
@@ -51,8 +50,8 @@ type
     property Spender: TAddress write SetSpender;
   end;
 
-procedure approve(const chain: TChain; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
-procedure show(const chain: TChain; const change: IAssetChange; const callback: TProc<Boolean>);
+procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>);
 
 implementation
 
@@ -72,23 +71,19 @@ uses
 
 {$R *.fmx}
 
-procedure approve(const chain: TChain; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
+procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
 begin
-  const frmAsset = TFrmAsset.Create(Application);
-  frmAsset.Chain := chain;
-  frmAsset.Token := token;
+  const frmAsset = TFrmAsset.Create(chain, tx, callback);
+  frmAsset.Token   := token;
   frmAsset.Spender := spender;
   frmAsset.Amount(token.Symbol, quantity, token.Decimals);
-  frmAsset.Callback := callback;
   frmAsset.Show;
 end;
 
-procedure show(const chain: TChain; const change: IAssetChange; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>);
 begin
-  const frmAsset = TFrmAsset.Create(Application);
-  frmAsset.Chain := chain;
+  const frmAsset = TFrmAsset.Create(chain, tx, callback);
   frmAsset.Change := change;
-  frmAsset.Callback := callback;
   frmAsset.Show;
 end;
 
@@ -169,7 +164,7 @@ begin
   if quantity = web3.Infinite then
     lblAmountText.Text := 'Unlimited'
   else
-    web3.defillama.price(Self.FChain, FToken, procedure(price: Double; _: IError)
+    web3.defillama.price(Self.Chain, FToken, procedure(price: Double; _: IError)
     begin
       thread.synchronize(procedure
       begin
@@ -183,7 +178,7 @@ end;
 
 procedure TFrmAsset.lblTokenTextClick(Sender: TObject);
 begin
-  common.Open(Self.FChain.Explorer + '/token/' + string(FToken));
+  common.Open(Self.Chain.Explorer + '/token/' + string(FToken));
 end;
 
 procedure TFrmAsset.lblSpenderTextClick(Sender: TObject);
@@ -191,9 +186,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblSpenderText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/address/' + string(address))
+      common.Open(Self.Chain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.Explorer + '/address/' + lblSpenderText.Text);
+      common.Open(Self.Chain.Explorer + '/address/' + lblSpenderText.Text);
   end);
 end;
 

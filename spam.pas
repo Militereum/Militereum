@@ -15,7 +15,8 @@ uses
   // web3
   web3,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmSpam = class(TFrmBase)
@@ -25,16 +26,14 @@ type
     Label2: TLabel;
     procedure lblContractTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     procedure SetAction(value: TTokenAction);
     procedure SetContract(value: TAddress);
   public
     property Action: TTokenAction write SetAction;
-    property Chain: TChain write FChain;
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -49,13 +48,11 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>);
 begin
-  const frmSpam = TFrmSpam.Create(Application);
+  const frmSpam = TFrmSpam.Create(chain, tx, callback);
   frmSpam.Action   := action;
-  frmSpam.Chain    := chain;
   frmSpam.Contract := contract;
-  frmSpam.Callback := callback;
   frmSpam.Show;
 end;
 
@@ -87,9 +84,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblContractText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/address/' + string(address))
+      common.Open(Self.Chain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.Explorer + '/address/' + lblContractText.Text);
+      common.Open(Self.Chain.Explorer + '/address/' + lblContractText.Text);
   end);
 end;
 

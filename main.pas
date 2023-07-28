@@ -367,16 +367,8 @@ begin
 
   Self.Dismiss;
 
-  if docker.installed then thread.lock(Self, procedure
+  if docker.running then thread.lock(Self, procedure
   begin
-    if docker.running or (function: Boolean
-    begin
-      Result := docker.start;
-      if Result then
-      repeat
-        TThread.Sleep(100);
-      until docker.running;
-    end)() then
     if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
       if docker.pull(RPCh_DOCKER_IMAGE) then
         if docker.run(RPCh_CONTAINER_NAME, '-e RESPONSE_TIMEOUT=10000 ' +
@@ -390,6 +382,30 @@ begin
             TThread.Sleep(100);
           until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
   end);
+
+//  if docker.installed then thread.lock(Self, procedure
+//  begin
+//    if docker.running or (function: Boolean
+//    begin
+//      Result := docker.start;
+//      if Result then
+//      repeat
+//        TThread.Sleep(100);
+//      until docker.running;
+//    end)() then
+//    if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
+//      if docker.pull(RPCh_DOCKER_IMAGE) then
+//        if docker.run(RPCh_CONTAINER_NAME, '-e RESPONSE_TIMEOUT=10000 ' +
+//          '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://production.discovery.rpch.tech ' +
+//          '-e PORT=8080 ' +
+//          '-e DATA_DIR=app ' +
+//          '-e CLIENT=' + {$I hopr.api.key} + ' ' +
+//          '-p 8080:8080 ' +
+//          '--rm ' + RPCh_DOCKER_IMAGE) then
+//          repeat
+//            TThread.Sleep(100);
+//          until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
+//  end);
 
   if SameText(aPayload.Method, 'eth_sendRawTransaction') then
     if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
@@ -410,37 +426,41 @@ begin
           if Assigned(chain) then
           begin
             Self.KnownTransactions.Add(TJsonString(aPayload.Params[0]).Value);
-            common.beforeTransaction;
 
-            var next: TNext;
-            next := procedure(const steps: TSteps; const index: Integer; const input: TChecked; const block: TProc; const done: TProc)
+            thread.lock(Self, procedure
             begin
-              if index >= Length(steps) then
-                done
-              else
-                steps[index](FServer, aContext.Binding.Port, chain^, tx.Value, input, block, procedure(const output: TChecked; const err: IError)
+              common.beforeTransaction;
+
+              var next: TNext;
+              next := procedure(const steps: TSteps; const index: Integer; const input: TChecked; const block: TProc; const done: TProc)
+              begin
+                if index >= Length(steps) then
+                  done
+                else
+                  steps[index](FServer, aContext.Binding.Port, chain^, tx.Value, input, block, procedure(const output: TChecked; const err: IError)
+                  begin
+                    if Assigned(err) then Log(err);
+                    next(steps, index + 1, output, block, done)
+                  end);
+              end;
+
+              const done: TProc<Boolean> = procedure(allow: Boolean)
+              begin
+                common.afterTransaction;
+                callback(allow);
+              end;
+
+              next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12], 0, [],
+                procedure // block
                 begin
-                  if Assigned(err) then Log(err);
-                  next(steps, index + 1, output, block, done)
+                  done(False);
+                end,
+                procedure // allow
+                begin
+                  Self.Notify(aContext.Binding.Port, chain^, tx.Value);
+                  done(True);
                 end);
-            end;
-
-            const done: TProc<Boolean> = procedure(allow: Boolean)
-            begin
-              common.afterTransaction;
-              callback(allow);
-            end;
-
-            next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12], 0, [],
-              procedure // block
-              begin
-                done(False);
-              end,
-              procedure // allow
-              begin
-                Self.Notify(aContext.Binding.Port, chain^, tx.Value);
-                done(True);
-              end);
+            end);
 
             EXIT;
           end;
