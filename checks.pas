@@ -97,7 +97,7 @@ begin
                   else
                     thread.synchronize(procedure
                     begin
-                      asset.approve(chain, token, args[0].ToAddress, value, procedure(allow: Boolean)
+                      asset.approve(chain, tx, token, args[0].ToAddress, value, procedure(allow: Boolean)
                       begin
                         if allow then
                           next(checked + [TChangeType.Approve])
@@ -147,7 +147,7 @@ begin
                         if (index > -1) and (changes.Item(index).Amount > 0) then
                           thread.synchronize(procedure
                           begin
-                            asset.show(chain, changes.Item(index), procedure(allow: Boolean)
+                            asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
                             begin
                               if allow then
                                 next(checked + [TChangeType.Transfer])
@@ -158,7 +158,7 @@ begin
                         else
                           thread.synchronize(procedure
                           begin
-                            honeypot.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                            honeypot.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
                             begin
                               if allow then
                                 next(checked)
@@ -203,7 +203,7 @@ begin
               else
                 thread.synchronize(procedure
                 begin
-                  setApprovalForAll.show(chain, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                  setApprovalForAll.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
                   begin
                     if allow then
                       next(checked)
@@ -239,7 +239,7 @@ begin
             else
               thread.synchronize(procedure
               begin
-                unverified.show(chain, tx.&To, procedure(allow: Boolean)
+                unverified.show(chain, tx, tx.&To, procedure(allow: Boolean)
                 begin
                   if allow then
                     next(checked)
@@ -291,7 +291,7 @@ begin
                         else
                           thread.synchronize(procedure
                           begin
-                            limit.show(chain, symbol, args[0].ToAddress, amount, procedure(allow: Boolean)
+                            limit.show(chain, tx, symbol, args[0].ToAddress, amount, procedure(allow: Boolean)
                             begin
                               if allow then
                                 next(checked)
@@ -327,7 +327,7 @@ begin
         else
           thread.synchronize(procedure
           begin
-            limit.show(chain, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
+            limit.show(chain, tx, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
             begin
               if allow then
                 next(checked)
@@ -364,7 +364,7 @@ begin
               TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
                 thread.synchronize(procedure
                 begin
-                  airdrop.show(action, chain, contracts[index], procedure(allow: Boolean)
+                  airdrop.show(action, chain, tx, contracts[index], procedure(allow: Boolean)
                   begin
                     if allow then
                       foreach(action, contracts, index + 1, done)
@@ -375,7 +375,7 @@ begin
               TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
                 thread.synchronize(procedure
                 begin
-                  spam.show(action, chain, contracts[index], procedure(allow: Boolean)
+                  spam.show(action, chain, tx, contracts[index], procedure(allow: Boolean)
                   begin
                     if allow then
                       foreach(action, contracts, index + 1, done)
@@ -456,7 +456,7 @@ begin
               else
                 thread.synchronize(procedure
                 begin
-                  firsttime.show(chain, tx.&To, procedure(allow: Boolean)
+                  firsttime.show(chain, tx, tx.&To, procedure(allow: Boolean)
                   begin
                     if allow then
                       next(checked)
@@ -495,7 +495,7 @@ begin
         else
           thread.synchronize(procedure
           begin
-            unsupported.show(action, chain, contracts[index], procedure(allow: Boolean)
+            unsupported.show(action, chain, tx, contracts[index], procedure(allow: Boolean)
             begin
               if allow then
                 foreach(action, contracts, index + 1, done)
@@ -561,7 +561,7 @@ begin
     else
       thread.synchronize(procedure
       begin
-        sanctioned.show(chain, tx.&To, procedure(allow: Boolean)
+        sanctioned.show(chain, tx, tx.&To, procedure(allow: Boolean)
         begin
           if allow then
             next(checked)
@@ -598,7 +598,7 @@ begin
                 else
                   thread.synchronize(procedure
                   begin
-                    honeypot.show(chain, honeypots.Item(index).Contract, from, procedure(allow: Boolean)
+                    honeypot.show(chain, tx, honeypots.Item(index).Contract, from, procedure(allow: Boolean)
                     begin
                       if allow then
                         step(index + 1, done)
@@ -665,7 +665,7 @@ begin
                     else
                       thread.synchronize(procedure
                       begin
-                        asset.show(chain, changes.Item(index), procedure(allow: Boolean)
+                        asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
                         begin
                           if allow then
                             step(index + 1, done)

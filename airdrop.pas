@@ -15,7 +15,8 @@ uses
   // web3
   web3,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmAirdrop = class(TFrmBase)
@@ -25,16 +26,14 @@ type
     Label2: TLabel;
     procedure lblTokenTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     procedure SetAction(value: TTokenAction);
     procedure SetToken(value: TAddress);
   public
     property Action: TTokenAction write SetAction;
-    property Chain: TChain write FChain;
     property Token: TAddress write SetToken;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const token: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>);
 
 implementation
 
@@ -49,13 +48,11 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const token: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>);
 begin
-  const frmAirdrop = TFrmAirdrop.Create(Application);
-  frmAirdrop.Action   := action;
-  frmAirdrop.Chain    := chain;
-  frmAirdrop.Token    := token;
-  frmAirdrop.Callback := callback;
+  const frmAirdrop = TFrmAirdrop.Create(chain, tx, callback);
+  frmAirdrop.Action := action;
+  frmAirdrop.Token  := token;
   frmAirdrop.Show;
 end;
 
@@ -87,9 +84,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblTokenText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/token/' + string(address))
+      common.Open(Self.Chain.Explorer + '/token/' + string(address))
     else
-      common.Open(Self.FChain.Explorer + '/token/' + lblTokenText.Text);
+      common.Open(Self.Chain.Explorer + '/token/' + lblTokenText.Text);
   end);
 end;
 

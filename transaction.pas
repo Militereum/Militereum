@@ -5,6 +5,8 @@ interface
 uses
   // Delphi
   System.SysUtils,
+  // Velthuis' BigNumbers
+  Velthuis.BigIntegers,
   // web3
   web3,
   web3.eth.alchemy.api,
@@ -17,6 +19,7 @@ type
     function Value: TWei;
     function Data : TBytes;
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
+    procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
@@ -39,9 +42,8 @@ uses
   // Delphi
   System.Classes,
   System.Threading,
-  // Velthuis' BigNumbers
-  Velthuis.BigIntegers,
   // web3
+  web3.eth.gas,
   web3.eth.tx,
   web3.rlp,
   web3.utils;
@@ -68,6 +70,7 @@ type
     function Value: TWei;
     function Data : TBytes;
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
+    procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
@@ -113,6 +116,19 @@ begin
     EXIT;
   end;
   if FToIsEOA = Yes then callback(True, nil) else callback(False, nil);
+end;
+
+procedure TTransaction.EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
+begin
+  Self.From
+    .ifErr(procedure(err: IError)
+    begin
+      callback(BigInteger.Zero, err)
+    end)
+    .&else(procedure(from: TAddress)
+    begin
+      web3.eth.gas.estimateGas(TWeb3.Create(chain), from, Self.&To, web3.utils.toHex(Self.Data), callback)
+    end)
 end;
 
 procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);

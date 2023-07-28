@@ -15,7 +15,8 @@ uses
   // web3
   web3,
   // project
-  base;
+  base,
+  transaction;
 
 type
   TFrmLimit = class(TFrmBase)
@@ -28,19 +29,17 @@ type
     lblAmountText: TLabel;
     procedure lblRecipientTextClick(Sender: TObject);
   strict private
-    FChain: TChain;
     procedure SetSymbol(const value: string);
     procedure SetRecipient(value: TAddress);
     procedure SetAmount(value: Double);
   public
-    constructor Create(aOwner: TComponent); override;
-    property Chain: TChain write FChain;
+    constructor Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>); override;
     property Symbol: string write SetSymbol;
     property Recipient: TAddress write SetRecipient;
     property Amount: Double write SetAmount;
   end;
 
-procedure show(const chain: TChain; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
 
 implementation
 
@@ -55,22 +54,20 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
 begin
-  const frmLimit = TFrmLimit.Create(Application);
-  frmLimit.Chain := chain;
-  frmLimit.Symbol := symbol;
+  const frmLimit = TFrmLimit.Create(chain, tx, callback);
+  frmLimit.Symbol    := symbol;
   frmLimit.Recipient := recipient;
-  frmLimit.Amount := amount;
-  frmLimit.Callback := callback;
+  frmLimit.Amount    := amount;
   frmLimit.Show;
 end;
 
 { TFrmLimit }
 
-constructor TFrmLimit.Create(aOwner: TComponent);
+constructor TFrmLimit.Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>);
 begin
-  inherited Create(aOwner);
+  inherited Create(chain, tx, callback);
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);
 end;
 
@@ -102,9 +99,9 @@ begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
-      common.Open(Self.FChain.Explorer + '/address/' + string(address))
+      common.Open(Self.Chain.Explorer + '/address/' + string(address))
     else
-      common.Open(Self.FChain.Explorer + '/address/' + lblRecipientText.Text);
+      common.Open(Self.Chain.Explorer + '/address/' + lblRecipientText.Text);
   end);
 end;
 
