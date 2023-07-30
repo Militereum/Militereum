@@ -475,17 +475,16 @@ begin
   if Assigned(FFrmLog) then
     thread.synchronize(procedure
     begin
-      FFrmLog.Memo.Lines.BeginUpdate;
+      FFrmLog.BeginUpdate;
       try
-        FFrmLog.Memo.Lines.Add('[REQUEST]  ' + request);
+        FFrmLog.Add(TLine.Request, request);
         if success then
-          FFrmLog.Memo.Lines.Add('[RESPONSE] ' + response)
+          FFrmLog.Add(TLine.Response, response)
         else
-          FFrmLog.Memo.Lines.Add('[ERROR]    ' + response);
+          FFrmLog.Add(TLine.Error, response);
       finally
-        FFrmLog.Memo.Lines.EndUpdate;
+        FFrmLog.EndUpdate;
       end;
-      FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
     end);
 end;
 
@@ -494,8 +493,7 @@ begin
   if Assigned(FFrmLog) then
     thread.synchronize(procedure
     begin
-      FFrmLog.Memo.Lines.Add('[ERROR]    ' + err.Message);
-      FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
+      FFrmLog.Add(TLine.Error, err.Message);
     end);
 end;
 
@@ -504,8 +502,7 @@ begin
   if Assigned(FFrmLog) then
     thread.synchronize(procedure
     begin
-      FFrmLog.Memo.Lines.Add('[INFO]     ' + info);
-      FFrmLog.Memo.Model.CaretPosition := TCaretPosition.Create(FFrmLog.Memo.Model.Lines.Count - 1, 0);
+      FFrmLog.Add(TLine.Info, info);
     end);
 end;
 
