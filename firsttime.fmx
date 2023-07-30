@@ -1,14 +1,6 @@
 inherited FrmFirstTime: TFrmFirstTime
   ClientHeight = 246
   DesignerMasterStyle = 0
-  inherited btnBlock: TButton
-    Position.Y = 208.000000000000000000
-    TabOrder = 12
-  end
-  inherited btnAllow: TButton
-    Position.Y = 208.000000000000000000
-    TabOrder = 16
-  end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 24.000000000000000000

@@ -1,14 +1,6 @@
 inherited FrmSpam: TFrmSpam
   ClientHeight = 271
   DesignerMasterStyle = 0
-  inherited btnBlock: TButton
-    Position.Y = 233.000000000000000000
-    TabOrder = 12
-  end
-  inherited btnAllow: TButton
-    Position.Y = 233.000000000000000000
-    TabOrder = 15
-  end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 24.000000000000000000

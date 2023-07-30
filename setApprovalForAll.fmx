@@ -1,14 +1,6 @@
 inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
   ClientHeight = 328
   DesignerMasterStyle = 0
-  inherited btnBlock: TButton
-    Position.Y = 290.000000000000000000
-    TabOrder = 34
-  end
-  inherited btnAllow: TButton
-    Position.Y = 290.000000000000000000
-    TabOrder = 43
-  end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 24.000000000000000000
@@ -31,7 +23,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Token:'
-    TabOrder = 1
+    TabOrder = 2
   end
   object lblSpenderTitle: TLabel
     Position.X = 24.000000000000000000
@@ -42,7 +34,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Spender:'
-    TabOrder = 18
+    TabOrder = 4
   end
   object lblSpenderText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -58,7 +50,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 21
+    TabOrder = 5
     OnClick = lblSpenderTextClick
   end
   object lblTokenText: TLabel
@@ -75,7 +67,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '(unknown)'
-    TabOrder = 10
+    TabOrder = 3
     OnClick = lblTokenTextClick
   end
   object lblAmountTitle: TLabel
@@ -87,7 +79,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Amount:'
-    TabOrder = 13
+    TabOrder = 6
   end
   object lblAmountText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -98,7 +90,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     Size.PlatformDefault = False
     TextSettings.WordWrap = False
     Text = 'all of them, now and in the future'
-    TabOrder = 14
+    TabOrder = 7
   end
   object Label1: TLabel
     Position.X = 24.000000000000000000
@@ -111,7 +103,7 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     Text = 
       'When you click on Allow, you are saying '#8220'I trust this spender to' +
       ' be able to transfer all of my NFTs out of my wallet'#8221
-    TabOrder = 2
+    TabOrder = 1
   end
   object Label2: TLabel
     Position.X = 24.000000000000000000
@@ -124,6 +116,6 @@ inherited FrmSetApprovalForAll: TFrmSetApprovalForAll
     Text = 
       'You should only ever want to do this when you are on a marketpla' +
       'ce you can trust. Otherwise, you should click on Block.'
-    TabOrder = 3
+    TabOrder = 8
   end
 end
