@@ -1,12 +1,6 @@
 inherited FrmLimit: TFrmLimit
   ClientHeight = 263
   DesignerMasterStyle = 0
-  inherited btnBlock: TButton
-    TabOrder = 13
-  end
-  inherited btnAllow: TButton
-    TabOrder = 15
-  end
   object lblTitle: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 24.000000000000000000
@@ -40,7 +34,7 @@ inherited FrmLimit: TFrmLimit
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 4
+    TabOrder = 3
   end
   object lblRecipientText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -56,7 +50,7 @@ inherited FrmLimit: TFrmLimit
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 7
+    TabOrder = 4
     OnClick = lblRecipientTextClick
   end
   object lblAssetText: TLabel

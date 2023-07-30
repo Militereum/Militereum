@@ -1,12 +1,6 @@
 inherited FrmAsset: TFrmAsset
   ClientHeight = 263
   DesignerMasterStyle = 0
-  inherited btnBlock: TButton
-    TabOrder = 17
-  end
-  inherited btnAllow: TButton
-    TabOrder = 20
-  end
   object imgLogo: TImage
     MultiResBitmap = <
       item
@@ -50,7 +44,7 @@ inherited FrmAsset: TFrmAsset
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Spender:'
-    TabOrder = 7
+    TabOrder = 3
   end
   object lblSpenderText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -66,7 +60,7 @@ inherited FrmAsset: TFrmAsset
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 10
+    TabOrder = 4
     OnClick = lblSpenderTextClick
   end
   object lblTokenText: TLabel

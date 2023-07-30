@@ -1,14 +1,6 @@
 inherited FrmHoneypot: TFrmHoneypot
   ClientHeight = 271
   DesignerMasterStyle = 0
-  inherited btnBlock: TButton
-    Position.Y = 233.000000000000000000
-    TabOrder = 14
-  end
-  inherited btnAllow: TButton
-    Position.Y = 233.000000000000000000
-    TabOrder = 17
-  end
   object lblHeader: TLabel
     StyledSettings = [Family, Style, FontColor]
     Position.X = 24.000000000000000000
@@ -42,7 +34,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.HorzAlign = Trailing
     TextSettings.WordWrap = False
     Text = 'Recipient:'
-    TabOrder = 6
+    TabOrder = 3
   end
   object lblRecipientText: TLabel
     Anchors = [akLeft, akTop, akRight]
@@ -58,7 +50,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.FontColor = claDodgerblue
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 8
+    TabOrder = 4
     OnClick = lblRecipientTextClick
   end
   object lblTokenText: TLabel
