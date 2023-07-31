@@ -33,7 +33,7 @@ type
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLog);
 
 implementation
 
@@ -48,9 +48,9 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmSpam = TFrmSpam.Create(chain, tx, callback);
+  const frmSpam = TFrmSpam.Create(chain, tx, callback, log);
   frmSpam.Action   := action;
   frmSpam.Contract := contract;
   frmSpam.Show;
@@ -71,11 +71,10 @@ begin
   lblContractText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then
-      thread.synchronize(procedure
-      begin
-        lblContractText.Text := ens;
-      end);
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+    begin
+      lblContractText.Text := ens;
+    end);
   end);
 end;
 

@@ -33,13 +33,13 @@ type
     procedure SetRecipient(value: TAddress);
     procedure SetAmount(value: Double);
   public
-    constructor Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>); override;
+    constructor Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLog); override;
     property Symbol: string write SetSymbol;
     property Recipient: TAddress write SetRecipient;
     property Amount: Double write SetAmount;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLog);
 
 implementation
 
@@ -54,9 +54,9 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmLimit = TFrmLimit.Create(chain, tx, callback);
+  const frmLimit = TFrmLimit.Create(chain, tx, callback, log);
   frmLimit.Symbol    := symbol;
   frmLimit.Recipient := recipient;
   frmLimit.Amount    := amount;
@@ -65,9 +65,9 @@ end;
 
 { TFrmLimit }
 
-constructor TFrmLimit.Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>);
+constructor TFrmLimit.Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLog);
 begin
-  inherited Create(chain, tx, callback);
+  inherited Create(chain, tx, callback, log);
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);
 end;
 
@@ -81,11 +81,10 @@ begin
   lblRecipientText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then
-      thread.synchronize(procedure
-      begin
-        lblRecipientText.Text := ens;
-      end);
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+    begin
+      lblRecipientText.Text := ens;
+    end);
   end);
 end;
 

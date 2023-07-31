@@ -37,6 +37,9 @@ type
   end;
 
 type
+  TLog = reference to procedure(const err: IError);
+
+type
   TFrmBase = class(TForm)
     imgMilitereum: TImage;
     imgWarning: TImage;
@@ -48,14 +51,16 @@ type
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
   strict private
-    FChain: TChain;
+    FChain   : TChain;
     FCallback: TProc<Boolean>;
+    FOnLog   : TLog;
   protected
     procedure DoShow; override;
     procedure Resize; override;
+    procedure Log(const err: IError);
     property Chain: TChain read FChain;
   public
-    constructor Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>); reintroduce; virtual;
+    constructor Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog); reintroduce; virtual;
   end;
 
 procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
@@ -144,20 +149,21 @@ end;
 
 { TFrmBase }
 
-constructor TFrmBase.Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>);
+constructor TFrmBase.Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog);
 begin
   inherited Create(Application);
 
   FChain    := chain;
   FCallback := callback;
+  FOnLog    := log;
 
   if Assigned(tx) then tx.EstimateGas(chain, procedure(qty: BigInteger; err: IError)
   begin
-    if not Assigned(err) then web3.eth.gas.getGasPrice(TWeb3.Create(chain), procedure(price: TWei; err: IError)
+    if Assigned(err) then Self.Log(err) else web3.eth.gas.getGasPrice(TWeb3.Create(chain), procedure(price: TWei; err: IError)
     begin
-      if not Assigned(err) then TWeb3.Create(chain).LatestPrice(procedure(ticker: Double; err: IError)
+      if Assigned(err) then Self.Log(err) else TWeb3.Create(chain).LatestPrice(procedure(ticker: Double; err: IError)
       begin
-        if not Assigned(err) then thread.synchronize(procedure
+        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
         begin
           lblGasFee.Text := System.SysUtils.Format('$ %.2f', [DotToFloat(fromWei(qty * price, ether)) * ticker]);
         end);
@@ -180,6 +186,11 @@ begin
   btnBlock.Position.Y := Self.ClientHeight - btnBlock.Height - 16;
   btnAllow.Position.X := M + 4;
   btnAllow.Position.Y := Self.ClientHeight - btnAllow.Height - 16;
+end;
+
+procedure TFrmBase.Log(const err: IError);
+begin
+  if Assigned(FOnLog) then FOnLog(err);
 end;
 
 procedure TFrmBase.FormClose(Sender: TObject; var Action: TCloseAction);

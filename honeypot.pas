@@ -37,7 +37,7 @@ type
     property Recipient: TAddress write SetRecipient;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, recipient: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, recipient: TAddress; const callback: TProc<Boolean>; const log: TLog);
 
 implementation
 
@@ -53,9 +53,9 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, recipient: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, recipient: TAddress; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback);
+  const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, log);
   frmHoneypot.Token     := token;
   frmHoneypot.Recipient := recipient;
   frmHoneypot.Show;
@@ -69,9 +69,9 @@ begin
   if not web3.utils.isHex(FToken) then
     lblTokenText.Text := string(FToken)
   else
-    common.Symbol(Self.Chain, FToken, procedure(symbol: string; _: IError)
+    common.Symbol(Self.Chain, FToken, procedure(symbol: string; err: IError)
     begin
-      thread.synchronize(procedure
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
         lblTokenText.Text := symbol;
       end);
@@ -83,11 +83,10 @@ begin
   lblRecipientText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then
-      thread.synchronize(procedure
-      begin
-        lblRecipientText.Text := ens;
-      end);
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+    begin
+      lblRecipientText.Text := ens;
+    end);
   end);
 end;
 

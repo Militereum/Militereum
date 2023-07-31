@@ -109,6 +109,7 @@ uses
   web3.eth.types,
   web3.utils,
   // project
+  base,
   checks,
   common,
   docker,
@@ -355,7 +356,7 @@ end;
 
 procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
 type
-  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
   TSteps = array of TStep;
   TNext  = reference to procedure(const steps: TSteps; const index: Integer; const checked: TChecked; const block: TProc; const done: TProc);
 begin
@@ -441,7 +442,7 @@ begin
                   begin
                     if Assigned(err) then Log(err);
                     next(steps, index + 1, output, block, done)
-                  end);
+                  end, Self.Log);
               end;
 
               const done: TProc<Boolean> = procedure(allow: Boolean)
