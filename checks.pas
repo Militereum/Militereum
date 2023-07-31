@@ -11,6 +11,7 @@ uses
   web3,
   web3.eth.alchemy.api,
   // project
+  base,
   server,
   transaction;
 
@@ -20,19 +21,19 @@ type
 type
   TNext = reference to procedure(const checked: TChecked; const err: IError = nil);
 
-procedure Step1 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step2 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step3 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step4 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step5 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step6 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step7 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step8 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
-procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step1 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step2 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step3 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step4 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step5 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step6 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step7 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step8 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 
 implementation
 
@@ -49,7 +50,6 @@ uses
   // project
   airdrop,
   asset,
-  base,
   common,
   firsttime,
   honeypot,
@@ -62,7 +62,7 @@ uses
   unverified;
 
 // approve(address,uint256)
-procedure Step1(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step1(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -103,7 +103,7 @@ begin
                           next(checked + [TChangeType.Approve])
                         else
                           block;
-                      end);
+                      end, log);
                     end);
                 end);
             end;
@@ -112,7 +112,7 @@ begin
 end;
 
 // transfer(address,uint256)
-procedure Step2(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step2(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -153,7 +153,7 @@ begin
                                 next(checked + [TChangeType.Transfer])
                               else
                                 block;
-                            end);
+                            end, log);
                           end)
                         else
                           thread.synchronize(procedure
@@ -164,7 +164,7 @@ begin
                                 next(checked)
                               else
                                 block;
-                            end);
+                            end, log);
                           end);
                       end;
                     end);
@@ -175,7 +175,7 @@ begin
 end;
 
 // setApprovalForAll(address,bool)
-procedure Step3(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step3(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -209,7 +209,7 @@ begin
                       next(checked)
                     else
                       block;
-                  end);
+                  end, log);
                 end);
             end;
           end);
@@ -217,7 +217,7 @@ begin
 end;
 
 // are we transacting with (a) smart contract and (b) not verified with etherscan?
-procedure Step4(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step4(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
@@ -245,7 +245,7 @@ begin
                     next(checked)
                   else
                     block;
-                end);
+                end, log);
               end);
           end);
         end);
@@ -253,7 +253,7 @@ begin
 end;
 
 // are we transferring more than $5k in ERC-20, translated to USD?
-procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -297,7 +297,7 @@ begin
                                 next(checked)
                               else
                                 block;
-                            end);
+                            end, log);
                           end);
                       end);
                   end;
@@ -308,7 +308,7 @@ begin
 end;
 
 // are we sending more than $5k in ETH, translated to USD?
-procedure Step6(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step6(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   if tx.Value = 0 then
     next(checked)
@@ -333,7 +333,7 @@ begin
                 next(checked)
               else
                 block;
-            end);
+            end, log);
           end);
       end;
     end);
@@ -341,7 +341,7 @@ begin
 end;
 
 // are we transacting with a spam contract or receiving spam tokens?
-procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 type
   TDone    = reference to procedure(const err: IError);
   TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
@@ -370,7 +370,7 @@ begin
                       foreach(action, contracts, index + 1, done)
                     else
                       block;
-                  end);
+                  end, log);
                 end);
               TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
                 thread.synchronize(procedure
@@ -381,7 +381,7 @@ begin
                       foreach(action, contracts, index + 1, done)
                     else
                       block;
-                  end);
+                  end, log);
                 end);
             else
               foreach(action, contracts, index + 1, done);
@@ -433,7 +433,7 @@ begin
 end;
 
 // have we transacted with this address before?
-procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   tx.From
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -462,7 +462,7 @@ begin
                       next(checked)
                     else
                       block;
-                  end);
+                  end, log);
                 end);
             end;
           end);
@@ -471,7 +471,7 @@ begin
 end;
 
 // are we transacting with an unsupported contract or receiving unsupported tokens?
-procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 type
   TDone    = reference to procedure(const err: IError);
   TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
@@ -501,7 +501,7 @@ begin
                 foreach(action, contracts, index + 1, done)
               else
                 block;
-            end);
+            end, log);
           end);
     end;
 
@@ -550,7 +550,7 @@ begin
 end;
 
 // are we transacting with a sanctioned address?
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; err: IError)
   begin
@@ -567,13 +567,13 @@ begin
             next(checked)
           else
             block;
-        end);
+        end, log);
       end);
   end);
 end;
 
 // are we buying a honeypot token?
-procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -604,7 +604,7 @@ begin
                         step(index + 1, done)
                       else
                         block;
-                    end);
+                    end, log);
                   end);
               end;
               step(0, procedure
@@ -618,7 +618,7 @@ begin
 end;
 
 // simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet
-procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -671,7 +671,7 @@ begin
                             step(index + 1, done)
                           else
                             block;
-                        end);
+                        end, log);
                       end);
               end;
               step(0, procedure
@@ -685,7 +685,7 @@ begin
 end;
 
 // include this step if you want every transaction to fail (debug only)
-procedure Block(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext);
+procedure Block(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   block;
 end;

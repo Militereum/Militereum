@@ -23,7 +23,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   strict private
     FUpdateCount: Integer;
-    class function FormatTime: string;
     procedure ScrollToBottom;
   public
     constructor Create(aOwner: TComponent); override;
@@ -67,23 +66,24 @@ begin
   end;
 end;
 
-class function TFrmLog.FormatTime: string;
-begin
-  Result := FormatDateTime('hh:nn:ss:zzz', Now);
-end;
-
 procedure TFrmLog.ScrollToBottom;
 begin
   Self.Memo.Model.CaretPosition := TCaretPosition.Create(Self.Memo.Model.Lines.Count - 1, 0)
 end;
 
 procedure TFrmLog.Add(const line: TLine; const msg: string);
+
+  function Now: string;
+  begin
+    Result := FormatDateTime('hh:nn:ss:zzz', System.SysUtils.Now);
+  end;
+
 begin
   case line of
-    Request : Self.Memo.Lines.Add('[REQUEST]  ' + FormatTime + ' ' + msg);
-    Response: Self.Memo.Lines.Add('[RESPONSE] ' + FormatTime + ' ' + msg);
-    Info    : Self.Memo.Lines.Add('[INFO]     ' + FormatTime + ' ' + msg);
-    Error   : Self.Memo.Lines.Add('[ERROR]    ' + FormatTime + ' ' + msg);
+    Request : Self.Memo.Lines.Add('[REQUEST]  ' + Now + ' ' + msg);
+    Response: Self.Memo.Lines.Add('[RESPONSE] ' + Now + ' ' + msg);
+    Info    : Self.Memo.Lines.Add('[INFO]     ' + Now + ' ' + msg);
+    Error   : Self.Memo.Lines.Add('[!ERROR!]  ' + Now + ' ' + msg);
   end;
   if FUpdateCount = 0 then ScrollToBottom;
 end;

@@ -50,8 +50,8 @@ type
     property Spender: TAddress write SetSpender;
   end;
 
-procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>);
+procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>; const log: TLog);
 
 implementation
 
@@ -71,18 +71,18 @@ uses
 
 {$R *.fmx}
 
-procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>);
+procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmAsset = TFrmAsset.Create(chain, tx, callback);
+  const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Token   := token;
   frmAsset.Spender := spender;
   frmAsset.Amount(token.Symbol, quantity, token.Decimals);
   frmAsset.Show;
 end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmAsset = TFrmAsset.Create(chain, tx, callback);
+  const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Change := change;
   frmAsset.Show;
 end;
@@ -136,13 +136,12 @@ begin
   if value <> '' then
     web3.http.get(value, [], procedure(img: IHttpResponse; err: IError)
     begin
-      if Assigned(img) then
-        thread.synchronize(procedure
-        begin
-          try
-            imgLogo.Bitmap.LoadFromStream(img.ContentStream);
-          except end;
-        end);
+      if Assigned(err) then Self.Log(err) else if Assigned(img) then thread.synchronize(procedure
+      begin
+        try
+          imgLogo.Bitmap.LoadFromStream(img.ContentStream);
+        except end;
+      end);
     end);
 end;
 
@@ -151,11 +150,10 @@ begin
   lblSpenderText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then
-      thread.synchronize(procedure
-      begin
-        lblSpenderText.Text := ens;
-      end);
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+    begin
+      lblSpenderText.Text := ens;
+    end);
   end);
 end;
 
@@ -164,9 +162,9 @@ begin
   if quantity = web3.Infinite then
     lblAmountText.Text := 'Unlimited'
   else
-    web3.defillama.price(Self.Chain, FToken, procedure(price: Double; _: IError)
+    web3.defillama.price(Self.Chain, FToken, procedure(price: Double; err: IError)
     begin
-      thread.synchronize(procedure
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
         if (price > 0) and (quantity.BitLength <= 64) then
           lblAmountText.Text := System.SysUtils.Format('$ %s', [common.Format(quantity.AsUInt64 * price)])

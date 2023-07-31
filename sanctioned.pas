@@ -31,7 +31,7 @@ type
     property Address: TAddress write SetAddress;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
 
 implementation
 
@@ -46,9 +46,9 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmSanctioned = TFrmSanctioned.Create(chain, tx, callback);
+  const frmSanctioned = TFrmSanctioned.Create(chain, tx, callback, log);
   frmSanctioned.Address := address;
   frmSanctioned.Show;
 end;
@@ -60,11 +60,10 @@ begin
   lblAddressText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then
-      thread.synchronize(procedure
-      begin
-        lblAddressText.Text := ens;
-      end);
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+    begin
+      lblAddressText.Text := ens;
+    end);
   end);
 end;
 

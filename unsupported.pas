@@ -33,7 +33,7 @@ type
     property Token: TAddress write SetToken;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLog);
 
 implementation
 
@@ -48,9 +48,9 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmUnsupported = TFrmUnsupported.Create(chain, tx, callback);
+  const frmUnsupported = TFrmUnsupported.Create(chain, tx, callback, log);
   frmUnsupported.Action := action;
   frmUnsupported.Token  := token;
   frmUnsupported.Show;
@@ -71,7 +71,7 @@ begin
   lblTokenText.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
   begin
-    if not Assigned(err) then thread.synchronize(procedure
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
     begin
       lblTokenText.Text := ens;
     end);
