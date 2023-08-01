@@ -23,6 +23,7 @@ uses
   limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},
   main in 'main.pas' {FrmMain},
+  phisher in 'phisher.pas' {FrmPhisher},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
   setApprovalForAll in 'setApprovalForAll.pas' {FrmSetApprovalForAll},
   server in 'server.pas',
