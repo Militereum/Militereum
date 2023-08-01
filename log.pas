@@ -26,8 +26,8 @@ type
     procedure ScrollToBottom;
   public
     constructor Create(aOwner: TComponent); override;
-    procedure BeginUpdate;
-    procedure EndUpdate;
+    procedure BeginUpdate; reintroduce;
+    procedure EndUpdate; reintroduce;
     procedure Add(const line: TLine; const msg: string);
   end;
 

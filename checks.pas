@@ -33,6 +33,7 @@ procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const ch
 procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 
 implementation
@@ -54,6 +55,7 @@ uses
   firsttime,
   honeypot,
   limit,
+  phisher,
   sanctioned,
   setApprovalForAll,
   spam,
@@ -65,7 +67,7 @@ uses
 procedure Step1(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(err: IError) begin next(checked, err) end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0x095EA7B3') then
@@ -115,7 +117,7 @@ end;
 procedure Step2(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(err: IError) begin next(checked, err) end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
@@ -178,7 +180,7 @@ end;
 procedure Step3(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(err: IError) begin next(checked, err) end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA22CB465') then
@@ -256,7 +258,7 @@ end;
 procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(err: IError) begin next(checked, err) end)
+    .ifErr(procedure(_: IError) begin next(checked) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
@@ -340,8 +342,31 @@ begin
   end;
 end;
 
-// are we transacting with a spam contract or receiving spam tokens?
+// are we transacting with a contract that has been identified as a phisher in the MobyMask Phisher Registry?
 procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+begin
+  isPhisher(tx.&To, procedure(result: Boolean; err: IError)
+  begin
+    if Assigned(err) then
+      next(checked, err)
+    else if not result then
+      next(checked)
+    else
+      thread.synchronize(procedure
+      begin
+        phisher.show(chain, tx, tx.&To, procedure(allow: Boolean)
+        begin
+          if allow then
+            next(checked)
+          else
+            block;
+        end, log);
+      end);
+  end);
+end;
+
+// are we transacting with a spam contract or receiving spam tokens?
+procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 type
   TDone    = reference to procedure(const err: IError);
   TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
@@ -393,10 +418,8 @@ begin
       begin
         tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
         begin
-          if Assigned(err) then
+          if Assigned(err) or isEOA then
             done(err)
-          else if isEOA then
-            done(nil)
           else
             foreach(taTransact, [tx.&To], 0, done);
         end);
@@ -406,10 +429,8 @@ begin
       begin
         tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
         begin
-          if Assigned(err) then
+          if Assigned(err) or not Assigned(changes) then
             done(err)
-          else if not Assigned(changes) then
-            done(nil)
           else
             tx.From
               .ifErr(procedure(err: IError) begin done(err) end)
@@ -433,7 +454,7 @@ begin
 end;
 
 // have we transacted with this address before?
-procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   tx.From
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -471,7 +492,7 @@ begin
 end;
 
 // are we transacting with an unsupported contract or receiving unsupported tokens?
-procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 type
   TDone    = reference to procedure(const err: IError);
   TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
@@ -550,7 +571,7 @@ begin
 end;
 
 // are we transacting with a sanctioned address?
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   web3.eth.breadcrumbs.sanctioned({$I breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; err: IError)
   begin
@@ -573,7 +594,7 @@ begin
 end;
 
 // are we buying a honeypot token?
-procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
@@ -618,7 +639,7 @@ begin
 end;
 
 // simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet
-procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
