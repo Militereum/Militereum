@@ -57,12 +57,15 @@ type
     pmSettings: TPopupMenu;
     mnuAutoRun: TMenuItem;
     imgSettings: TImage;
+    lblHelp: TLabel;
+    imgHelp: TImage;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
     procedure mnuAutoRunClick(Sender: TObject);
+    procedure lblHelpClick(Sender: TObject);
   strict private
     FCanNotify: Boolean;
     FNotified : Boolean;
@@ -137,6 +140,8 @@ begin
 
   edtCopy.Visible := False;
   btnCopy.Visible := False;
+  imgHelp.Visible := False;
+  lblHelp.Visible := False;
 
   const ports = server.ports(NUM_CHAINS);
   if ports.isErr then
@@ -184,6 +189,11 @@ function TFrmMain.KnownTransactions: TThreadList<string>;
 begin
   if not Assigned(FKnownTransactions) then FKnownTransactions := TThreadList<string>.Create;
   Result := FKnownTransactions;
+end;
+
+procedure TFrmMain.lblHelpClick(Sender: TObject);
+begin
+  common.Open('https://militereum.com/how-to-setup/');
 end;
 
 procedure TFrmMain.Notify;
@@ -312,6 +322,9 @@ begin
 
   TSpeedButton(Sender).StaysPressed := True;
   updateImage(TSpeedButton(Sender));
+
+  imgHelp.Visible := False;
+  lblHelp.Visible := False;
 
   const chain = Self.GetChain;
   edtCopy.Visible := Assigned(chain);
@@ -538,6 +551,8 @@ begin
     begin
       S.SetClipboard(FServer.URI(FServer.port(chain^).Value));
       TButton(Sender).Text := 'Copied';
+      imgHelp.Visible := True;
+      lblHelp.Visible := True;
     end;
   end;
 end;
