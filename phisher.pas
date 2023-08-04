@@ -53,6 +53,7 @@ uses
 
 {$R *.fmx}
 
+// https://github.com/Montoya/mobymask-snap#readme
 procedure isPhisher(const address: TAddress; const callback: TProc<Boolean, IError>);
 begin
   const MM = TMobyMask.Create;
@@ -77,6 +78,7 @@ begin
   inherited Create(TWeb3.Create(common.Ethereum), '0xB06E6DB9288324738f04fCAAc910f5A60102C1F8');
 end;
 
+// mobyMaskContract.isPhisher('eip155:1:${transaction.to}')
 procedure TMobyMask.IsPhisher(const address: TAddress; const callback: TProc<Boolean, IError>);
 begin
   web3.eth.call(Self.Client, Self.Contract, 'isPhisher(string)', ['eip155:1:' + string(address).ToLower], callback);

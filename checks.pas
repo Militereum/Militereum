@@ -63,6 +63,54 @@ uses
   unsupported,
   unverified;
 
+type
+  TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TProc<IError>);
+
+procedure forEachToken(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TForEach; const done: TProc<IError>);
+begin
+  const step1 = procedure(const done1: TProc<IError>) // tx.To
+  begin
+    tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
+    begin
+      if Assigned(err) or isEOA then
+        done1(err)
+      else
+        callback(taTransact, [tx.&To], 0, done1);
+    end);
+  end;
+
+  const step2 = procedure(const done2: TProc<IError>) // incoming tokens
+  begin
+    server.apiKey(port)
+      .ifErr(procedure(err: IError) begin done2(err) end)
+      .&else(procedure(apiKey: string)
+      begin
+        tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
+        begin
+          if Assigned(err) or not Assigned(changes) then
+            done2(err)
+          else
+            tx.From
+              .ifErr(procedure(err: IError) begin done2(err) end)
+              .&else(procedure(from: TAddress)
+              begin
+                callback(taReceive, (function(const incoming: IAssetChanges): TArray<TAddress>
+                begin
+                  Result := [];
+                  for var I := 0 to Pred(incoming.Count) do
+                    if incoming.Item(I).Contract.SameAs(tx.&To) then
+                      // ignore tx.To
+                    else
+                      Result := Result + [incoming.Item(I).Contract];
+                end)(changes.Incoming(from)), 0, done2);
+              end);
+        end);
+      end);
+  end;
+
+  step1(procedure(err: IError) begin if Assigned(err) then done(err) else step2(done) end);
+end;
+
 // approve(address,uint256)
 procedure Step1(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
 begin
@@ -367,16 +415,13 @@ end;
 
 // are we transacting with a spam contract or receiving spam tokens?
 procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
-type
-  TDone    = reference to procedure(const err: IError);
-  TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(checked, err) end)
     .&else(procedure(apiKey: string)
     begin
       var foreach: TForEach;
-      foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone)
+      foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TProc<IError>)
       begin
         if index >= Length(contracts) then
           done(nil)
@@ -413,43 +458,7 @@ begin
             end;
           end);
       end;
-
-      const step1 = procedure(const done: TDone) // tx.To
-      begin
-        tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
-        begin
-          if Assigned(err) or isEOA then
-            done(err)
-          else
-            foreach(taTransact, [tx.&To], 0, done);
-        end);
-      end;
-
-      const step2 = procedure(const done: TDone) // incoming tokens
-      begin
-        tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
-        begin
-          if Assigned(err) or not Assigned(changes) then
-            done(err)
-          else
-            tx.From
-              .ifErr(procedure(err: IError) begin done(err) end)
-              .&else(procedure(from: TAddress)
-              begin
-                foreach(taReceive, (function(const incoming: IAssetChanges): TArray<TAddress>
-                begin
-                  Result := [];
-                  for var I := 0 to Pred(incoming.Count) do
-                    if incoming.Item(I).Contract.SameAs(tx.&To) then
-                      // ignore tx.To
-                    else
-                      Result := Result + [incoming.Item(I).Contract];
-                end)(changes.Incoming(from)), 0, done);
-              end);
-        end);
-      end;
-
-      step1(procedure(const err: IError) begin if Assigned(err) then next(checked, err) else step2(procedure(const err: IError) begin next(checked, err) end) end);
+      forEachToken(server, port, chain, tx, foreach, procedure(err: IError) begin next(checked, err) end);
     end);
 end;
 
@@ -493,9 +502,6 @@ end;
 
 // are we transacting with an unsupported contract or receiving unsupported tokens?
 procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
-type
-  TDone    = reference to procedure(const err: IError);
-  TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone);
 begin
   web3.eth.tokenlists.unsupported(chain, procedure(tokens: TTokens; err: IError)
   begin
@@ -506,7 +512,7 @@ begin
     end;
 
     var foreach: TForEach;
-    foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TDone)
+    foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const done: TProc<IError>)
     begin
       if index >= Length(contracts) then
         done(nil)
@@ -526,47 +532,7 @@ begin
           end);
     end;
 
-    const step1 = procedure(const done: TDone) // tx.To
-    begin
-      tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
-      begin
-        if Assigned(err) or isEOA then
-          done(err)
-        else
-          foreach(taTransact, [tx.&To], 0, done);
-      end);
-    end;
-
-    const step2 = procedure(const done: TDone) // incoming tokens
-    begin
-      server.apiKey(port)
-        .ifErr(procedure(err: IError) begin done(err) end)
-        .&else(procedure(apiKey: string)
-        begin
-          tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
-          begin
-            if Assigned(err) or not Assigned(changes) then
-              done(err)
-            else
-              tx.From
-                .ifErr(procedure(err: IError) begin done(err) end)
-                .&else(procedure(from: TAddress)
-                begin
-                  foreach(taReceive, (function(const incoming: IAssetChanges): TArray<TAddress>
-                  begin
-                    Result := [];
-                    for var I := 0 to Pred(incoming.Count) do
-                      if incoming.Item(I).Contract.SameAs(tx.&To) then
-                        // ignore tx.To
-                      else
-                        Result := Result + [incoming.Item(I).Contract];
-                  end)(changes.Incoming(from)), 0, done);
-                end);
-          end);
-        end);
-    end;
-
-    step1(procedure(const err: IError) begin if Assigned(err) then next(checked, err) else step2(procedure(const err: IError) begin next(checked, err) end) end);
+    forEachToken(server, port, chain, tx, foreach, procedure(err: IError) begin next(checked, err) end);
   end);
 end;
 
