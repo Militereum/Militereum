@@ -72,7 +72,8 @@ type
     FFirstTime: Boolean;
     FFrmLog: TFrmLog;
     FServer: TEthereumRPCServer;
-    FKnownTransactions: TThreadList<string>;
+    FAllowedTransactions: TStrings;
+    FBlockedTransactions: TStrings;
     procedure Dismiss;
     procedure Log(const err: IError); overload;
     procedure Log(const info: string); overload;
@@ -84,7 +85,10 @@ type
     procedure DoShow; override;
     procedure DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
     procedure DoLog(const request, response: string; const success: Boolean);
-    function  KnownTransactions: TThreadList<string>;
+    function  AllowedTransactions: TStrings;
+    function  BlockedTransactions: TStrings;
+    function  IsAllowedTransaction(const params: string): Boolean;
+    function  IsBlockedTransaction(const params: string): Boolean;
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
@@ -180,15 +184,32 @@ begin
   const id = docker.getContainerId(RPCh_CONTAINER_NAME);
   if id <> '' then docker.stop(id);
 
-  if Assigned(FKnownTransactions) then FKnownTransactions.Free;
+  if Assigned(FAllowedTransactions) then FAllowedTransactions.Free;
+  if Assigned(FBlockedTransactions) then FBlockedTransactions.Free;
 
   inherited Destroy;
 end;
 
-function TFrmMain.KnownTransactions: TThreadList<string>;
+function TFrmMain.AllowedTransactions: TStrings;
 begin
-  if not Assigned(FKnownTransactions) then FKnownTransactions := TThreadList<string>.Create;
-  Result := FKnownTransactions;
+  if not Assigned(FAllowedTransactions) then FAllowedTransactions := TStringList.Create;
+  Result := FAllowedTransactions;
+end;
+
+function TFrmMain.BlockedTransactions: TStrings;
+begin
+  if not Assigned(FBlockedTransactions) then FBlockedTransactions := TStringList.Create;
+  Result := FBlockedTransactions;
+end;
+
+function TFrmMain.IsAllowedTransaction(const params: string): Boolean;
+begin
+  Result := Self.AllowedTransactions.IndexOf(params) > -1;
+end;
+
+function TFrmMain.IsBlockedTransaction(const params: string): Boolean;
+begin
+  Result := Self.BlockedTransactions.IndexOf(params) > -1;
 end;
 
 procedure TFrmMain.lblHelpClick(Sender: TObject);
@@ -369,9 +390,9 @@ end;
 
 procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
 type
-  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const checked: TChecked; const block: TProc; const next: TNext; const log: TLog);
+  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
   TSteps = array of TStep;
-  TNext  = reference to procedure(const steps: TSteps; const index: Integer; const checked: TChecked; const block: TProc; const done: TProc);
+  TNext  = reference to procedure(const steps: TSteps; const index: Integer; const prompted: TPrompted; const block: TBlock; const done: TBlock);
 begin
   if not Assigned(aPayload) then
   begin
@@ -381,8 +402,7 @@ begin
 
   Self.Dismiss;
 
-  if docker.running then thread.lock(Self, procedure
-  begin
+  if docker.running then
     if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
       if docker.pull(RPCh_DOCKER_IMAGE) then
         if docker.run(RPCh_CONTAINER_NAME, '-e RESPONSE_TIMEOUT=10000 ' +
@@ -395,10 +415,8 @@ begin
           repeat
             TThread.Sleep(100);
           until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
-  end);
 
-//  if docker.installed then thread.lock(Self, procedure
-//  begin
+//  if docker.installed then
 //    if docker.running or (function: Boolean
 //    begin
 //      Result := docker.start;
@@ -419,67 +437,63 @@ begin
 //          repeat
 //            TThread.Sleep(100);
 //          until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
-//  end);
 
   if SameText(aPayload.Method, 'eth_sendRawTransaction') then
     if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
-      if (function(const tx: string): Integer
-      begin
-        const L = Self.KnownTransactions.LockList;
-        try
-          Result := L.IndexOf(TJsonString(aPayload.Params[0]).Value);
-        finally
-          Self.KnownTransactions.UnlockList;
-        end;
-      end)(TJsonString(aPayload.Params[0]).Value) = -1 then
-      begin
-        const tx = decodeRawTransaction(web3.utils.fromHex(TJsonString(aPayload.Params[0]).Value));
-        if tx.isOk then
+    begin
+      const params = TJsonString(aPayload.Params[0]).Value;
+      if IsAllowedTransaction(params) then
+        callback(True)
+      else if IsBlockedTransaction(params) then
+        callback(False)
+      else begin
+        decodeRawTransaction(web3.utils.fromHex(params))
+        .ifErr(procedure(err: IError) begin Log(err) end)
+        .&else(procedure(tx: transaction.ITransaction)
         begin
           const chain = FServer.chain(aContext.Binding.Port);
           if Assigned(chain) then
           begin
-            Self.KnownTransactions.Add(TJsonString(aPayload.Params[0]).Value);
+            common.beforeTransaction;
 
-            thread.lock(Self, procedure
+            Self.Notify('Simulating your transaction');
+
+            var next: TNext;
+            next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const block: TBlock; const done: TBlock)
             begin
-              common.beforeTransaction;
-
-              var next: TNext;
-              next := procedure(const steps: TSteps; const index: Integer; const input: TChecked; const block: TProc; const done: TProc)
-              begin
-                if index >= Length(steps) then
-                  done
-                else
-                  steps[index](FServer, aContext.Binding.Port, chain^, tx.Value, input, block, procedure(const output: TChecked; const err: IError)
-                  begin
-                    if Assigned(err) then Log(err);
-                    next(steps, index + 1, output, block, done)
-                  end, Self.Log);
-              end;
-
-              const done: TProc<Boolean> = procedure(allow: Boolean)
-              begin
-                common.afterTransaction;
-                callback(allow);
-              end;
-
-              next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13], 0, [],
-                procedure // block
+              if index >= Length(steps) then
+                done(input)
+              else
+                steps[index](FServer, aContext.Binding.Port, chain^, tx, input, block, procedure(const output: TPrompted; const err: IError)
                 begin
-                  done(False);
-                end,
-                procedure // allow
-                begin
-                  Self.Notify(aContext.Binding.Port, chain^, tx.Value);
-                  done(True);
-                end);
+                  if Assigned(err) then Log(err);
+                  next(steps, index + 1, output, block, done)
+                end, Self.Log);
+            end;
+
+            const done = procedure(const allow: Boolean; const prompted: TPrompted)
+            begin
+              if allow then Self.AllowedTransactions.Add(params) else Self.BlockedTransactions.Add(params);
+              common.afterTransaction;
+              callback(allow);
+              if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
+            end;
+
+            next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13], 0, [],
+            procedure(const prompted: TPrompted) // block
+            begin
+              done(False, prompted);
+            end,
+            procedure(const prompted: TPrompted) // allow
+            begin
+              Self.Notify(aContext.Binding.Port, chain^, tx);
+              done(True, prompted);
             end);
-
-            EXIT;
           end;
-        end;
+        end);
       end;
+      EXIT;
+    end;
 
   callback(True);
 end;
