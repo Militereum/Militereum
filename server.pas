@@ -69,7 +69,8 @@ uses
   web3.http,
   web3.json,
   // project
-  common;
+  common,
+  thread;
 
 const
   MAX_PORT_NO = 65535 - 1024;
@@ -249,8 +250,6 @@ procedure TEthereumRPCServer.DoCommandGet(
 type
   TForward = (Allow, Wait, Block);
 begin
-  var status := TForward.Allow;
-
   const body = (function(const aRequestInfo: TIdHTTPRequestInfo): string
   begin
     Result := '';
@@ -259,7 +258,7 @@ begin
     const SS = TStringStream.Create;
     try
       SS.CopyFrom(aRequestInfo.PostStream, 0);
-      Result := SS.DataString;
+      Result := SS.DataString.Trim;
     finally
       SS.Free;
     end;
@@ -274,32 +273,40 @@ begin
 
       if Assigned(FOnRPC) then
       begin
-        status := TForward.Wait;
-        FOnRPC(aContext, payload, procedure(allow: Boolean)
+        thread.lock(Self, procedure
         begin
-          if allow then
-            status := TForward.Allow
-          else
-            status := TForward.Block;
-        end);
-        while status = TForward.Wait do TThread.Sleep(100);
-      end;
+          var status := TForward.Wait;
+          FOnRPC(aContext, payload, procedure(allow: Boolean)
+          begin
+            if allow then
+              status := TForward.Allow
+            else
+              status := TForward.Block;
+          end);
+          while status = TForward.Wait do TThread.Sleep(100);
 
-      if status = TForward.Block then Self.Block(payload, aResponseInfo);
+          const success = (function: Boolean
+          begin
+            Result := True;
+            if status = TForward.Block then
+              Self.Block(payload, aResponseInfo)
+            else
+              Result := Self.Forward(aContext, body, aResponseInfo);
+          end)();
+
+          if Assigned(FOnLog) then FOnLog(body, aResponseInfo.ContentText.Trim, success);
+        end);
+
+        EXIT;
+      end;
     end;
   finally
     &object.Free;
   end;
 
-  const success = (function: Boolean
-  begin
-    if status = TForward.Allow then
-      Result := Self.Forward(aContext, body, aResponseInfo)
-    else
-      Result := True;
-  end)();
+  const success = Self.Forward(aContext, body, aResponseInfo);
 
-  if Assigned(FOnLog) then FOnLog(body, aResponseInfo.ContentText, success);
+  if Assigned(FOnLog) then FOnLog(body, aResponseInfo.ContentText.Trim, success);
 end;
 
 procedure TEthereumRPCServer.Block(
