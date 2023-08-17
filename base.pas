@@ -22,7 +22,7 @@ uses
 type
   TTokenAction = (taReceive, taTransact);
 const
-  ActionText: array[TTokenAction] of string =  ('receive', 'transact with');
+  ActionText: array[TTokenAction] of string = ('receive', 'transact with');
 
 // 1. Labels with HorzAlign=Center are automatically enlarged until there are no more ellipsis
 // 2. The form is automatically enlarged after (1)
@@ -63,7 +63,7 @@ type
     constructor Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog); reintroduce; virtual;
   end;
 
-procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
+procedure centerOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
 
 implementation
 
@@ -81,7 +81,7 @@ uses
   // project
   thread;
 
-procedure CenterOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
+procedure centerOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
 
   function FitInRect(const aValue: TRectF; const aMaxRect: TRectF): TRectF;
   begin
@@ -118,7 +118,7 @@ procedure TLabel.ApplyStyle;
   procedure CenterParentForm;
   begin
     const F = GetParentForm;
-    if Assigned(F) then CenterOnDisplayUnderMouseCursor(F);
+    if Assigned(F) then centerOnDisplayUnderMouseCursor(F);
   end;
 
 begin
@@ -157,6 +157,9 @@ begin
   FCallback := callback;
   FOnLog    := log;
 
+  lblGasFee.Visible := False;
+  imgGasFee.Visible := False;
+
   if Assigned(tx) then tx.EstimateGas(chain, procedure(qty: BigInteger; err: IError)
   begin
     if Assigned(err) then Self.Log(err) else web3.eth.gas.getGasPrice(TWeb3.Create(chain), procedure(price: TWei; err: IError)
@@ -166,6 +169,8 @@ begin
         if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
         begin
           lblGasFee.Text := System.SysUtils.Format('$ %.2f', [DotToFloat(fromWei(qty * price, ether)) * ticker]);
+          lblGasFee.Visible := True;
+          imgGasFee.Visible := True;
         end);
       end);
     end);
@@ -174,7 +179,7 @@ end;
 
 procedure TFrmBase.DoShow;
 begin
-  CenterOnDisplayUnderMouseCursor(Self);
+  centerOnDisplayUnderMouseCursor(Self);
   inherited DoShow;
 end;
 

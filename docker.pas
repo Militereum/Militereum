@@ -276,7 +276,7 @@ end;
 
 procedure TFrmDocker.DoShow;
 begin
-  base.CenterOnDisplayUnderMouseCursor(Self);
+  centerOnDisplayUnderMouseCursor(Self);
   inherited DoShow;
 end;
 
