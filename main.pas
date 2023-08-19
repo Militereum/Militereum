@@ -83,7 +83,7 @@ type
     procedure ShowLogWindow;
   strict protected
     procedure DoShow; override;
-    procedure DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
+    procedure DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
     procedure DoLog(const request, response: string; const success: Boolean);
     function  AllowedTransactions: TStrings;
     function  BlockedTransactions: TStrings;
@@ -388,7 +388,7 @@ begin
   FCanNotify := aIsGranted;
 end;
 
-procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>);
+procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
 type
   TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
   TSteps = array of TStep;
@@ -448,49 +448,49 @@ begin
         callback(False)
       else begin
         decodeRawTransaction(web3.utils.fromHex(params))
-        .ifErr(procedure(err: IError) begin Log(err) end)
-        .&else(procedure(tx: transaction.ITransaction)
-        begin
-          const chain = FServer.chain(aContext.Binding.Port);
-          if Assigned(chain) then
+          .ifErr(procedure(err: IError) begin error(err) end)
+          .&else(procedure(tx: transaction.ITransaction)
           begin
-            common.beforeTransaction;
-
-            Self.Notify('Simulating your transaction');
-
-            var next: TNext;
-            next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const block: TBlock; const done: TBlock)
+            const chain = FServer.chain(aContext.Binding.Port);
+            if Assigned(chain) then
             begin
-              if index >= Length(steps) then
-                done(input)
-              else
-                steps[index](FServer, aContext.Binding.Port, chain^, tx, input, block, procedure(const output: TPrompted; const err: IError)
-                begin
-                  if Assigned(err) then Log(err);
-                  next(steps, index + 1, output, block, done)
-                end, Self.Log);
+              common.beforeTransaction;
+
+              Self.Notify('Simulating your transaction');
+
+              var next: TNext;
+              next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const block: TBlock; const done: TBlock)
+              begin
+                if index >= Length(steps) then
+                  done(input)
+                else
+                  steps[index](FServer, aContext.Binding.Port, chain^, tx, input, block, procedure(const output: TPrompted; const err: IError)
+                  begin
+                    if Assigned(err) then Self.Log(err);
+                    next(steps, index + 1, output, block, done)
+                  end, Self.Log);
+              end;
+
+              const done = procedure(const allow: Boolean; const prompted: TPrompted)
+              begin
+                if allow then Self.AllowedTransactions.Add(params) else Self.BlockedTransactions.Add(params);
+                common.afterTransaction;
+                callback(allow);
+                if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
+              end;
+
+              next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13], 0, [],
+              procedure(const prompted: TPrompted) // block
+              begin
+                done(False, prompted);
+              end,
+              procedure(const prompted: TPrompted) // allow
+              begin
+                Self.Notify(aContext.Binding.Port, chain^, tx);
+                done(True, prompted);
+              end);
             end;
-
-            const done = procedure(const allow: Boolean; const prompted: TPrompted)
-            begin
-              if allow then Self.AllowedTransactions.Add(params) else Self.BlockedTransactions.Add(params);
-              common.afterTransaction;
-              callback(allow);
-              if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
-            end;
-
-            next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13], 0, [],
-            procedure(const prompted: TPrompted) // block
-            begin
-              done(False, prompted);
-            end,
-            procedure(const prompted: TPrompted) // allow
-            begin
-              Self.Notify(aContext.Binding.Port, chain^, tx);
-              done(True, prompted);
-            end);
-          end;
-        end);
+          end);
       end;
       EXIT;
     end;
