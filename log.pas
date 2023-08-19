@@ -72,19 +72,19 @@ begin
 end;
 
 procedure TFrmLog.Add(const line: TLine; const msg: string);
-
-  function Now: string;
-  begin
-    Result := FormatDateTime('hh:nn:ss:zzz', System.SysUtils.Now);
-  end;
-
 begin
-  case line of
-    Request : Self.Memo.Lines.Add('[REQUEST]  ' + Now + ' ' + msg);
-    Response: Self.Memo.Lines.Add('[RESPONSE] ' + Now + ' ' + msg);
-    Info    : Self.Memo.Lines.Add('[INFO]     ' + Now + ' ' + msg);
-    Error   : Self.Memo.Lines.Add('[!ERROR!]  ' + Now + ' ' + msg);
-  end;
+  Self.Memo.Lines.Add((
+    function(const time: string): string
+    begin
+      case line of
+        Request : Result := '[REQUEST]  ' + time + ' ' + msg;
+        Response: Result := '[RESPONSE] ' + time + ' ' + msg;
+        Info    : Result := '[INFO]     ' + time + ' ' + msg;
+        Error   : Result := '[!ERROR!]  ' + time + ' ' + msg;
+      end;
+      if Length(Result) > 4096 then Result := Copy(Result, Low(Result), 4095) + '…';
+    end)(FormatDateTime('hh:nn:ss:zzz', System.SysUtils.Now))
+  );
   if FUpdateCount = 0 then ScrollToBottom;
 end;
 
