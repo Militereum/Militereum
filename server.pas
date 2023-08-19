@@ -26,7 +26,8 @@ type
   TOnRPC = procedure(
     const aContext: TIdContext;
     const aPayload: IPayload;
-    const callback: TProc<Boolean>) of object;
+    const callback: TProc<Boolean>;
+    const onError : TProc<IError>) of object;
   TOnLog = procedure(const request, response: string; const success: Boolean) of object;
 
   TEthereumRPCServer = class(TIdCustomHTTPServer)
@@ -35,7 +36,8 @@ type
     FOnLog: TOnLog;
     procedure Block(
       const aPayload: IPayload;
-      const aResponseInfo: TIdHTTPResponseInfo);
+      const aResponseInfo: TIdHTTPResponseInfo;
+      const aError: IError);
     function Forward(
       const aContext: TIdContext;
       const aRequest: string;
@@ -275,21 +277,26 @@ begin
       begin
         thread.lock(Self, procedure
         begin
+          var error: IError := nil;
           var status := TForward.Wait;
-          FOnRPC(aContext, payload, procedure(allow: Boolean)
-          begin
-            if allow then
-              status := TForward.Allow
-            else
-              status := TForward.Block;
-          end);
-          while status = TForward.Wait do TThread.Sleep(100);
+
+          FOnRPC(aContext, payload,
+            procedure(allow: Boolean)
+            begin
+              if allow then
+                status := TForward.Allow
+              else
+                status := TForward.Block;
+            end,
+            procedure(err: IError) begin error := err end);
+
+          while (status = TForward.Wait) and not Assigned(error) do TThread.Sleep(100);
 
           const success = (function: Boolean
           begin
-            Result := True;
-            if status = TForward.Block then
-              Self.Block(payload, aResponseInfo)
+            Result := not Assigned(error);
+            if (status = TForward.Block) or not Result then
+              Self.Block(payload, aResponseInfo, error)
             else
               Result := Self.Forward(aContext, body, aResponseInfo);
           end)();
@@ -311,10 +318,14 @@ end;
 
 procedure TEthereumRPCServer.Block(
   const aPayload: IPayload;
-  const aResponseInfo: TIdHTTPResponseInfo);
+  const aResponseInfo: TIdHTTPResponseInfo;
+  const aError: IError);
 begin
-  aResponseInfo.ResponseNo  := 405;
-  aResponseInfo.ContentText := System.SysUtils.Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
+  aResponseInfo.ResponseNo := 405;
+  if Assigned(aError) then
+    aResponseInfo.ContentText := System.SysUtils.Format('{"jsonrpc":"2.0","error":{"code":-32000,"message":"%s"},"id":%s}', [aError.Message, aPayload.Id.ToString(10)])
+  else
+    aResponseInfo.ContentText := System.SysUtils.Format('{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not allowed"},"id":%s}', [aPayload.Id.ToString(10)]);
 end;
 
 function TEthereumRPCServer.Forward(
