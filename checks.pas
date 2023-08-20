@@ -42,6 +42,8 @@ procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const ch
 implementation
 
 uses
+  // Delphi
+  System.Math,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
@@ -51,6 +53,7 @@ uses
   web3.eth.etherscan,
   web3.eth.tokenlists,
   web3.eth.types,
+  web3.eth.utils,
   web3.utils,
   // project
   airdrop,
@@ -328,14 +331,12 @@ begin
               if quantity = 0 then
                 next(prompted)
               else
-                web3.defillama.price(chain, tx.&To, procedure(price: Double; err: IError)
+                web3.defillama.coin(chain, tx.&To, procedure(coin: ICoin; err: IError)
                 begin
-                  if Assigned(err) then
+                  if Assigned(err) or not Assigned(coin) then
                     next(prompted, err)
-                  else if (price = 0) or (quantity.BitLength > 64) then
-                    next(prompted)
                   else begin
-                    const amount = quantity.AsUInt64 * price;
+                    const amount = (quantity.AsDouble / Round(Power(10, coin.Decimals))) * coin.Price;
                     if amount < common.LIMIT then
                       next(prompted)
                     else
@@ -371,12 +372,10 @@ begin
     const client: IWeb3 = TWeb3.Create(chain);
     client.LatestPrice(procedure(price: Double; err: IError)
     begin
-      if Assigned(err) then
+      if (price = 0) or Assigned(err) then
         next(prompted, err)
-      else if (price = 0) or (tx.Value.BitLength > 64) then
-        next(prompted)
       else begin
-        const amount = tx.Value.AsUInt64 * price;
+        const amount = dotToFloat(fromWei(tx.Value, ether)) * price;
         if amount < common.LIMIT then
           next(prompted)
         else

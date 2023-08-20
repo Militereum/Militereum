@@ -166,10 +166,7 @@ begin
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
-        if (price > 0) and (quantity.BitLength <= 64) then
-          lblAmountText.Text := System.SysUtils.Format('$ %s', [common.Format(quantity.AsUInt64 * price)])
-        else
-          lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.Format(quantity.AsDouble / Round(Power(10, decimals)))]);
+        lblAmountText.Text := System.SysUtils.Format('$ %.2f', [(quantity.AsDouble / Round(Power(10, decimals))) * price]);
       end);
     end);
 end;

@@ -168,7 +168,7 @@ begin
       begin
         if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
         begin
-          lblGasFee.Text := System.SysUtils.Format('$ %.2f', [DotToFloat(fromWei(qty * price, ether)) * ticker]);
+          lblGasFee.Text := System.SysUtils.Format('$ %.2f', [dotToFloat(fromWei(qty * price, ether)) * ticker]);
           lblGasFee.Visible := True;
           imgGasFee.Visible := True;
         end);
