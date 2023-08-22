@@ -1235,7 +1235,7 @@ object FrmMain: TFrmMain
     TextSettings.FontColor = claDodgerblue
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'Need help? Click here if you are unsure what to do'
+    Text = 'need help? click here if you are unsure what to do'
     TabOrder = 10
     OnClick = lblHelpClick
   end

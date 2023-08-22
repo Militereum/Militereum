@@ -14,6 +14,7 @@ uses
 
 type
   ITransaction = interface
+    function Nonce: BigInteger;
     function From : IResult<TAddress>;
     function &To  : TAddress;
     function Value: TWei;
@@ -65,6 +66,7 @@ type
       FSimulated: IAssetChanges;
   public
     constructor Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
+    function Nonce: BigInteger;
     function From : IResult<TAddress>;
     function &To  : TAddress;
     function Value: TWei;
@@ -82,6 +84,11 @@ begin
   Self.FToIsEOA := Unknown;
   Self.FValue   := value;
   Self.FData    := data;
+end;
+
+function TTransaction.Nonce: BigInteger;
+begin
+  Result := Self.FNonce;
 end;
 
 function TTransaction.From: IResult<TAddress>;

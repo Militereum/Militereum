@@ -79,7 +79,6 @@ type
     procedure Log(const info: string); overload;
     procedure Notify; overload;
     function  Notify(const body: string): Boolean; overload;
-    procedure Notify(const port: TIdPort; const chain: TChain; const tx: ITransaction); overload;
     procedure ShowLogWindow;
   strict protected
     procedure DoShow; override;
@@ -235,52 +234,6 @@ begin
       finally
         N.Free;
       end;
-    end);
-end;
-
-// notify the user when we allow (not block) a transaction
-procedure TFrmMain.Notify(const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction);
-resourcestring
-  RS_APPROVED_YOUR_TX = 'Approved your transaction';
-begin
-  FServer.apiKey(port)
-    .ifErr(procedure(_: IError) begin Self.Notify(RS_APPROVED_YOUR_TX) end)
-    .&else(procedure(apiKey: string)
-    begin
-      tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; _: IError)
-      begin
-        if not Assigned(changes) then
-          Self.Notify(RS_APPROVED_YOUR_TX)
-        else
-          tx.From
-            .ifErr(procedure(_: IError) begin Self.Notify(RS_APPROVED_YOUR_TX) end)
-            .&else(procedure(from: TAddress)
-            begin
-              const item = (function(const outgoing: IAssetChanges): IAssetChange
-              begin
-                if Assigned(outgoing) then for var I := 0 to Pred(outgoing.Count) do
-                  if (outgoing.Item(I).Change = Transfer) and (outgoing.Item(I).Amount > 0) then
-                  begin
-                    Result := outgoing.Item(I);
-                    EXIT;
-                  end;
-                Result := nil;
-              end)(changes.Outgoing(from));
-              if not Assigned(item) then
-                Self.Notify(RS_APPROVED_YOUR_TX)
-              else
-                item.&To.ToString(TWeb3.Create(common.Ethereum), procedure(name: string; err: IError)
-                begin
-                  Self.Notify(System.SysUtils.Format('Approved transfer of %s %s to %s', [item.Symbol, common.Format(item.Unscale), (function: string
-                  begin
-                    if Assigned(err) then
-                      Result := string(item.&To)
-                    else
-                      Result := name;
-                  end)()]));
-                end, True);
-            end);
-      end);
     end);
 end;
 
@@ -486,7 +439,7 @@ begin
               end,
               procedure(const prompted: TPrompted) // allow
               begin
-                Self.Notify(aContext.Binding.Port, chain^, tx);
+                Self.Notify(System.SysUtils.Format('Approved your transaction %s', [tx.Nonce.ToString]));
                 done(True, prompted);
               end);
             end;
