@@ -29,6 +29,7 @@ uses
   // web3
   web3.sync,
   // Project
+  common,
   main,
   thread;
 
@@ -218,11 +219,10 @@ begin
   if FFirstBecomeActive then
     FFirstBecomeActive := False
   else
-    if counter.Get = 0 then
-      thread.synchronize(procedure
-      begin
-        if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
-      end);
+    if (counter.Get = 0) and not common.Debug then thread.synchronize(procedure
+    begin
+      if Assigned(FrmMain) and not(FrmMain.Visible) then FrmMain.Show;
+    end);
 end;
 
 end.
