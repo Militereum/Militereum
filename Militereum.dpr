@@ -31,7 +31,8 @@ uses
   thread in 'thread.pas',
   transaction in 'transaction.pas',
   unsupported in 'unsupported.pas' {FrmUnsupported},
-  unverified in 'unverified.pas' {FrmUnverified};
+  unverified in 'unverified.pas' {FrmUnverified},
+  update in 'update.pas' {FrmUpdate};
 
 {$R *.res}
 

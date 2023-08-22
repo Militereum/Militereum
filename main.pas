@@ -119,9 +119,8 @@ uses
   checks,
   common,
   docker,
-  thread;
-
-{$I Militereum.version}
+  thread,
+  update;
 
 { TFrmMain }
 
@@ -139,7 +138,7 @@ begin
   inherited Create(aOwner);
 
   FFirstTime := True;
-  Self.Caption := Self.Caption + ' ' + VERSION;
+  Self.Caption := Self.Caption + ' ' + {$I Militereum.version};
 
   edtCopy.Visible := False;
   btnCopy.Visible := False;
@@ -319,6 +318,15 @@ begin
     EXIT;
 
   if common.Debug then ShowLogWindow;
+
+  update.latestRelease(procedure(tag: string)
+  begin
+    if common.ParseSemVer(tag) > common.ParseSemVer({$I Militereum.version}) then
+      thread.synchronize(procedure
+      begin
+        update.show(tag);
+      end);
+  end);
 
   if docker.supported and not docker.installed then
   begin
