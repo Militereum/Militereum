@@ -5,7 +5,6 @@ interface
 uses
   // Delphi
   System.Classes,
-  System.Generics.Collections,
   System.Notification,
   System.SysUtils,
   // FireMonkey
@@ -20,13 +19,11 @@ uses
   FMX.Types,
   // Indy
   IdContext,
-  IdGlobal,
   // web3
   web3,
   // project
   log,
-  server,
-  transaction;
+  server;
 
 type
   TFrmMain = class(TForm)
@@ -103,16 +100,16 @@ implementation
 
 uses
   // Delphi
+  System.Generics.Collections,
   System.JSON,
   System.Types,
   System.UITypes,
   // FireMonkey
   FMX.Dialogs,
   FMX.Platform,
-  FMX.Text,
+  // Indy
+  IdGlobal,
   // web3
-  web3.eth.alchemy.api,
-  web3.eth.types,
   web3.utils,
   // project
   base,
@@ -120,6 +117,7 @@ uses
   common,
   docker,
   thread,
+  transaction,
   update;
 
 { TFrmMain }

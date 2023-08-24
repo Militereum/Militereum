@@ -3,8 +3,6 @@ unit checks;
 interface
 
 uses
-  // Delphi
-  System.SysUtils,
   // Indy
   IdGlobal,
   // web3
@@ -44,6 +42,7 @@ implementation
 uses
   // Delphi
   System.Math,
+  System.SysUtils,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3

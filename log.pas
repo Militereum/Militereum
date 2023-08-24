@@ -38,8 +38,9 @@ implementation
 uses
   // Delphi
   System.SysUtils,
-  // FireMonket
-  FMX.BehaviorManager;
+  // FireMonkey
+  FMX.BehaviorManager,
+  FMX.Text;
 
 constructor TFrmLog.Create(aOwner: TComponent);
 begin

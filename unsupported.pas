@@ -38,8 +38,6 @@ procedure show(const action: TTokenAction; const chain: TChain; const tx: transa
 implementation
 
 uses
-  // FireMonkey
-  FMX.Forms,
   // web3
   web3.eth.types,
   // project

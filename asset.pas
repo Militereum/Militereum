@@ -59,8 +59,6 @@ uses
   // Delphi
   System.Math,
   System.Net.HttpClient,
-  // FireMonkey
-  FMX.Forms,
   // web3
   web3.defillama,
   web3.eth.types,

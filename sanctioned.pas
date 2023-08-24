@@ -36,8 +36,6 @@ procedure show(const chain: TChain; const tx: transaction.ITransaction; const ad
 implementation
 
 uses
-  // FireMonkey
-  FMX.Forms,
   // web3
   web3.eth.types,
   // project
