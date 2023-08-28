@@ -55,7 +55,9 @@ type
     mnuAutoRun: TMenuItem;
     imgSettings: TImage;
     lblHelp: TLabel;
-    imgHelp: TImage;
+    btnBase: TSpeedButton;
+    imgBase: TImage;
+    imgBase1: TImage;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -140,7 +142,6 @@ begin
 
   edtCopy.Visible := False;
   btnCopy.Visible := False;
-  imgHelp.Visible := False;
   lblHelp.Visible := False;
 
   const ports = server.ports(NUM_CHAINS);
@@ -259,7 +260,8 @@ begin
     Result := @web3.Arbitrum
   else if btnOptimism.IsPressed then
     Result := @web3.Optimism
-  // ToDo: add Base here
+  else if btnBase.IsPressed then
+    Result := @web3.Base
   else
     Result := nil;
 end;
@@ -292,12 +294,10 @@ begin
       updateImage(other);
     end;
 
-  TSpeedButton(Sender).StaysPressed := True;
+  TSpeedButton(Sender).StaysPressed := not TSpeedButton(Sender).StaysPressed;
   updateImage(TSpeedButton(Sender));
 
-  imgHelp.Visible := False;
   lblHelp.Visible := False;
-
   const chain = Self.GetChain;
   edtCopy.Visible := Assigned(chain);
   btnCopy.Text := 'Copy';
@@ -525,7 +525,6 @@ begin
     begin
       S.SetClipboard(FServer.URI(FServer.port(chain^).Value));
       TButton(Sender).Text := 'Copied';
-      imgHelp.Visible := True;
       lblHelp.Visible := True;
     end;
   end;
