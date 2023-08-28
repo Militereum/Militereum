@@ -58,7 +58,7 @@ begin
     'https://api.github.com/repos/svanas/militereum/releases/latest',
     [
       TNetHeader.Create('Accept', 'application/vnd.github+json'),
-      TNetHeader.Create('Authorization', 'Bearer ' + {$I github.api.key}),
+      TNetHeader.Create('Authorization', 'Bearer ' + {$I keys/github.api.key}),
       TNetHeader.Create('X-GitHub-Api-Version', '2022-11-28')
     ],
     procedure(response: TJsonValue; _: IError)

@@ -83,8 +83,8 @@ uses
   // project
   docker;
 
-{$I alchemy.api.key}
-{$I etherscan.api.key}
+{$I keys/alchemy.api.key}
+{$I keys/etherscan.api.key}
 
 function TEthereumRPCServerHelper.chain(const port: TIdPort): PChain;
 begin

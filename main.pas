@@ -369,7 +369,7 @@ begin
           '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://production.discovery.rpch.tech ' +
           '-e PORT=8080 ' +
           '-e DATA_DIR=app ' +
-          '-e CLIENT=' + {$I hopr.api.key} + ' ' +
+          '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
           '-p 8080:8080 ' +
           '--rm ' + RPCh_DOCKER_IMAGE) then
           repeat
@@ -391,7 +391,7 @@ begin
 //          '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://production.discovery.rpch.tech ' +
 //          '-e PORT=8080 ' +
 //          '-e DATA_DIR=app ' +
-//          '-e CLIENT=' + {$I hopr.api.key} + ' ' +
+//          '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
 //          '-p 8080:8080 ' +
 //          '--rm ' + RPCh_DOCKER_IMAGE) then
 //          repeat
