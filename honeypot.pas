@@ -64,7 +64,7 @@ end;
 procedure TFrmHoneypot.SetToken(value: TAddress);
 begin
   FToken := value;
-  if not web3.utils.isHex(FToken) then
+  if not web3.utils.isHex(string(FToken)) then
     lblTokenText.Text := string(FToken)
   else
     common.Symbol(Self.Chain, FToken, procedure(symbol: string; err: IError)

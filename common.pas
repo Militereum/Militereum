@@ -15,7 +15,7 @@ uses
   server;
 
 const
-  NUM_CHAINS = 5;
+  NUM_CHAINS = 6;
   LIMIT      = 5000; // USD
 
 type
@@ -98,6 +98,8 @@ begin
     Result := @web3.Arbitrum
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
     Result := @web3.Optimism
+  else if (Self.Bindings.Count > 5) and (port = Self.Bindings[5].Port) then
+    Result := @web3.Base
   else
     Result := nil;
   if Assigned(Result) then
@@ -120,6 +122,8 @@ begin
     Result := TResult<TIdPort>.Ok(Self.Bindings[3].Port)
   else if (chain = web3.Optimism) and (Self.Bindings.Count > 4) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[4].Port)
+  else if (chain = web3.Base) and (Self.Bindings.Count > 5) then
+    Result := TResult<TIdPort>.Ok(Self.Bindings[5].Port)
   else
     Result := TResult<TIdPort>.Err(0, System.SysUtils.Format('invalid chain: %s', [chain.Name]));
 end;
@@ -152,6 +156,8 @@ begin
     Result := web3.eth.alchemy.endpoint(web3.Arbitrum, ALCHEMY_API_KEY_ARBITRUM, core)
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM, core)
+  else if (Self.Bindings.Count> 5) and (port = Self.Bindings[5].Port) then
+    Result := web3.eth.alchemy.endpoint(web3.Base, ALCHEMY_API_KEY_BASE, core)
   else
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
   if Result.isOk then
@@ -207,6 +213,8 @@ begin
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ARBITRUM))
   else if chain = web3.Optimism then
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_OPTIMISM))
+  else if chain = web3.Base then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_BASE))
   else
     Result := TResult<IEtherscan>.Err(nil, System.SysUtils.Format('not supported on %s', [chain.Name]));
 end;

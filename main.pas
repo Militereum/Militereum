@@ -259,6 +259,7 @@ begin
     Result := @web3.Arbitrum
   else if btnOptimism.IsPressed then
     Result := @web3.Optimism
+  // ToDo: add Base here
   else
     Result := nil;
 end;

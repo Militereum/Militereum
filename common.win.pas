@@ -25,6 +25,7 @@ uses
   // FireMonkey
   FMX.Platform.Win,
   // project
+  common,
   main,
   thread;
 
@@ -155,7 +156,7 @@ begin
         if (appWindow = 0) and (PCREATESTRUCT(Msg.lParam)^.lpszClass = 'TFMAppClass') then
           appWindow := Msg.hwnd;
       $0287:
-        if (Msg.lParam = WinAPI.Windows.LPARAM(appWindow)) and (Msg.wParam = 23) then
+        if (Msg.lParam = WinAPI.Windows.LPARAM(appWindow)) and (Msg.wParam = 23) and not(common.Debug) then
           activateMainWindow;
     end;
   Result := CallNextHookEx(appHook, Code, WParam, WinAPI.Windows.LPARAM(Msg));
