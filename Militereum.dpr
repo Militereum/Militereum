@@ -17,6 +17,7 @@ uses
   base in 'base.pas' {FrmBase},
   checks in 'checks.pas',
   common in 'common.pas',
+  dextools in 'dextools.pas',
   docker in 'docker.pas' {FrmDocker},
   firsttime in 'firsttime.pas' {FrmFirstTime},
   honeypot in 'honeypot.pas' {FrmHoneypot},
