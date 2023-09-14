@@ -43,15 +43,16 @@ After your crypto wallet has approved the allowance, Militereum will intercept t
 ![image](assets/approve.png)
 
 Besides token allowances, Militereum will block...
-1. monetary transfers above $5k [➹](assets/limit.png), and
-2. transactions to a sanctioned address [➹](assets/sanctioned.png), and
-3. transactions to a smart contract that has not been [etherscan](https://etherscan.io/)-verified [➹](assets/unverified.png), and
-4. transactions to an address you have not transacted with before [➹](assets/firsttime.png) (this check will stop most phishing attacks), and
-5. you receiving a token (or transacting with a smart contract) that lies about its own token supply [➹](assets/spam.png), and
-6. you buying honeypot tokens that are designed to pump but you cannot sell [➹](assets/honeypot.png), and
-7. you trusting someone else to be able to transfer all your NFTs out of your wallet [➹](assets/setApprovalForAll.png), and
-8. you receiving (or otherwise transacting with) a token that is unsupported by Uniswap [➹](assets/unsupported.png), and
-9. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
+1. [monetary transfers above $5k](assets/limit.png)
+2. transactions to [a sanctioned address](assets/sanctioned.png)
+3. transactions to [a smart contract that has not been etherscan-verified](assets/unverified.png)
+4. transactions to [an address you have not transacted with before](assets/firsttime.png) (this check will stop most phishing attacks)
+5. transactions to [an address that has been identified as a phisher in the MobyMask Phisher Registry](assets/phisher.png)
+6. you trusting someone else to be able to [transfer all your NFTs out of your wallet](assets/setApprovalForAll.png)
+7. you buying [a token that lies about its own token supply](assets/spam.png)
+8. you buying [a honeypot token that is designed to pump but you cannot sell](assets/honeypot.png)
+9. you buying [a token that is unsupported by Uniswap](assets/unsupported.png)
+10. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
 
