@@ -23,6 +23,7 @@ uses
   honeypot in 'honeypot.pas' {FrmHoneypot},
   limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},
+  lowDexScore in 'lowDexScore.pas' {FrmLowDexScore},
   main in 'main.pas' {FrmMain},
   phisher in 'phisher.pas' {FrmPhisher},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
