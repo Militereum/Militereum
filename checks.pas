@@ -35,6 +35,7 @@ procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const ch
 procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 
 implementation
@@ -58,9 +59,11 @@ uses
   airdrop,
   asset,
   common,
+  dextools,
   firsttime,
   honeypot,
   limit,
+  lowDexScore,
   phisher,
   sanctioned,
   setApprovalForAll,
@@ -70,52 +73,65 @@ uses
   unverified;
 
 type
-  TSubStep = reference to procedure(const index: Integer; const prompted: TPrompted; const done: TNext);
-  TForEach = reference to procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const prompted: TPrompted; const done: TNext);
-
-procedure forEachToken(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const callback: TForEach; const done: TNext);
-begin
-  const step1 = procedure(const prompted1: TPrompted; const done1: TNext) // tx.To
-  begin
-    tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
-    begin
-      if Assigned(err) or isEOA then
-        done1(prompted1, err)
-      else
-        callback(taTransact, [tx.&To], 0, prompted1, done1);
-    end);
+  TTokenContract = record
+  private
+    Action : TTokenAction;
+    Address: TAddress;
+  public
+    constructor Create(const aAction: TTokenAction; const aAddress: TAddress);
   end;
 
-  const step2 = procedure(const prompted2: TPrompted; const done2: TNext) // incoming tokens
+constructor TTokenContract.Create(const aAction: TTokenAction; const aAddress: TAddress);
+begin
+  Self.Action  := aAction;
+  Self.Address := aAddress;
+end;
+
+type
+  TGetEach = reference to procedure(const contracts: TArray<TTokenContract>; const err: IError);
+  TSubStep = reference to procedure(const index: Integer; const prompted: TPrompted);
+
+procedure getEachToken(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TGetEach);
+begin
+  var contracts: TArray<TTokenContract> := [];
+  // step #1: tx.To
+  tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
+    if Assigned(err) then
+    begin
+      callback(contracts, err);
+      EXIT;
+    end;
+    if not isEOA then
+      contracts := contracts + [TTokenContract.Create(taTransact, tx.&To)];
+    // step #2: incoming tokens
     server.apiKey(port)
-      .ifErr(procedure(err: IError) begin done2(prompted2, err) end)
+      .ifErr(procedure(err: IError) begin callback(contracts, err) end)
       .&else(procedure(apiKey: string)
       begin
         tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
         begin
           if Assigned(err) or not Assigned(changes) then
-            done2(prompted2, err)
+            callback(contracts, err)
           else
             tx.From
-              .ifErr(procedure(err: IError) begin done2(prompted2, err) end)
+              .ifErr(procedure(err: IError) begin callback(contracts, err) end)
               .&else(procedure(from: TAddress)
               begin
-                callback(taReceive, (function(const incoming: IAssetChanges): TArray<TAddress>
-                begin
-                  Result := [];
+                const incoming: IAssetChanges = changes.Incoming(from);
+                try
                   for var I := 0 to Pred(incoming.Count) do
                     if incoming.Item(I).Contract.SameAs(tx.&To) then
                       // ignore tx.To
                     else
-                      Result := Result + [incoming.Item(I).Contract];
-                end)(changes.Incoming(from)), 0, prompted2, done2);
+                      contracts := contracts + [TTokenContract.Create(taReceive, incoming.Item(I).Contract)];
+                finally
+                  callback(contracts, nil);
+                end;
               end);
         end);
       end);
-  end;
-
-  step1(prompted, procedure(const prompted: TPrompted; const err: IError) begin if Assigned(err) then done(prompted, err) else step2(prompted, done) end);
+  end);
 end;
 
 // approve(address,uint256)
@@ -423,45 +439,53 @@ begin
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
     .&else(procedure(apiKey: string)
     begin
-      var foreach: TForEach;
-      foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const prompted: TPrompted; const done: TNext)
+      getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TTokenContract>; const err: IError)
       begin
-        if index >= Length(contracts) then
-          done(prompted, nil)
-        else
-          web3.eth.alchemy.api.detect(apiKey, chain, contracts[index], procedure(contractType: TContractType; err: IError)
-          begin
-            if Assigned(err) then
-              done(prompted, err)
-            else case contractType of
-              TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
-                thread.synchronize(procedure
-                begin
-                  airdrop.show(action, chain, tx, contracts[index], procedure(allow: Boolean)
+        if Assigned(err) then
+        begin
+          next(prompted, err);
+          EXIT;
+        end;
+        var step: TSubStep;
+        step := procedure(const index: Integer; const prompted: TPrompted)
+        begin
+          if index >= Length(contracts) then
+            next(prompted)
+          else
+            web3.eth.alchemy.api.detect(apiKey, chain, contracts[index].Address, procedure(contractType: TContractType; err: IError)
+            begin
+              if Assigned(err) then
+                next(prompted, err)
+              else case contractType of
+                TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
+                  thread.synchronize(procedure
                   begin
-                    if allow then
-                      foreach(action, contracts, index + 1, prompted + [TWarning.Other], done)
-                    else
-                      block(prompted);
-                  end, log);
-                end);
-              TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
-                thread.synchronize(procedure
-                begin
-                  spam.show(action, chain, tx, contracts[index], procedure(allow: Boolean)
+                    airdrop.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                    begin
+                      if allow then
+                        step(index + 1, prompted + [TWarning.Other])
+                      else
+                        block(prompted);
+                    end, log);
+                  end);
+                TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
+                  thread.synchronize(procedure
                   begin
-                    if allow then
-                      foreach(action, contracts, index + 1, prompted + [TWarning.Other], done)
-                    else
-                      block(prompted);
-                  end, log);
-                end);
-            else
-              foreach(action, contracts, index + 1, prompted, done);
-            end;
-          end);
-      end;
-      forEachToken(server, port, chain, tx, prompted, foreach, next);
+                    spam.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                    begin
+                      if allow then
+                        step(index + 1, prompted + [TWarning.Other])
+                      else
+                        block(prompted);
+                    end, log);
+                  end);
+              else
+                step(index + 1, prompted);
+              end;
+            end);
+        end;
+        step(0, prompted);
+      end);
     end);
 end;
 
@@ -513,29 +537,35 @@ begin
       next(prompted, err);
       EXIT;
     end;
-
-    var foreach: TForEach;
-    foreach := procedure(const action: TTokenAction; const contracts: TArray<TAddress>; const index: Integer; const prompted: TPrompted; const done: TNext)
+    getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TTokenContract>; const err: IError)
     begin
-      if index >= Length(contracts) then
-        done(prompted, nil)
-      else
-        if tokens.IndexOf(contracts[index]) = -1 then
-          foreach(action, contracts, index + 1, prompted, done)
+      if Assigned(err) then
+      begin
+        next(prompted, err);
+        EXIT;
+      end;
+      var step: TSubStep;
+      step := procedure(const index: Integer; const prompted: TPrompted)
+      begin
+        if index >= Length(contracts) then
+          next(prompted, nil)
         else
-          thread.synchronize(procedure
-          begin
-            unsupported.show(action, chain, tx, contracts[index], procedure(allow: Boolean)
+          if tokens.IndexOf(contracts[index].Address) = -1 then
+            step(index + 1, prompted)
+          else
+            thread.synchronize(procedure
             begin
-              if allow then
-                foreach(action, contracts, index + 1, prompted + [TWarning.Other], done)
-              else
-                block(prompted);
-            end, log);
-          end);
-    end;
-
-    forEachToken(server, port, chain, tx, prompted, foreach, next);
+              unsupported.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+              begin
+                if allow then
+                  step(index + 1, prompted + [TWarning.Other])
+                else
+                  block(prompted);
+              end, log);
+            end);
+      end;
+      step(0, prompted);
+    end);
   end);
 end;
 
@@ -562,8 +592,48 @@ begin
   end);
 end;
 
-// are we buying a honeypot token?
+// are we receiving (or otherwise transacting with) a low-DEX-score token?
 procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+begin
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TTokenContract>; const err: IError)
+  begin
+    if Assigned(err) then
+    begin
+      next(prompted, err);
+      EXIT;
+    end;
+    var step: TSubStep;
+    step := procedure(const index: Integer; const prompted: TPrompted)
+    begin
+      if index >= Length(contracts) then
+        next(prompted, nil)
+      else
+        dextools.score({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(score: Integer; err: IError)
+        begin
+          if Assigned(err) then
+            next(prompted, err)
+          else
+            if (score = 0) or (score >= 50) then
+              step(index + 1, prompted)
+            else
+              thread.synchronize(procedure
+              begin
+                lowDexScore.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                begin
+                  if allow then
+                    step(index + 1, prompted + [TWarning.Other])
+                  else
+                    block(prompted);
+                end, log);
+              end);
+        end);
+    end;
+    step(0, prompted);
+  end);
+end;
+
+// are we buying a honeypot token?
+procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -581,23 +651,23 @@ begin
               next(prompted)
             else begin
               var step: TSubStep;
-              step := procedure(const index: Integer; const prompted: TPrompted; const done: TNext)
+              step := procedure(const index: Integer; const prompted: TPrompted)
               begin
                 if index >= honeypots.Count then
-                  done(prompted)
+                  next(prompted)
                 else
                   thread.synchronize(procedure
                   begin
                     honeypot.show(chain, tx, honeypots.Item(index).Contract, from, procedure(allow: Boolean)
                     begin
                       if allow then
-                        step(index + 1, prompted,done)
+                        step(index + 1, prompted)
                       else
                         block(prompted);
                     end, log);
                   end);
               end;
-              step(0, prompted, next);
+              step(0, prompted);
             end;
           end);
         end);
@@ -605,7 +675,7 @@ begin
 end;
 
 // simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet
-procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -635,33 +705,33 @@ begin
                   if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
               end)(changes);
               var step: TSubStep;
-              step := procedure(const index: Integer; const prompted: TPrompted; const done: TNext)
+              step := procedure(const index: Integer; const prompted: TPrompted)
               begin
                 if index >= changes.Count then
-                  done(prompted)
+                  next(prompted)
                 else
                   // ignore incoming transactions
                   if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
-                    step(index + 1, prompted, done)
+                    step(index + 1, prompted)
                   else
                     // if we have prompted for this approval before in step 1
                     if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TWarning.Approve in prompted))
                     // or we have prompted for this transfer before in step 2
                     or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TWarning.TransferOut in prompted)) then
-                      step(index + 1, prompted, done)
+                      step(index + 1, prompted)
                     else
                       thread.synchronize(procedure
                       begin
                         asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
                         begin
                           if allow then
-                            step(index + 1, prompted + [TWarning.Other], done)
+                            step(index + 1, prompted + [TWarning.Other])
                           else
                             block(prompted);
                         end, log);
                       end);
               end;
-              step(0, prompted, next);
+              step(0, prompted);
             end;
           end);
         end);
