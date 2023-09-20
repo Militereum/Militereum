@@ -32,3 +32,12 @@
 | Chain ID           | 10                              |
 | Currency symbol    | ETH                             |
 | Block explorer URL | https://optimistic.etherscan.io |
+
+|                    | Base                   |
+|--------------------|------------------------|
+| New RPC URL        | http://localhost:64506 |
+| Chain ID           | 8453                   |
+| Currency symbol    | ETH                    |
+| Block explorer URL | https://basescan.org   |
+
+Note: you might want to remove ALL non-Militereum RPC URLs from your crypto wallet because some attacks start with a popup which asks you to "Switch to Optimism" or "Switch to Arbitrum" before you are prompted with the malicious transaction that will then drain your wallet on said network.
