@@ -4,7 +4,7 @@
 * shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device, and
 * blocks suspicious transactions, and
 * works with every EVM-compatible wallet, including browser-based (eg. [MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/)) and native desktop (eg. [Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb)) wallets, and
-* non-custodial, 100% uptime. you do not depend on our infrastructure because there isn't any, and
+* non-custodial, 100% uptime. you do not depend on our servers because there aren't any, and
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/) and [Base](https://base.org/), and
 * available for [Windows](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR) and [macOS](https://github.com/svanas/Militereum/releases/latest/download/macOS.zip), and
 * auditable open source code
