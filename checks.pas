@@ -36,12 +36,14 @@ procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const ch
 procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure Step15(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 
 implementation
 
 uses
   // Delphi
+  System.JSON,
   System.Math,
   System.SysUtils,
   // Velthuis' BigNumbers
@@ -64,6 +66,7 @@ uses
   honeypot,
   limit,
   lowDexScore,
+  noDexPair,
   phisher,
   sanctioned,
   setApprovalForAll,
@@ -73,27 +76,53 @@ uses
   unverified;
 
 type
-  TTokenContract = record
+  TContract = record
   private
     Action : TTokenAction;
     Address: TAddress;
+    Chain  : TChain;
   public
-    constructor Create(const aAction: TTokenAction; const aAddress: TAddress);
+    constructor Create(const aAction: TTokenAction; const aAddress: TAddress; const aChain: TChain);
+    procedure IsToken(const callback: TProc<Boolean, IError>);
   end;
 
-constructor TTokenContract.Create(const aAction: TTokenAction; const aAddress: TAddress);
+constructor TContract.Create(const aAction: TTokenAction; const aAddress: TAddress; const aChain: TChain);
 begin
   Self.Action  := aAction;
   Self.Address := aAddress;
+  Self.Chain   := aChain;
+end;
+
+procedure TContract.IsToken(const callback: TProc<Boolean, IError>);
+begin
+  const address = Self.Address;
+  if Self.Action = taReceive then
+    callback(True, nil)
+  else
+    common.Etherscan(Self.Chain)
+      .ifErr(procedure(err: IError)
+      begin
+        callback(False, err);
+      end)
+      .&else(procedure(etherscan: IEtherscan)
+      begin
+        etherscan.getContractABI(address, procedure(abi: IContractABI; err: IError)
+        begin
+          if Assigned(err) then
+            callback(False, err)
+          else
+            callback(abi.IsERC20, nil);
+        end);
+      end);
 end;
 
 type
-  TGetEach = reference to procedure(const contracts: TArray<TTokenContract>; const err: IError);
+  TGetEach = reference to procedure(const contracts: TArray<TContract>; const err: IError);
   TSubStep = reference to procedure(const index: Integer; const prompted: TPrompted);
 
 procedure getEachToken(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TGetEach);
 begin
-  var contracts: TArray<TTokenContract> := [];
+  var contracts: TArray<TContract> := [];
   // step #1: tx.To
   tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
@@ -103,7 +132,7 @@ begin
       EXIT;
     end;
     if not isEOA then
-      contracts := contracts + [TTokenContract.Create(taTransact, tx.&To)];
+      contracts := contracts + [TContract.Create(taTransact, tx.&To, chain)];
     // step #2: incoming tokens
     server.apiKey(port)
       .ifErr(procedure(err: IError) begin callback(contracts, err) end)
@@ -124,7 +153,7 @@ begin
                     if incoming.Item(I).Contract.SameAs(tx.&To) then
                       // ignore tx.To
                     else
-                      contracts := contracts + [TTokenContract.Create(taReceive, incoming.Item(I).Contract)];
+                      contracts := contracts + [TContract.Create(taReceive, incoming.Item(I).Contract, chain)];
                 finally
                   callback(contracts, nil);
                 end;
@@ -439,7 +468,7 @@ begin
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
     .&else(procedure(apiKey: string)
     begin
-      getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TTokenContract>; const err: IError)
+      getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
       begin
         if Assigned(err) then
         begin
@@ -537,7 +566,7 @@ begin
       next(prompted, err);
       EXIT;
     end;
-    getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TTokenContract>; const err: IError)
+    getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
     begin
       if Assigned(err) then
       begin
@@ -595,7 +624,7 @@ end;
 // are we receiving (or otherwise transacting with) a low-DEX-score token?
 procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 begin
-  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TTokenContract>; const err: IError)
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
     if Assigned(err) then
     begin
@@ -632,8 +661,57 @@ begin
   end);
 end;
 
-// are we buying a honeypot token?
+// are we receiving (or otherwise transacting with) a token without a DEX pair?
 procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+begin
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
+  begin
+    if Assigned(err) then
+    begin
+      next(prompted, err);
+      EXIT;
+    end;
+    var step: TSubStep;
+    step := procedure(const index: Integer; const prompted: TPrompted)
+    begin
+      if index >= Length(contracts) then
+        next(prompted, nil)
+      else
+        contracts[index].IsToken(procedure(isToken: Boolean; err: IError)
+        begin
+          if Assigned(err) then
+            next(prompted, err)
+          else
+            if not isToken then
+              step(index + 1, prompted)
+            else
+              dextools.pairs({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(arr: TJsonArray; err: IError)
+              begin
+                if Assigned(err) then
+                  next(prompted, err)
+                else
+                  if arr.Count > 0 then
+                    step(index + 1, prompted)
+                  else
+                    thread.synchronize(procedure
+                    begin
+                      noDexPair.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                      begin
+                        if allow then
+                          step(index + 1, prompted + [TWarning.Other])
+                        else
+                          block(prompted);
+                      end, log);
+                    end);
+              end);
+        end);
+    end;
+    step(0, prompted);
+  end);
+end;
+
+// are we buying a honeypot token?
+procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -675,7 +753,7 @@ begin
 end;
 
 // simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet
-procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure Step15(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
