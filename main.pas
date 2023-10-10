@@ -437,7 +437,7 @@ begin
                 if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
               end;
 
-              next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13, Step14], 0, [],
+              next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13, Step14, Step15], 0, [],
               procedure(const prompted: TPrompted) // block
               begin
                 done(False, prompted);

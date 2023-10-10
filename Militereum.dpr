@@ -25,6 +25,7 @@ uses
   log in 'log.pas' {FrmLog},
   lowDexScore in 'lowDexScore.pas' {FrmLowDexScore},
   main in 'main.pas' {FrmMain},
+  noDexPair in 'noDexPair.pas' {FrmNoDexPair},
   phisher in 'phisher.pas' {FrmPhisher},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
   setApprovalForAll in 'setApprovalForAll.pas' {FrmSetApprovalForAll},
