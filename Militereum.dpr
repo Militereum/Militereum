@@ -3,6 +3,7 @@ program Militereum;
 uses
   System.StartUpCopy,
   FMX.Forms,
+  FMX.Types,
 {$IFDEF MACOS}
   common.mac in 'common.mac.pas',
   docker.mac in 'docker.mac.pas',
@@ -40,6 +41,7 @@ uses
 {$R *.res}
 
 begin
+  GlobalUseMetal := True;
   Application.Initialize;
 {$IFDEF MSWINDOWS}
   const mutex = CreateMutex(nil, False, 'MilitereumMutex');
