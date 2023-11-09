@@ -42,8 +42,6 @@ type
     imgOptimism: TImage;
     edtCopy: TEdit;
     btnCopy: TButton;
-    lblWelcome: TLabel;
-    imgMilitereum: TImage;
     lblTitle: TLabel;
     imgArbitrum1: TImage;
     imgOptimism1: TImage;
@@ -61,6 +59,10 @@ type
     btnSepolia: TSpeedButton;
     imgSepolia: TImage;
     imgSepolia1: TImage;
+    mnuShowTestNetworks: TMenuItem;
+    Header: TGridPanelLayout;
+    imgMilitereum: TImage;
+    lblWelcome: TLabel;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -68,6 +70,7 @@ type
     procedure btnSettingsClick(Sender: TObject);
     procedure mnuAutoRunClick(Sender: TObject);
     procedure lblHelpClick(Sender: TObject);
+    procedure mnuShowTestNetworksClick(Sender: TObject);
   strict private
     FCanNotify: Boolean;
     FNotified : Boolean;
@@ -76,12 +79,14 @@ type
     FServer: TEthereumRPCServer;
     FAllowedTransactions: TStrings;
     FBlockedTransactions: TStrings;
+    FShowTestNetworks: Boolean;
     procedure Dismiss;
     procedure Log(const err: IError); overload;
     procedure Log(const info: string); overload;
     procedure Notify; overload;
     function  Notify(const body: string): Boolean; overload;
     procedure ShowLogWindow;
+    procedure SetShowTestNetworks(Value: Boolean);
   strict protected
     procedure DoShow; override;
     procedure DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
@@ -94,6 +99,7 @@ type
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
     function GetChain: PChain;
+    property ShowTestNetworks: Boolean read FShowTestNetworks write SetShowTestNetworks;
   end;
 
 var
@@ -141,6 +147,7 @@ begin
   inherited Create(aOwner);
 
   FFirstTime := True;
+  FShowTestNetworks := True;
   Self.Caption := Self.Caption + ' ' + {$I Militereum.version};
 
   edtCopy.Visible := False;
@@ -275,6 +282,21 @@ procedure TFrmMain.ShowLogWindow;
 begin
   if not Assigned(FFrmLog) then FFrmLog := TFrmLog.Create(Application);
   FFrmLog.Show;
+end;
+
+procedure TFrmMain.SetShowTestNetworks(Value: Boolean);
+begin
+  if Value <> FShowTestNetworks then
+  begin
+    with Grid do if Value then ColumnCollection[1].Value := ColumnCollection[0].Value else ColumnCollection[1].Value := 0;
+    with Grid do if Value then ColumnCollection[2].Value := ColumnCollection[0].Value else ColumnCollection[2].Value := 0;
+    Self.ClientWidth := Round((function: Single
+    begin
+      Result := 2 * Grid.Position.X;
+      for var I := 0 to Pred(Grid.ColumnCollection.Count) do Result := Result + Grid.ColumnCollection[I].Value;
+    end)());
+    FShowTestNetworks := Value;
+  end;
 end;
 
 procedure TFrmMain.btnNetworkClick(Sender: TObject);
@@ -499,9 +521,16 @@ end;
 
 procedure TFrmMain.btnSettingsClick(Sender: TObject);
 begin
+  mnuShowTestNetworks.IsChecked := Self.ShowTestNetworks;
   mnuAutoRun.IsChecked := common.AutoRunEnabled;
   const P = btnSettings.LocalToScreen(PointF(0, btnSettings.Height));
   pmSettings.Popup(P.X, P.Y);
+end;
+
+procedure TFrmMain.mnuShowTestNetworksClick(Sender: TObject);
+begin
+  mnuShowTestNetworks.IsChecked := not mnuShowTestNetworks.IsChecked;
+  Self.ShowTestNetworks := mnuShowTestNetworks.IsChecked;
 end;
 
 procedure TFrmMain.mnuAutoRunClick(Sender: TObject);
