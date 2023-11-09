@@ -58,6 +58,9 @@ type
     btnBase: TSpeedButton;
     imgBase: TImage;
     imgBase1: TImage;
+    btnSepolia: TSpeedButton;
+    imgSepolia: TImage;
+    imgSepolia1: TImage;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -254,6 +257,8 @@ begin
     Result := @web3.Ethereum
   else if btnGoerli.IsPressed then
     Result := @web3.Goerli
+  else if btnSepolia.IsPressed then
+    Result := @web3.Sepolia
   else if btnPolygon.IsPressed then
     Result := @web3.Polygon
   else if btnArbitrum.IsPressed then

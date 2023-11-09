@@ -15,7 +15,7 @@ uses
   server;
 
 const
-  NUM_CHAINS = 6;
+  NUM_CHAINS = 7;
   LIMIT      = 5000; // USD
 
 type
@@ -93,12 +93,14 @@ begin
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
     Result := @web3.Goerli
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-    Result := @web3.Polygon
+    Result := @web3.Sepolia
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-    Result := @web3.Arbitrum
+    Result := @web3.Polygon
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
-    Result := @web3.Optimism
+    Result := @web3.Arbitrum
   else if (Self.Bindings.Count > 5) and (port = Self.Bindings[5].Port) then
+    Result := @web3.Optimism
+  else if (Self.Bindings.Count > 6) and (port = Self.Bindings[6].Port) then
     Result := @web3.Base
   else
     Result := nil;
@@ -116,14 +118,16 @@ begin
     Result := TResult<TIdPort>.Ok(Self.Bindings[0].Port)
   else if (chain = web3.Goerli) and (Self.Bindings.Count > 1) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[1].Port)
-  else if (chain = web3.Polygon) and (Self.Bindings.Count > 2) then
+  else if (chain = web3.Sepolia) and (Self.Bindings.Count > 2) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[2].Port)
-  else if (chain = web3.Arbitrum) and (Self.Bindings.Count > 3) then
+  else if (chain = web3.Polygon) and (Self.Bindings.Count > 3) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[3].Port)
-  else if (chain = web3.Optimism) and (Self.Bindings.Count > 4) then
+  else if (chain = web3.Arbitrum) and (Self.Bindings.Count > 4) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[4].Port)
-  else if (chain = web3.Base) and (Self.Bindings.Count > 5) then
+  else if (chain = web3.Optimism) and (Self.Bindings.Count > 5) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[5].Port)
+  else if (chain = web3.Base) and (Self.Bindings.Count > 6) then
+    Result := TResult<TIdPort>.Ok(Self.Bindings[6].Port)
   else
     Result := TResult<TIdPort>.Err(0, System.SysUtils.Format('invalid chain: %s', [chain.Name]));
 end;
@@ -135,11 +139,15 @@ begin
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_GOERLI)
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-    Result := TResult<string>.Ok(ALCHEMY_API_KEY_POLYGON)
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_SEPOLIA)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-    Result := TResult<string>.Ok(ALCHEMY_API_KEY_ARBITRUM)
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_POLYGON)
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_ARBITRUM)
+  else if (Self.Bindings.Count > 5) and (port = Self.Bindings[5].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_OPTIMISM)
+  else if (Self.Bindings.Count > 6) and (port = Self.Bindings[6].Port) then
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_BASE)
   else
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
 end;
@@ -151,12 +159,14 @@ begin
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Goerli, ALCHEMY_API_KEY_GOERLI, core)
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Polygon, ALCHEMY_API_KEY_POLYGON, core)
+    Result := web3.eth.alchemy.endpoint(web3.Sepolia, ALCHEMY_API_KEY_SEPOLIA, core)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Arbitrum, ALCHEMY_API_KEY_ARBITRUM, core)
+    Result := web3.eth.alchemy.endpoint(web3.Polygon, ALCHEMY_API_KEY_POLYGON, core)
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
+    Result := web3.eth.alchemy.endpoint(web3.Arbitrum, ALCHEMY_API_KEY_ARBITRUM, core)
+  else if (Self.Bindings.Count > 5) and (port = Self.Bindings[5].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Optimism, ALCHEMY_API_KEY_OPTIMISM, core)
-  else if (Self.Bindings.Count> 5) and (port = Self.Bindings[5].Port) then
+  else if (Self.Bindings.Count> 6) and (port = Self.Bindings[6].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Base, ALCHEMY_API_KEY_BASE, core)
   else
     Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
@@ -207,6 +217,8 @@ begin
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ETHEREUM))
   else if chain = web3.Goerli then
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_GOERLI))
+  else if chain = web3.Sepolia then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_SEPOLIA))
   else if chain = web3.Polygon then
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_POLYGON))
   else if chain = web3.Arbitrum then
