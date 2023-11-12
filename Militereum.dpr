@@ -18,6 +18,7 @@ uses
   base in 'base.pas' {FrmBase},
   checks in 'checks.pas',
   common in 'common.pas',
+  demo in 'demo.pas' {dmDemo: TDataModule},
   dextools in 'dextools.pas',
   docker in 'docker.pas' {FrmDocker},
   firsttime in 'firsttime.pas' {FrmFirstTime},
@@ -52,6 +53,7 @@ begin
   end;
 {$ENDIF MSWINDOWS}
   Application.CreateForm(TFrmMain, FrmMain);
+  Application.CreateForm(TdmDemo, dmDemo);
   common.initialize;
   Application.Run;
   common.finalize;

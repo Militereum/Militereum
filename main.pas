@@ -22,6 +22,7 @@ uses
   // web3
   web3,
   // project
+  demo,
   log,
   server;
 
@@ -63,6 +64,20 @@ type
     Header: TGridPanelLayout;
     imgMilitereum: TImage;
     lblWelcome: TLabel;
+    mnuDemo: TMenuItem;
+    mnuLimit: TMenuItem;
+    mnuApprove: TMenuItem;
+    mnuSanctioned: TMenuItem;
+    mnuUnverified: TMenuItem;
+    mnuPhisher: TMenuItem;
+    mnuSetApprovalForAll: TMenuItem;
+    mnuSpam: TMenuItem;
+    mnuHoneypot: TMenuItem;
+    mnuUnsupported: TMenuItem;
+    mnuNoDexPair: TMenuItem;
+    mnuFirsttime: TMenuItem;
+    mnuLowDexScore: TMenuItem;
+    mnuAirdrop: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -146,9 +161,11 @@ constructor TFrmMain.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
 
-  FFirstTime := True;
+  FFirstTime        := True;
   FShowTestNetworks := True;
+
   Self.Caption := Self.Caption + ' ' + {$I Militereum.version};
+  if common.Demo then Self.Caption := Self.Caption + ' - Demo mode';
 
   edtCopy.Visible := False;
   btnCopy.Visible := False;
@@ -523,6 +540,7 @@ procedure TFrmMain.btnSettingsClick(Sender: TObject);
 begin
   mnuShowTestNetworks.IsChecked := Self.ShowTestNetworks;
   mnuAutoRun.IsChecked := common.AutoRunEnabled;
+  mnuDemo.Visible := common.Demo;
   const P = btnSettings.LocalToScreen(PointF(0, btnSettings.Height));
   pmSettings.Popup(P.X, P.Y);
 end;

@@ -77,13 +77,14 @@ end;
 procedure TFrmLimit.SetRecipient(value: TAddress);
 begin
   lblRecipientText.Text := string(value);
-  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
     begin
-      lblRecipientText.Text := ens;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblRecipientText.Text := ens;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmLimit.SetAmount(value: Double);
