@@ -406,39 +406,29 @@ begin
 
   Self.Dismiss;
 
-  if docker.running then
-    if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
-      if docker.pull(RPCh_DOCKER_IMAGE) then
-        if docker.run(RPCh_CONTAINER_NAME, '--platform=linux/amd64 ' +
-          '-e PORT=8080 ' +
-          '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
-          '-p 8080:45750 ' +
-          '--rm ' + RPCh_DOCKER_IMAGE) then
-          repeat
-            TThread.Sleep(100);
-          until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
-
-//  if docker.installed then
-//    if docker.running or (function: Boolean
-//    begin
-//      Result := docker.start;
-//      if Result then
-//      repeat
-//        TThread.Sleep(100);
-//      until docker.running;
-//    end)() then
-//    if docker.getContainerId(RPCh_CONTAINER_NAME) = '' then
-//      if docker.pull(RPCh_DOCKER_IMAGE) then
-//        if docker.run(RPCh_CONTAINER_NAME, '-e RESPONSE_TIMEOUT=10000 ' +
-//          '-e DISCOVERY_PLATFORM_API_ENDPOINT=https://production.discovery.rpch.tech ' +
-//          '-e PORT=8080 ' +
-//          '-e DATA_DIR=app ' +
-//          '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
-//          '-p 8080:8080 ' +
-//          '--rm ' + RPCh_DOCKER_IMAGE) then
-//          repeat
-//            TThread.Sleep(100);
-//          until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
+  if (function: Boolean
+  begin
+    Result := docker.running;
+//  Result := docker.installed and docker.running or (function: Boolean
+//  begin
+//    Result := docker.start;
+//    if Result then
+//    repeat
+//      TThread.Sleep(100);
+//    until docker.running;
+//  end)();
+  end)()
+  and (docker.getContainerId(RPCh_CONTAINER_NAME) = '')
+  and docker.pull(RPCh_DOCKER_IMAGE)
+  and docker.run(RPCh_CONTAINER_NAME,
+    '--platform=linux/amd64 ' +
+    '-e FORCE_ZERO_HOP=true ' +
+    '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
+    Format('-p %d:%d ', [RPCh_PORT_NUMBER, RPCh_PORT_NUMBER]) +
+    '--rm ' + RPCh_DOCKER_IMAGE) then
+    repeat
+      TThread.Sleep(100);
+    until docker.getContainerId(RPCh_CONTAINER_NAME) <> '';
 
   if SameText(aPayload.Method, 'eth_sendRawTransaction') then
     if (aPayload.Params.Count > 0) and (aPayload.Params[0] is TJsonString) then
