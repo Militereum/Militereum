@@ -64,8 +64,8 @@ end;
 procedure TFrmHoneypot.SetToken(value: TAddress);
 begin
   FToken := value;
-  if not web3.utils.isHex(string(FToken)) then
-    lblTokenText.Text := string(FToken)
+  if common.Demo then
+    lblTokenText.Text := value
   else
     common.Symbol(Self.Chain, FToken, procedure(symbol: string; err: IError)
     begin
@@ -79,13 +79,14 @@ end;
 procedure TFrmHoneypot.SetRecipient(value: TAddress);
 begin
   lblRecipientText.Text := string(value);
-  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
     begin
-      lblRecipientText.Text := ens;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblRecipientText.Text := ens;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmHoneypot.lblTokenTextClick(Sender: TObject);

@@ -41,6 +41,7 @@ type
   end;
 
 function Debug: Boolean;
+function Demo: Boolean;
 function Ethereum: TChain;
 function Etherscan(const chain: TChain): IResult<IEtherscan>;
 function GetTempFileName: string;
@@ -202,6 +203,11 @@ end;
 function Debug: Boolean;
 begin
   Result := FindCmdLineSwitch('debug');
+end;
+
+function Demo: Boolean;
+begin
+  Result := FindCmdLineSwitch('demo');
 end;
 
 function Ethereum: TChain;

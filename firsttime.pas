@@ -55,13 +55,14 @@ end;
 procedure TFrmFirstTime.SetAddress(value: TAddress);
 begin
   lblAddressText.Text := string(value);
-  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
     begin
-      lblAddressText.Text := ens;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblAddressText.Text := ens;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmFirstTime.lblAddressTextClick(Sender: TObject);

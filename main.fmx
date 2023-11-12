@@ -1353,6 +1353,87 @@ object FrmMain: TFrmMain
       Text = 'Start Militereum automatically when you log in'
       OnClick = mnuAutoRunClick
     end
+    object mnuDemo: TMenuItem
+      Text = 'Demo'
+      object mnuApprove: TMenuItem
+        Action = dmDemo.actApprove
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuLimit: TMenuItem
+        Action = dmDemo.actLimit
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuSanctioned: TMenuItem
+        Action = dmDemo.actSanctioned
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuUnverified: TMenuItem
+        Action = dmDemo.actUnverified
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuFirsttime: TMenuItem
+        Action = dmDemo.actFirsttime
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuPhisher: TMenuItem
+        Action = dmDemo.actPhisher
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuSetApprovalForAll: TMenuItem
+        Action = dmDemo.actSetApprovalForAll
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuAirdrop: TMenuItem
+        Action = dmDemo.actAirdrop
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuSpam: TMenuItem
+        Action = dmDemo.actSpam
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuHoneypot: TMenuItem
+        Action = dmDemo.actHoneypot
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuUnsupported: TMenuItem
+        Action = dmDemo.actUnsupported
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuNoDexPair: TMenuItem
+        Action = dmDemo.actNoDexPair
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+      object mnuLowDexScore: TMenuItem
+        Action = dmDemo.actLowDexScore
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
+    end
   end
   object lblHelp: TLabel
     Anchors = [akLeft, akTop, akRight]

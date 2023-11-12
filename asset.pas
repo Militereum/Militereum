@@ -146,13 +146,14 @@ end;
 procedure TFrmAsset.SetSpender(value: TAddress);
 begin
   lblSpenderText.Text := string(value);
-  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
     begin
-      lblSpenderText.Text := ens;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblSpenderText.Text := ens;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmAsset.Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
