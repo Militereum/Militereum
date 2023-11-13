@@ -92,13 +92,7 @@ end;
 
 procedure TdmDemo.actApproveExecute(Sender: TObject);
 begin
-  web3.eth.tokenlists.token(common.Ethereum, '0x6B175474E89094C44Da98b954EedeAC495271d0F', procedure(dai: IToken; err: IError)
-  begin
-    thread.synchronize(procedure
-    begin
-      asset.approve(common.Ethereum, nil, dai, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', web3.Infinite, procedure(allow: Boolean) begin end, nil);
-    end);
-  end);
+  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', web3.Infinite, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);
