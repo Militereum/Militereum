@@ -65,7 +65,7 @@ procedure TFrmHoneypot.SetToken(value: TAddress);
 begin
   FToken := value;
   if common.Demo then
-    lblTokenText.Text := value
+    lblTokenText.Text := string(value)
   else
     common.Symbol(Self.Chain, FToken, procedure(symbol: string; err: IError)
     begin

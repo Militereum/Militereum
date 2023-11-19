@@ -42,6 +42,8 @@ type
 
 function Debug: Boolean;
 function Demo: Boolean;
+function Simulate: Boolean;
+
 function Ethereum: TChain;
 function Etherscan(const chain: TChain): IResult<IEtherscan>;
 function GetTempFileName: string;
@@ -176,6 +178,21 @@ begin
       Result := TResult<string>.Ok(Self.URI(RPCh_PORT_NUMBER) + '/?provider=' + Result.Value);
 end;
 
+function Debug: Boolean;
+begin
+  Result := FindCmdLineSwitch('debug');
+end;
+
+function Demo: Boolean;
+begin
+  Result := FindCmdLineSwitch('demo');
+end;
+
+function Simulate: Boolean;
+begin
+  Result := FindCmdLineSwitch('simulate');
+end;
+
 constructor TSemVer.Create(const aMajor, aMinor, aPatch: Integer);
 begin
   Self.Major := aMajor;
@@ -198,16 +215,6 @@ end;
 class operator TSemVer.GreaterThanOrEqual(const A, B: TSemVer): Boolean;
 begin
   Result := (A > B) or (A = B);
-end;
-
-function Debug: Boolean;
-begin
-  Result := FindCmdLineSwitch('debug');
-end;
-
-function Demo: Boolean;
-begin
-  Result := FindCmdLineSwitch('demo');
 end;
 
 function Ethereum: TChain;

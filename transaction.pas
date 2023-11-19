@@ -63,6 +63,7 @@ type
       FToIsEOA  : TIsEOA;
       FValue    : TWei;
       FData     : TBytes;
+      FEstimated: BigInteger;
       FSimulated: IAssetChanges;
   public
     constructor Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
@@ -78,12 +79,14 @@ type
 
 constructor TTransaction.Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
 begin
-  Self.FRaw     := raw;
-  Self.FNonce   := nonce;
-  Self.FTo      := &to;
-  Self.FToIsEOA := Unknown;
-  Self.FValue   := value;
-  Self.FData    := data;
+  Self.FRaw       := raw;
+  Self.FNonce     := nonce;
+  Self.FTo        := &to;
+  Self.FToIsEOA   := Unknown;
+  Self.FValue     := value;
+  Self.FData      := data;
+  Self.FEstimated := BigInteger.Zero;
+  Self.FSimulated := nil;
 end;
 
 function TTransaction.Nonce: BigInteger;
@@ -127,15 +130,22 @@ end;
 
 procedure TTransaction.EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
 begin
-  Self.From
-    .ifErr(procedure(err: IError)
-    begin
-      callback(BigInteger.Zero, err)
-    end)
-    .&else(procedure(from: TAddress)
-    begin
-      web3.eth.gas.estimateGas(TWeb3.Create(chain), from, Self.&To, web3.utils.toHex(Self.Data), callback)
-    end)
+  if FEstimated > BigInteger.Zero then
+    callback(FEstimated, nil)
+  else
+    Self.From
+      .ifErr(procedure(err: IError)
+      begin
+        callback(BigInteger.Zero, err)
+      end)
+      .&else(procedure(from: TAddress)
+      begin
+        web3.eth.gas.estimateGas(TWeb3.Create(chain), from, Self.&To, web3.utils.toHex(Self.Data), procedure(qty: BigInteger; err: IError)
+        begin
+          if (err = nil) then Self.FEstimated := qty;
+          callback(qty, err);
+        end);
+      end)
 end;
 
 procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
@@ -158,7 +168,7 @@ begin
       begin
         web3.eth.alchemy.api.simulate(apiKey, chain, from, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
         begin
-          Self.FSimulated := changes;
+          if (err = nil) then Self.FSimulated := changes;
           callback(changes, err);
         end);
       end);
