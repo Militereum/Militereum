@@ -58,6 +58,8 @@ uses
   // web3
   web3,
   web3.eth.tokenlists,
+  // Velthuis' BigNumbers
+  Velthuis.BigIntegers,
   // project
   airdrop,
   asset,

@@ -136,6 +136,7 @@ uses
   // Indy
   IdGlobal,
   // web3
+  web3.eth.alchemy.api,
   web3.utils,
   // project
   base,
@@ -164,8 +165,13 @@ begin
   FFirstTime        := True;
   FShowTestNetworks := True;
 
-  Self.Caption := Self.Caption + ' ' + {$I Militereum.version};
-  if common.Demo then Self.Caption := Self.Caption + ' - Demo mode';
+  Self.Caption := (function: string
+  begin
+    Result := Self.Caption + ' ' + {$I Militereum.version};
+    if common.Demo then Result := Result + ' - Demo mode';
+    if common.Debug then Result := Result + ' - Debug mode';
+    if common.Simulate then Result := Result + ' - Simulator';
+  end)();
 
   edtCopy.Visible := False;
   btnCopy.Visible := False;
@@ -471,16 +477,40 @@ begin
                 if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
               end;
 
-              next([Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13, Step14, Step15], 0, [],
-              procedure(const prompted: TPrompted) // block
+              const steps = (function: TSteps
               begin
-                done(False, prompted);
-              end,
-              procedure(const prompted: TPrompted) // allow
-              begin
-                Self.Notify(System.SysUtils.Format('Approved your transaction %s', [tx.Nonce.ToString]));
-                done(True, prompted);
-              end);
+                Result := [Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13, Step14, Step15];
+                if common.Simulate then
+                begin
+                  Result := Result + [Block];
+                  FServer.apiKey(aContext.Binding.Port).ifOk(procedure(apiKey: string)
+                  begin
+                    tx.Simulate(apiKey, chain^, procedure(changes: IAssetChanges; _: IError)
+                    begin
+                      if Assigned(changes) then
+                      begin
+                        var S: IFMXClipboardService;
+                        if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, S) then
+                        begin
+                          S.SetClipboard(changes.Raw);
+                          Self.Notify('Copied your simulated transaction to the clipboard');
+                        end;
+                      end;
+                    end);
+                  end)
+                end;
+              end)();
+
+              next(steps, 0, [],
+                procedure(const prompted: TPrompted) // block
+                begin
+                  done(False, prompted);
+                end,
+                procedure(const prompted: TPrompted) // allow
+                begin
+                  Self.Notify(System.SysUtils.Format('Approved your transaction %s', [tx.Nonce.ToString]));
+                  done(True, prompted);
+                end);
             end;
           end);
       end;
