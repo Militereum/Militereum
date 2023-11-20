@@ -97,7 +97,8 @@ type
     FShowTestNetworks: Boolean;
     procedure Dismiss;
     procedure Log(const err: IError); overload;
-    procedure Log(const info: string); overload;
+    procedure Log(const err: string); overload;
+    procedure Log(const err1, err2: string); overload;
     procedure Notify; overload;
     function  Notify(const body: string): Boolean; overload;
     procedure ShowLogWindow;
@@ -143,6 +144,7 @@ uses
   checks,
   common,
   docker,
+  error,
   thread,
   transaction,
   update;
@@ -400,9 +402,7 @@ end;
 
 procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
 type
-  TStep  = reference to procedure(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-  TSteps = array of TStep;
-  TNext  = reference to procedure(const steps: TSteps; const index: Integer; const prompted: TPrompted; const block: TBlock; const done: TBlock);
+  TNext = reference to procedure(const steps: TSteps; const index: Integer; const prompted: TPrompted; const done: TBlock);
 begin
   if not Assigned(aPayload) then
   begin
@@ -457,16 +457,31 @@ begin
               Self.Notify('Simulating your transaction');
 
               var next: TNext;
-              next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const block: TBlock; const done: TBlock)
+              next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const done: TBlock)
               begin
                 if index >= Length(steps) then
                   done(input)
                 else
-                  steps[index](FServer, aContext.Binding.Port, chain^, tx, input, block, procedure(const output: TPrompted; const err: IError)
+                  steps[index](input, procedure(const output: TPrompted; const err: IError)
                   begin
-                    if Assigned(err) then Self.Log(err);
-                    next(steps, index + 1, output, block, done)
-                  end, Self.Log);
+                    if Assigned(err) then
+                    begin
+                      var ME: IMilitereumError;
+                      if not Supports(err, IMilitereumError, ME) then
+                        Self.Log(err)
+                      else
+                        ME.Comment
+                          .ifErr(procedure(_: IError)
+                          begin
+                            Self.Log(Format('%s - %s', [ME.FuncName, ME.Message]))
+                          end)
+                          .&else(procedure(comment: string)
+                          begin
+                            Self.Log(Format('%s - %s', [ME.FuncName, comment]),  ME.Message)
+                          end)
+                    end;
+                    next(steps, index + 1, output, done);
+                  end);
               end;
 
               const done = procedure(const allow: Boolean; const prompted: TPrompted)
@@ -477,12 +492,12 @@ begin
                 if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
               end;
 
-              const steps = (function: TSteps
+              const steps = (function(const checks: TChecks): TSteps
               begin
-                Result := [Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, Step10, Step11, Step12, Step13, Step14, Step15];
+                Result := [checks.Step1, checks.Step2, checks.Step3, checks.Step4, checks.Step5, checks.Step6, checks.Step7, checks.Step8, checks.Step9, checks.Step10, checks.Step11, checks.Step12, checks.Step13, checks.Step14, checks.Step15];
                 if common.Simulate then
                 begin
-                  Result := Result + [Block];
+                  Result := Result + [checks.Fail];
                   FServer.apiKey(aContext.Binding.Port).ifOk(procedure(apiKey: string)
                   begin
                     tx.Simulate(apiKey, chain^, procedure(changes: IAssetChanges; _: IError)
@@ -499,13 +514,14 @@ begin
                     end);
                   end)
                 end;
-              end)();
-
-              next(steps, 0, [],
+              end)(
+              TChecks.Create(FServer, aContext.Binding.Port, chain^, tx,
                 procedure(const prompted: TPrompted) // block
                 begin
                   done(False, prompted);
-                end,
+                end, Self.Log));
+
+              next(steps, 0, [],
                 procedure(const prompted: TPrompted) // allow
                 begin
                   Self.Notify(System.SysUtils.Format('Approved your transaction %s', [tx.Nonce.ToString]));
@@ -540,19 +556,24 @@ end;
 
 procedure TFrmMain.Log(const err: IError);
 begin
-  if Assigned(FFrmLog) then
-    thread.synchronize(procedure
-    begin
-      FFrmLog.Add(TLine.Error, err.Message);
-    end);
+  Log(err.Message);
 end;
 
-procedure TFrmMain.Log(const info: string);
+procedure TFrmMain.Log(const err: string);
 begin
   if Assigned(FFrmLog) then
     thread.synchronize(procedure
     begin
-      FFrmLog.Add(TLine.Info, info);
+      FFrmLog.Add(TLine.Error, err);
+    end);
+end;
+
+procedure TFrmMain.Log(const err1, err2: string);
+begin
+  if Assigned(FFrmLog) then
+    thread.synchronize(procedure
+    begin
+      FFrmLog.Add(TLine.Error, err1, err2);
     end);
 end;
 

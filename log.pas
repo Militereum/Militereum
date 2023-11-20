@@ -28,7 +28,8 @@ type
     constructor Create(aOwner: TComponent); override;
     procedure BeginUpdate; reintroduce;
     procedure EndUpdate; reintroduce;
-    procedure Add(const line: TLine; const msg: string);
+    procedure Add(const line: TLine; const msg: string); overload;
+    procedure Add(const line: TLine; const msg1, msg2: string); overload;
   end;
 
 implementation
@@ -74,18 +75,31 @@ end;
 
 procedure TFrmLog.Add(const line: TLine; const msg: string);
 begin
-  Self.Memo.Lines.Add((
+  Add(line, msg, '');
+end;
+
+procedure TFrmLog.Add(const line: TLine; const msg1, msg2: string);
+
+  function Trim4k(const input: string): string; inline;
+  begin
+    if Length(input) > 4096 then
+      Result := Copy(input, Low(input), 4095) + '…'
+    else
+      Result := input;
+  end;
+
+begin
+  Self.Memo.Lines.Add(Trim4k((
     function(const time: string): string
     begin
       case line of
-        Request : Result := '[REQUEST]  ' + time + ' ' + msg;
-        Response: Result := '[RESPONSE] ' + time + ' ' + msg;
-        Info    : Result := '[INFO]     ' + time + ' ' + msg;
-        Error   : Result := '[!ERROR!]  ' + time + ' ' + msg;
+        Request : Result := '[REQUEST]  ' + time + ' ' + msg1;
+        Response: Result := '[RESPONSE] ' + time + ' ' + msg1;
+        Info    : Result := '[INFO]     ' + time + ' ' + msg1;
+        Error   : Result := '[!ERROR!]  ' + time + ' ' + msg1;
       end;
-      if Length(Result) > 4096 then Result := Copy(Result, Low(Result), 4095) + '…';
-    end)(FormatDateTime('hh:nn:ss:zzz', System.SysUtils.Now))
-  );
+    end)(FormatDateTime('hh:nn:ss:zzz', System.SysUtils.Now))));
+  if msg2 <> '' then Self.Memo.Lines.Add(Trim4k('           ' + msg2));
   if FUpdateCount = 0 then ScrollToBottom;
 end;
 

@@ -21,6 +21,7 @@ uses
   demo in 'demo.pas' {dmDemo: TDataModule},
   dextools in 'dextools.pas',
   docker in 'docker.pas' {FrmDocker},
+  error in 'error.pas',
   firsttime in 'firsttime.pas' {FrmFirstTime},
   honeypot in 'honeypot.pas' {FrmHoneypot},
   limit in 'limit.pas' {FrmLimit},
