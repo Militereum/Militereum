@@ -20,24 +20,55 @@ type
 
 type
   TBlock = reference to procedure(const prompted: TPrompted);
-  TNext  = reference to procedure(const prompted: TPrompted; const err: IError = nil);
+  TNext  = reference to procedure(const prompted: TPrompted; const err: IError);
 
-procedure Step1 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step2 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step3 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step4 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step5 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step6 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step7 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step8 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step9 (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Step15(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
-procedure Block (const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+type
+  TStep  = procedure(const prompted: TPrompted; const next: TNext) of object;
+  TSteps = array of TStep;
+
+type
+  IChecks = interface
+    procedure Step1 (const prompted: TPrompted; const next: TNext);
+    procedure Step2 (const prompted: TPrompted; const next: TNext);
+    procedure Step3 (const prompted: TPrompted; const next: TNext);
+    procedure Step4 (const prompted: TPrompted; const next: TNext);
+    procedure Step5 (const prompted: TPrompted; const next: TNext);
+    procedure Step6 (const prompted: TPrompted; const next: TNext);
+    procedure Step7 (const prompted: TPrompted; const next: TNext);
+    procedure Step8 (const prompted: TPrompted; const next: TNext);
+    procedure Step9 (const prompted: TPrompted; const next: TNext);
+    procedure Step10(const prompted: TPrompted; const next: TNext);
+    procedure Step11(const prompted: TPrompted; const next: TNext);
+    procedure Step12(const prompted: TPrompted; const next: TNext);
+    procedure Step13(const prompted: TPrompted; const next: TNext);
+    procedure Step14(const prompted: TPrompted; const next: TNext);
+    procedure Step15(const prompted: TPrompted; const next: TNext);
+    procedure Fail  (const prompted: TPrompted; const next: TNext);
+  end;
+
+type
+  TChecks = record // adapter, holds a reference to the interface
+  strict private
+    FChecks: IChecks;
+  public
+    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+    procedure Step1 (const prompted: TPrompted; const next: TNext);
+    procedure Step2 (const prompted: TPrompted; const next: TNext);
+    procedure Step3 (const prompted: TPrompted; const next: TNext);
+    procedure Step4 (const prompted: TPrompted; const next: TNext);
+    procedure Step5 (const prompted: TPrompted; const next: TNext);
+    procedure Step6 (const prompted: TPrompted; const next: TNext);
+    procedure Step7 (const prompted: TPrompted; const next: TNext);
+    procedure Step8 (const prompted: TPrompted; const next: TNext);
+    procedure Step9 (const prompted: TPrompted; const next: TNext);
+    procedure Step10(const prompted: TPrompted; const next: TNext);
+    procedure Step11(const prompted: TPrompted; const next: TNext);
+    procedure Step12(const prompted: TPrompted; const next: TNext);
+    procedure Step13(const prompted: TPrompted; const next: TNext);
+    procedure Step14(const prompted: TPrompted; const next: TNext);
+    procedure Step15(const prompted: TPrompted; const next: TNext);
+    procedure Fail  (const prompted: TPrompted; const next: TNext);
+  end;
 
 implementation
 
@@ -62,6 +93,7 @@ uses
   asset,
   common,
   dextools,
+  error,
   firsttime,
   honeypot,
   limit,
@@ -74,6 +106,8 @@ uses
   thread,
   unsupported,
   unverified;
+
+{--------------------------------- TContract ----------------------------------}
 
 type
   TContract = record
@@ -115,6 +149,8 @@ begin
         end);
       end);
 end;
+
+{-------------------------------- getEachToken --------------------------------}
 
 type
   TGetEach = reference to procedure(const contracts: TArray<TContract>; const err: IError);
@@ -163,22 +199,79 @@ begin
   end);
 end;
 
-// approve(address,uint256)
-procedure Step1(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+{------------------------------ TImplementation -------------------------------}
+
+type
+  TImplementation = class(TInterfacedObject, IChecks)
+  strict private
+    server: TEthereumRPCServer;
+    port  : TIdPort;
+    chain : TChain;
+    tx    : transaction.ITransaction;
+    block : TBlock;
+    log   : TLog;
+  public
+    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+    [TComment('approve(address,uint256)')]
+    procedure Step1(const prompted: TPrompted; const next: TNext);
+    [TComment('transfer(address,uint256)')]
+    procedure Step2(const prompted: TPrompted; const next: TNext);
+    [TComment('setApprovalForAll(address,bool)')]
+    procedure Step3(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with (a) smart contract and (b) not verified with etherscan?')]
+    procedure Step4(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transferring more than $5k in ERC-20, translated to USD?')]
+    procedure Step5(const prompted: TPrompted; const next: TNext);
+    [TComment('are we sending more than $5k in ETH, translated to USD?')]
+    procedure Step6(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with a contract that has been identified as a phisher in the MobyMask Phisher Registry?')]
+    procedure Step7(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with a spam contract or receiving spam tokens?')]
+    procedure Step8(const prompted: TPrompted; const next: TNext);
+    [TComment('have we transacted with this address before?')]
+    procedure Step9(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with an unsupported contract or receiving unsupported tokens?')]
+    procedure Step10(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with a sanctioned address?')]
+    procedure Step11(const prompted: TPrompted; const next: TNext);
+    [TComment('are we receiving (or otherwise transacting with) a low-DEX-score token?')]
+    procedure Step12(const prompted: TPrompted; const next: TNext);
+    [TComment('are we receiving (or otherwise transacting with) a token without a DEX pair?')]
+    procedure Step13(const prompted: TPrompted; const next: TNext);
+    [TComment('are we buying a honeypot token?')]
+    procedure Step14(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step15(const prompted: TPrompted; const next: TNext);
+    [TComment('include this step if you want the transaction to fail')]
+    procedure Fail(const prompted: TPrompted; const next: TNext);
+  end;
+
+constructor TImplementation.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+begin
+  inherited Create;
+  Self.server := server;
+  Self.port   := port;
+  Self.chain  := chain;
+  Self.tx     := tx;
+  Self.block  := block;
+  Self.log    := log;
+end;
+
+procedure TImplementation.Step1(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted) end)
+    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0x095EA7B3') then
-        next(prompted)
+        next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
           .ifErr(procedure(err: IError) begin next(prompted, err) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
-              next(prompted)
+              next(prompted, nil)
             else begin
               const value = (function(const args: TArray<TArg>): BigInteger
               begin
@@ -188,21 +281,21 @@ begin
                   Result := web3.Infinite;
               end)(args);
               if value = 0 then
-                next(prompted)
+                next(prompted, nil)
               else
                 web3.eth.tokenlists.token(chain, tx.&To, procedure(token: IToken; err: IError)
                 begin
                   if Assigned(err) then
-                    next(prompted, err)
+                    next(prompted, error.wrap(err, Self.Step1))
                   else if not Assigned(token) then
-                    next(prompted)
+                    next(prompted, nil)
                   else
                     thread.synchronize(procedure
                     begin
                       asset.approve(chain, tx, token, args[0].ToAddress, value, procedure(allow: Boolean)
                       begin
                         if allow then
-                          next(prompted + [TWarning.Approve])
+                          next(prompted + [TWarning.Approve], nil)
                         else
                           block(prompted);
                       end, log);
@@ -213,26 +306,25 @@ begin
     end);
 end;
 
-// transfer(address,uint256)
-procedure Step2(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step2(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted) end)
+    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
-        next(prompted)
+        next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
           .ifErr(procedure(err: IError) begin next(prompted, err) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
-              next(prompted)
+              next(prompted, nil)
             else begin
               const quantity = args[1].toUInt256;
               if quantity = 0 then
-                next(prompted)
+                next(prompted, nil)
               else
                 server.apiKey(port)
                   .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -241,9 +333,9 @@ begin
                     tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
                     begin
                       if Assigned(err) then
-                        next(prompted, err)
+                        next(prompted, error.wrap(err, Self.Step2))
                       else if not Assigned(changes) then
-                        next(prompted)
+                        next(prompted, nil)
                       else begin
                         const index = changes.IndexOf(tx.&To);
                         if (index > -1) and (changes.Item(index).Amount > 0) then
@@ -252,7 +344,7 @@ begin
                             asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
                             begin
                               if allow then
-                                next(prompted + [TWarning.TransferOut])
+                                next(prompted + [TWarning.TransferOut], nil)
                               else
                                 block(prompted);
                             end, log);
@@ -263,7 +355,7 @@ begin
                             honeypot.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
                             begin
                               if allow then
-                                next(prompted + [TWarning.Other])
+                                next(prompted + [TWarning.Other], nil)
                               else
                                 block(prompted);
                             end, log);
@@ -276,22 +368,21 @@ begin
     end);
 end;
 
-// setApprovalForAll(address,bool)
-procedure Step3(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step3(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted) end)
+    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA22CB465') then
-        next(prompted)
+        next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
           .ifErr(procedure(err: IError) begin next(prompted, err) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
-              next(prompted)
+              next(prompted, nil)
             else begin
               const approved = (function(const args: TArray<TArg>): Boolean
               begin
@@ -301,14 +392,14 @@ begin
                   Result := False;
               end)(args);
               if not approved then
-                next(prompted)
+                next(prompted, nil)
               else
                 thread.synchronize(procedure
                 begin
                   setApprovalForAll.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
                   begin
                     if allow then
-                      next(prompted + [TWarning.Other])
+                      next(prompted + [TWarning.Other], nil)
                     else
                       block(prompted);
                   end, log);
@@ -318,15 +409,14 @@ begin
     end);
 end;
 
-// are we transacting with (a) smart contract and (b) not verified with etherscan?
-procedure Step4(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step4(const prompted: TPrompted; const next: TNext);
 begin
   tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
     if Assigned(err) then
-      next(prompted, err)
+      next(prompted, error.wrap(err, Self.Step4))
     else if isEOA then
-      next(prompted)
+      next(prompted, nil)
     else
       common.Etherscan(chain)
         .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -335,16 +425,16 @@ begin
           etherscan.getContractSourceCode(tx.&To, procedure(src: string; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, err)
+              next(prompted, error.wrap(err, Self.Step4))
             else if src <> '' then
-              next(prompted)
+              next(prompted, nil)
             else
               thread.synchronize(procedure
               begin
                 unverified.show(chain, tx, tx.&To, procedure(allow: Boolean)
                 begin
                   if allow then
-                    next(prompted + [TWarning.Other])
+                    next(prompted + [TWarning.Other], nil)
                   else
                     block(prompted);
                 end, log);
@@ -354,47 +444,46 @@ begin
   end);
 end;
 
-// are we transferring more than $5k in ERC-20, translated to USD?
-procedure Step5(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step5(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted) end)
+    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
-        next(prompted)
+        next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
           .ifErr(procedure(err: IError) begin next(prompted, err) end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
-              next(prompted)
+              next(prompted, nil)
             else begin
               const quantity = args[1].toUInt256;
               if quantity = 0 then
-                next(prompted)
+                next(prompted, nil)
               else
                 web3.defillama.coin(chain, tx.&To, procedure(coin: ICoin; err: IError)
                 begin
                   if Assigned(err) or not Assigned(coin) then
-                    next(prompted, err)
+                    next(prompted, error.wrap(err, Self.Step5))
                   else begin
                     const amount = (quantity.AsDouble / Round(Power(10, coin.Decimals))) * coin.Price;
                     if amount < common.LIMIT then
-                      next(prompted)
+                      next(prompted, nil)
                     else
                       common.Symbol(chain, tx.&To, procedure(symbol: string; err: IError)
                       begin
                         if Assigned(err) then
-                          next(prompted, err)
+                          next(prompted, error.wrap(err, Self.Step5))
                         else
                           thread.synchronize(procedure
                           begin
                             limit.show(chain, tx, symbol, args[0].ToAddress, amount, procedure(allow: Boolean)
                             begin
                               if allow then
-                                next(prompted + [TWarning.Other])
+                                next(prompted + [TWarning.Other], nil)
                               else
                                 block(prompted);
                             end, log);
@@ -407,28 +496,27 @@ begin
     end);
 end;
 
-// are we sending more than $5k in ETH, translated to USD?
-procedure Step6(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step6(const prompted: TPrompted; const next: TNext);
 begin
   if tx.Value = 0 then
-    next(prompted)
+    next(prompted, nil)
   else begin
     const client: IWeb3 = TWeb3.Create(chain);
     client.LatestPrice(procedure(price: Double; err: IError)
     begin
       if (price = 0) or Assigned(err) then
-        next(prompted, err)
+        next(prompted, error.wrap(err, Self.Step6))
       else begin
         const amount = dotToFloat(fromWei(tx.Value, ether)) * price;
         if amount < common.LIMIT then
-          next(prompted)
+          next(prompted, nil)
         else
           thread.synchronize(procedure
           begin
             limit.show(chain, tx, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
             begin
               if allow then
-                next(prompted + [TWarning.Other])
+                next(prompted + [TWarning.Other], nil)
               else
                 block(prompted);
             end, log);
@@ -438,22 +526,21 @@ begin
   end;
 end;
 
-// are we transacting with a contract that has been identified as a phisher in the MobyMask Phisher Registry?
-procedure Step7(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step7(const prompted: TPrompted; const next: TNext);
 begin
   isPhisher(tx.&To, procedure(result: Boolean; err: IError)
   begin
     if Assigned(err) then
-      next(prompted, err)
+      next(prompted, error.wrap(err, Self.Step7))
     else if not result then
-      next(prompted)
+      next(prompted, nil)
     else
       thread.synchronize(procedure
       begin
         phisher.show(chain, tx, tx.&To, procedure(allow: Boolean)
         begin
           if allow then
-            next(prompted + [TWarning.Other])
+            next(prompted + [TWarning.Other], nil)
           else
             block(prompted);
         end, log);
@@ -461,8 +548,7 @@ begin
   end);
 end;
 
-// are we transacting with a spam contract or receiving spam tokens?
-procedure Step8(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step8(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -472,19 +558,19 @@ begin
       begin
         if Assigned(err) then
         begin
-          next(prompted, err);
+          next(prompted, error.wrap(err, Self.Step8));
           EXIT;
         end;
         var step: TSubStep;
         step := procedure(const index: Integer; const prompted: TPrompted)
         begin
           if index >= Length(contracts) then
-            next(prompted)
+            next(prompted, nil)
           else
             web3.eth.alchemy.api.detect(apiKey, chain, contracts[index].Address, procedure(contractType: TContractType; err: IError)
             begin
               if Assigned(err) then
-                next(prompted, err)
+                next(prompted, error.wrap(err, Self.Step8))
               else case contractType of
                 TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
                   thread.synchronize(procedure
@@ -518,8 +604,7 @@ begin
     end);
 end;
 
-// have we transacted with this address before?
-procedure Step9(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step9(const prompted: TPrompted; const next: TNext);
 begin
   tx.From
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -532,20 +617,20 @@ begin
           etherscan.getTransactions(from, procedure(txs: ITransactions; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, err)
+              next(prompted, error.wrap(err, Self.Step9))
             else if not Assigned(txs) then
-              next(prompted)
+              next(prompted, nil)
             else begin
               txs.FilterBy(tx.&To);
               if txs.Count > 0 then
-                next(prompted)
+                next(prompted, nil)
               else
                 thread.synchronize(procedure
                 begin
                   firsttime.show(chain, tx, tx.&To, procedure(allow: Boolean)
                   begin
                     if allow then
-                      next(prompted + [TWarning.Other])
+                      next(prompted + [TWarning.Other], nil)
                     else
                       block(prompted);
                   end, log);
@@ -556,21 +641,20 @@ begin
     end);
 end;
 
-// are we transacting with an unsupported contract or receiving unsupported tokens?
-procedure Step10(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step10(const prompted: TPrompted; const next: TNext);
 begin
   web3.eth.tokenlists.unsupported(chain, procedure(tokens: TTokens; err: IError)
   begin
     if Assigned(err) then
     begin
-      next(prompted, err);
+      next(prompted, error.wrap(err, Self.Step10));
       EXIT;
     end;
     getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
     begin
       if Assigned(err) then
       begin
-        next(prompted, err);
+        next(prompted, error.wrap(err, Self.Step10));
         EXIT;
       end;
       var step: TSubStep;
@@ -598,22 +682,21 @@ begin
   end);
 end;
 
-// are we transacting with a sanctioned address?
-procedure Step11(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step11(const prompted: TPrompted; const next: TNext);
 begin
   web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; err: IError)
   begin
     if Assigned(err) then
-      next(prompted, err)
+      next(prompted, error.wrap(err, Self.Step11))
     else if not value then
-      next(prompted)
+      next(prompted, nil)
     else
       thread.synchronize(procedure
       begin
         sanctioned.show(chain, tx, tx.&To, procedure(allow: Boolean)
         begin
           if allow then
-            next(prompted + [TWarning.Other])
+            next(prompted + [TWarning.Other], nil)
           else
             block(prompted);
         end, log);
@@ -621,14 +704,13 @@ begin
   end);
 end;
 
-// are we receiving (or otherwise transacting with) a low-DEX-score token?
-procedure Step12(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure Timplementation.Step12(const prompted: TPrompted; const next: TNext);
 begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
     if Assigned(err) then
     begin
-      next(prompted, err);
+      next(prompted, error.wrap(err, Self.Step12));
       EXIT;
     end;
     var step: TSubStep;
@@ -640,7 +722,7 @@ begin
         dextools.score({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(score: Integer; err: IError)
         begin
           if Assigned(err) then
-            next(prompted, err)
+            next(prompted, error.wrap(err, Self.Step12))
           else
             if (score = 0) or (score >= 50) then
               step(index + 1, prompted)
@@ -661,14 +743,13 @@ begin
   end);
 end;
 
-// are we receiving (or otherwise transacting with) a token without a DEX pair?
-procedure Step13(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step13(const prompted: TPrompted; const next: TNext);
 begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
     if Assigned(err) then
     begin
-      next(prompted, err);
+      next(prompted, error.wrap(err, Self.Step13));
       EXIT;
     end;
     var step: TSubStep;
@@ -680,7 +761,7 @@ begin
         contracts[index].IsToken(procedure(isToken: Boolean; err: IError)
         begin
           if Assigned(err) then
-            next(prompted, err)
+            next(prompted, error.wrap(err, Self.Step13))
           else
             if not isToken then
               step(index + 1, prompted)
@@ -688,7 +769,7 @@ begin
               dextools.pairs({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(arr: TJsonArray; err: IError)
               begin
                 if Assigned(err) then
-                  next(prompted, err)
+                  next(prompted, error.wrap(err, Self.Step13))
                 else
                   if arr.Count > 0 then
                     step(index + 1, prompted)
@@ -710,8 +791,7 @@ begin
   end);
 end;
 
-// are we buying a honeypot token?
-procedure Step14(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step14(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -724,15 +804,15 @@ begin
           web3.eth.alchemy.api.honeypots(apiKey, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, err)
+              next(prompted, error.wrap(err, Self.Step14))
             else if (honeypots = nil) or (honeypots.Count = 0) then
-              next(prompted)
+              next(prompted, nil)
             else begin
               var step: TSubStep;
               step := procedure(const index: Integer; const prompted: TPrompted)
               begin
                 if index >= honeypots.Count then
-                  next(prompted)
+                  next(prompted, nil)
                 else
                   thread.synchronize(procedure
                   begin
@@ -752,8 +832,7 @@ begin
     end);
 end;
 
-// simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet
-procedure Step15(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Step15(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -766,9 +845,9 @@ begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, err)
+              next(prompted, error.wrap(err, Self.Step15))
             else if not Assigned(changes) then
-              next(prompted)
+              next(prompted, nil)
             else begin
               const approvals = (function(const changes: IAssetChanges): Integer
               begin
@@ -786,7 +865,7 @@ begin
               step := procedure(const index: Integer; const prompted: TPrompted)
               begin
                 if index >= changes.Count then
-                  next(prompted)
+                  next(prompted, nil)
                 else
                   // ignore incoming transactions
                   if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
@@ -816,10 +895,96 @@ begin
     end);
 end;
 
-// include this step if you want every transaction to fail (debug only)
-procedure Block(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const prompted: TPrompted; const block: TBlock; const next: TNext; const log: TLog);
+procedure TImplementation.Fail(const prompted: TPrompted; const next: TNext);
 begin
   block(prompted);
+end;
+
+{---------------------------------- TChecks -----------------------------------}
+
+constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+begin
+  Self.FChecks := TImplementation.Create(server, port, chain, tx, block, log);
+end;
+
+procedure TChecks.Step1(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step1(prompted, next);
+end;
+
+procedure TChecks.Step2(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step2(prompted, next);
+end;
+
+procedure TChecks.Step3(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step3(prompted, next);
+end;
+
+procedure TChecks.Step4(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step4(prompted, next);
+end;
+
+procedure TChecks.Step5(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step5(prompted, next);
+end;
+
+procedure TChecks.Step6(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step6(prompted, next);
+end;
+
+procedure TChecks.Step7(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step7(prompted, next);
+end;
+
+procedure TChecks.Step8(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step8(prompted, next);
+end;
+
+procedure TChecks.Step9(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step9(prompted, next);
+end;
+
+procedure TChecks.Step10(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step10(prompted, next);
+end;
+
+procedure TChecks.Step11(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step11(prompted, next);
+end;
+
+procedure TChecks.Step12(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step12(prompted, next);
+end;
+
+procedure TChecks.Step13(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step13(prompted, next);
+end;
+
+procedure TChecks.Step14(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step14(prompted, next);
+end;
+
+procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step15(prompted, next);
+end;
+
+procedure TChecks.Fail(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Fail(prompted, next);
 end;
 
 end.
