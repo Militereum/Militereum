@@ -12,30 +12,37 @@
 | Currency symbol    | ETH                         |
 | Block explorer URL | https://goerli.etherscan.io |
 
+|                    | Sepolia                      |
+|--------------------|------------------------------|
+| New RPC URL        | http://localhost:64509       |
+| Chain ID           | 11155111                     |
+| Currency symbol    | ETH                          |
+| Block explorer URL | https://sepolia.etherscan.io |
+
 |                    | Polygon                 |
 |--------------------|-------------------------|
-| New RPC URL        | http://localhost:64509  |
+| New RPC URL        | http://localhost:64508  |
 | Chain ID           | 137                     |
 | Currency symbol    | MATIC                   |
 | Block explorer URL | https://polygonscan.com |
 
 |                    | Arbitrum               |
 |--------------------|------------------------|
-| New RPC URL        | http://localhost:64508 |
+| New RPC URL        | http://localhost:64507 |
 | Chain ID           | 42161                  |
 | Currency symbol    | ETH                    |
 | Block explorer URL | https://arbiscan.io    |
 
 |                    | Optimism                        |
 |--------------------|---------------------------------|
-| New RPC URL        | http://localhost:64507          |
+| New RPC URL        | http://localhost:64506          |
 | Chain ID           | 10                              |
 | Currency symbol    | ETH                             |
 | Block explorer URL | https://optimistic.etherscan.io |
 
 |                    | Base                   |
 |--------------------|------------------------|
-| New RPC URL        | http://localhost:64506 |
+| New RPC URL        | http://localhost:64505 |
 | Chain ID           | 8453                   |
 | Currency symbol    | ETH                    |
 | Block explorer URL | https://basescan.org   |
