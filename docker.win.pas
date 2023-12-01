@@ -20,9 +20,12 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.IOUtils,
-  WinAPI.ShellAPI,
   System.SysUtils,
+  // Windows
+  WinAPI.ShellAPI,
   WinAPI.Windows,
+  // Indy
+  IdSSLOpenSSLHeaders,
   // Project
   common;
 
@@ -128,7 +131,9 @@ end;
 
 function installer: string;
 begin
-  const libeay32 = TPath.GetDirectoryName(ParamStr(0)) + TPath.DirectorySeparatorChar + 'libeay32.dll';
+  IdOpenSSLSetLibPath(TPath.GetTempPath);
+
+  const libeay32 = IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'libeay32.dll';
   if not TFile.Exists(libeay32) then
   begin
     const RS = TResourceStream.Create(hInstance, 'libeay32', RT_RCDATA);
@@ -144,7 +149,7 @@ begin
     end;
   end;
 
-  const ssleay32 = TPath.GetDirectoryName(ParamStr(0)) + TPath.DirectorySeparatorChar + 'ssleay32.dll';
+  const ssleay32 = IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'ssleay32.dll';
   if not TFile.Exists(ssleay32) then
   begin
     const RS = TResourceStream.Create(hInstance, 'ssleay32', RT_RCDATA);
