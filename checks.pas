@@ -43,6 +43,7 @@ type
     procedure Step13(const prompted: TPrompted; const next: TNext);
     procedure Step14(const prompted: TPrompted; const next: TNext);
     procedure Step15(const prompted: TPrompted; const next: TNext);
+    procedure Step16(const prompted: TPrompted; const next: TNext);
     procedure Fail  (const prompted: TPrompted; const next: TNext);
   end;
 
@@ -67,6 +68,7 @@ type
     procedure Step13(const prompted: TPrompted; const next: TNext);
     procedure Step14(const prompted: TPrompted; const next: TNext);
     procedure Step15(const prompted: TPrompted; const next: TNext);
+    procedure Step16(const prompted: TPrompted; const next: TNext);
     procedure Fail  (const prompted: TPrompted; const next: TNext);
   end;
 
@@ -91,6 +93,7 @@ uses
   // project
   airdrop,
   asset,
+  censorable,
   common,
   dextools,
   error,
@@ -238,10 +241,12 @@ type
     procedure Step12(const prompted: TPrompted; const next: TNext);
     [TComment('are we receiving (or otherwise transacting with) a token without a DEX pair?')]
     procedure Step13(const prompted: TPrompted; const next: TNext);
-    [TComment('are we buying a honeypot token?')]
+    [TComment('are we receiving (or otherwise transacting with) a censorable token that can blacklist you?')]
     procedure Step14(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we buying a honeypot token?')]
     procedure Step15(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step16(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -793,6 +798,60 @@ end;
 
 procedure TImplementation.Step14(const prompted: TPrompted; const next: TNext);
 begin
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
+  begin
+    if Assigned(err) then
+      next(prompted, error.wrap(err, Self.Step14))
+    else
+      common.Etherscan(chain)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step14))
+        end)
+        .&else(procedure(etherscan: IEtherscan)
+        begin
+          var step: TSubStep;
+          step := procedure(const index: Integer; const prompted: TPrompted)
+          begin
+            if index >= Length(contracts) then
+              next(prompted, nil)
+            else
+              etherscan.getContractABI(contracts[index].Address, procedure(abi: IContractABI; err: IError)
+              begin
+                if Assigned(err) then
+                  next(prompted, error.wrap(err, Self.Step14))
+                else
+                  if not (function: Boolean // returns True if censorable, otherwise False
+                  begin
+                    for var I := 0 to Pred(abi.Count) do
+                      if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('blacklist', abi.Item(I).Name.ToLower) > 0) then
+                      begin
+                        Result := True;
+                        EXIT;
+                      end;
+                    Result := False;
+                  end)() then
+                    step(index + 1, prompted)
+                  else
+                    thread.synchronize(procedure
+                    begin
+                      censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
+                      begin
+                        if allow then
+                          step(index + 1, prompted + [TWarning.Other])
+                        else
+                          block(prompted);
+                      end, log);
+                    end);
+              end);
+          end;
+          step(0, prompted);
+        end);
+  end);
+end;
+
+procedure TImplementation.Step15(const prompted: TPrompted; const next: TNext);
+begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
     .&else(procedure(apiKey: string)
@@ -804,7 +863,7 @@ begin
           web3.eth.alchemy.api.honeypots(apiKey, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step14))
+              next(prompted, error.wrap(err, Self.Step15))
             else if (honeypots = nil) or (honeypots.Count = 0) then
               next(prompted, nil)
             else begin
@@ -832,7 +891,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step15(const prompted: TPrompted; const next: TNext);
+procedure TImplementation.Step16(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -845,7 +904,7 @@ begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step15))
+              next(prompted, error.wrap(err, Self.Step16))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
@@ -980,6 +1039,11 @@ end;
 procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
 begin
   Self.FChecks.Step15(prompted, next);
+end;
+
+procedure TChecks.Step16(const prompted: TPrompted; const next: TNext);
+begin
+  Self.FChecks.Step16(prompted, next);
 end;
 
 procedure TChecks.Fail(const prompted: TPrompted; const next: TNext);

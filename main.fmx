@@ -1421,6 +1421,12 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuCensorable: TMenuItem
+        Action = dmDemo.actCensorable
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
       object mnuNoDexPair: TMenuItem
         Action = dmDemo.actNoDexPair
         Enabled = True
