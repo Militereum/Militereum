@@ -25,6 +25,7 @@ type
     actNoDexPair: TAction;
     actLowDexScore: TAction;
     actAirdrop: TAction;
+    actCensorable: TAction;
     procedure actApproveExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actSanctionedExecute(Sender: TObject);
@@ -39,6 +40,7 @@ type
     procedure actUpdate(Sender: TObject);
     procedure actLowDexScoreExecute(Sender: TObject);
     procedure actAirdropExecute(Sender: TObject);
+    procedure actCensorableExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -64,6 +66,7 @@ uses
   airdrop,
   asset,
   base,
+  censorable,
   common,
   firsttime,
   honeypot,
@@ -95,6 +98,11 @@ end;
 procedure TdmDemo.actApproveExecute(Sender: TObject);
 begin
   asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', web3.Infinite, procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actCensorableExecute(Sender: TObject);
+begin
+  censorable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);

@@ -77,5 +77,10 @@ object dmDemo: TdmDemo
       OnExecute = actAirdropExecute
       OnUpdate = actUpdate
     end
+    object actCensorable: TAction
+      Text = 'You buying a censorable token that can blacklist you'
+      OnExecute = actCensorableExecute
+      OnUpdate = actUpdate
+    end
   end
 end
