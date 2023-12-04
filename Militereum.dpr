@@ -30,6 +30,7 @@ uses
   lowDexScore in 'lowDexScore.pas' {FrmLowDexScore},
   main in 'main.pas' {FrmMain},
   noDexPair in 'noDexPair.pas' {FrmNoDexPair},
+  pausable in 'pausable.pas' {FrmPausable},
   phisher in 'phisher.pas' {FrmPhisher},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
   setApprovalForAll in 'setApprovalForAll.pas' {FrmSetApprovalForAll},

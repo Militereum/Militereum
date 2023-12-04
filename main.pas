@@ -79,6 +79,7 @@ type
     mnuLowDexScore: TMenuItem;
     mnuAirdrop: TMenuItem;
     mnuCensorable: TMenuItem;
+    mnuPausable: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -173,7 +174,7 @@ begin
     Result := Self.Caption + ' ' + {$I Militereum.version};
     if common.Demo then Result := Result + ' - Demo mode';
     if common.Debug then Result := Result + ' - Debug mode';
-    if common.Simulate then Result := Result + ' - Simulator';
+    if common.Simulate then Result := Result + ' - Simulate-only';
   end)();
 
   edtCopy.Visible := False;

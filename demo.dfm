@@ -82,5 +82,12 @@ object dmDemo: TdmDemo
       OnExecute = actCensorableExecute
       OnUpdate = actUpdate
     end
+    object actPausable: TAction
+      Text = 
+        'You buying a pausable token that can prevent you from swapping o' +
+        'r selling'
+      OnExecute = actPausableExecute
+      OnUpdate = actUpdate
+    end
   end
 end

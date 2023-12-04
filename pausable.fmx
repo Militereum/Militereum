@@ -1,4 +1,4 @@
-inherited FrmCensorable: TFrmCensorable
+inherited FrmPausable: TFrmPausable
   ClientHeight = 246
   DesignerMasterStyle = 0
   object lblTitle: TLabel
@@ -11,7 +11,7 @@ inherited FrmCensorable: TFrmCensorable
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You are about to %s a censorable %s'
+    Text = 'You are about to %s a pausable %s'
     TabOrder = 0
   end
   object lblToken: TLabel
@@ -40,8 +40,8 @@ inherited FrmCensorable: TFrmCensorable
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 
-      'Your wallet can be blacklisted from being able to transfer, swap' +
-      ' or sell this token.'
+      'Token transfers can be paused, preventing you from swapping or s' +
+      'elling.'
     TabOrder = 2
   end
 end

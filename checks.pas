@@ -102,6 +102,7 @@ uses
   limit,
   lowDexScore,
   noDexPair,
+  pausable,
   phisher,
   sanctioned,
   setApprovalForAll,
@@ -821,9 +822,9 @@ begin
                 if Assigned(err) then
                   next(prompted, error.wrap(err, Self.Step14))
                 else
-                  if not (function: Boolean // returns True if censorable, otherwise False
+                  if (function: Boolean // returns True if censorable, otherwise False
                   begin
-                    for var I := 0 to Pred(abi.Count) do
+                    if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
                       if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('blacklist', abi.Item(I).Name.ToLower) > 0) then
                       begin
                         Result := True;
@@ -831,8 +832,6 @@ begin
                       end;
                     Result := False;
                   end)() then
-                    step(index + 1, prompted)
-                  else
                     thread.synchronize(procedure
                     begin
                       censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
@@ -842,7 +841,30 @@ begin
                         else
                           block(prompted);
                       end, log);
-                    end);
+                    end)
+                  else
+                    if (function: Boolean // returns True if pausable, otherwise False
+                    begin
+                      if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
+                        if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('pause', abi.Item(I).Name.ToLower) > 0) then
+                        begin
+                          Result := True;
+                          EXIT;
+                        end;
+                      Result := False;
+                    end)() then
+                      thread.synchronize(procedure
+                      begin
+                        pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
+                        begin
+                          if allow then
+                            step(index + 1, prompted + [TWarning.Other])
+                          else
+                            block(prompted);
+                        end, log);
+                      end)
+                    else
+                      step(index + 1, prompted);
               end);
           end;
           step(0, prompted);
