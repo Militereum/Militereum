@@ -26,6 +26,7 @@ type
     actLowDexScore: TAction;
     actAirdrop: TAction;
     actCensorable: TAction;
+    actPausable: TAction;
     procedure actApproveExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actSanctionedExecute(Sender: TObject);
@@ -41,6 +42,7 @@ type
     procedure actLowDexScoreExecute(Sender: TObject);
     procedure actAirdropExecute(Sender: TObject);
     procedure actCensorableExecute(Sender: TObject);
+    procedure actPausableExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -73,6 +75,7 @@ uses
   limit,
   lowDexScore,
   noDexPair,
+  pausable,
   phisher,
   sanctioned,
   setApprovalForAll,
@@ -128,6 +131,11 @@ end;
 procedure TdmDemo.actNoDexPairExecute(Sender: TObject);
 begin
   noDexPair.show(taReceive, common.Ethereum, nil, '0x14C926F2290044B647e1Bf2072e67B495eff1905', procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actPausableExecute(Sender: TObject);
+begin
+  pausable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actPhisherExecute(Sender: TObject);

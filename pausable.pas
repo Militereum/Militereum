@@ -1,4 +1,4 @@
-unit censorable;
+unit pausable;
 
 interface
 
@@ -19,7 +19,7 @@ uses
   transaction;
 
 type
-  TFrmCensorable = class(TFrmBase)
+  TFrmPausable = class(TFrmBase)
     lblTitle: TLabel;
     lblToken: TLabel;
     lblFooter: TLabel;
@@ -49,21 +49,21 @@ uses
 
 procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLog);
 begin
-  const frmCensorable = TFrmCensorable.Create(chain, tx, callback, log);
-  frmCensorable.Action   := action;
-  frmCensorable.Contract := contract;
-  frmCensorable.IsERC20  := isERC20;
-  frmCensorable.Show;
+  const frmPausable = TFrmPausable.Create(chain, tx, callback, log);
+  frmPausable.Action   := action;
+  frmPausable.Contract := contract;
+  frmPausable.IsERC20  := isERC20;
+  frmPausable.Show;
 end;
 
-{ TFrmCensorable }
+{ TFrmPausable }
 
-procedure TFrmCensorable.SetAction(value: TTokenAction);
+procedure TFrmPausable.SetAction(value: TTokenAction);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value], '%s']);
 end;
 
-procedure TFrmCensorable.SetContract(value: TAddress);
+procedure TFrmPausable.SetContract(value: TAddress);
 begin
   lblToken.Text := string(value);
   value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
@@ -75,7 +75,7 @@ begin
   end);
 end;
 
-procedure TFrmCensorable.SetIsERC20(value: Boolean);
+procedure TFrmPausable.SetIsERC20(value: Boolean);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [(function: string
   begin
@@ -83,7 +83,7 @@ begin
   end)()]);
 end;
 
-procedure TFrmCensorable.lblTokenClick(Sender: TObject);
+procedure TFrmPausable.lblTokenClick(Sender: TObject);
 begin
   TAddress.FromName(TWeb3.Create(common.Ethereum), lblToken.Text, procedure(address: TAddress; err: IError)
   begin
