@@ -53,9 +53,11 @@ Besides token allowances, Militereum will block...
 8. you buying [a token that lies about its own token supply](assets/spam.png)
 9. you buying [a honeypot token that is designed to pump but you cannot sell](assets/honeypot.png)
 10. you buying [a token that is unsupported by Uniswap](assets/unsupported.png)
-11. you receiving [a token without a DEX pair](assets/noDexPair.png)
-12. you receiving [a low-DEX-score token](assets/lowDexScore.png)
-13. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
+11. you buying [a censorable token that can blacklist you](assets/censorable.png)
+12. you buying [a pausable token that can prevent you from swapping or selling](assets/pausable.png)
+13. you receiving [a token without a DEX pair](assets/noDexPair.png)
+14. you receiving [a low-DEX-score token](assets/lowDexScore.png)
+15. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
 
