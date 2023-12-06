@@ -151,18 +151,12 @@ end;
 procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
 begin
   if Assigned(FSimulated) then
-    TTask.Create(procedure
-    begin
-      callback(FSimulated, nil)
-    end).Start
+    callback(FSimulated, nil)
   else
     Self.From
       .ifErr(procedure(err: IError)
       begin
-        TTask.Create(procedure
-        begin
-          callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
-        end).Start
+        callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
       end)
       .&else(procedure(from: TAddress)
       begin

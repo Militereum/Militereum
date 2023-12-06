@@ -99,8 +99,7 @@ type
     FShowTestNetworks: Boolean;
     procedure Dismiss;
     procedure Log(const err: IError); overload;
-    procedure Log(const err: string); overload;
-    procedure Log(const err1, err2: string); overload;
+    procedure Log(const line: TLine; const row: string); overload;
     procedure Notify; overload;
     function  Notify(const body: string): Boolean; overload;
     procedure ShowLogWindow;
@@ -432,7 +431,7 @@ begin
     '--platform=linux/amd64 ' +
     '-e FORCE_ZERO_HOP=true ' +
     '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
-    Format('-p %d:%d ', [RPCh_PORT_NUMBER, RPCh_PORT_NUMBER]) +
+    System.SysUtils.Format('-p %d:%d ', [RPCh_PORT_NUMBER, RPCh_PORT_NUMBER]) +
     '--rm ' + RPCh_DOCKER_IMAGE) then
     repeat
       TThread.Sleep(100);
@@ -469,32 +468,39 @@ begin
                     if Assigned(err) then
                     begin
                       var ME: IMilitereumError;
-                      if not Supports(err, IMilitereumError, ME) then
-                        Self.Log(err)
-                      else
-                        ME.Comment
-                          .ifErr(procedure(_: IError)
-                          begin
-                            Self.Log(Format('%s - %s', [ME.FuncName, ME.Message]))
-                          end)
-                          .&else(procedure(comment: string)
-                          begin
-                            Self.Log(Format('%s - %s', [ME.FuncName, comment]),  ME.Message)
-                          end)
+                      if Supports(err, IMilitereumError, ME) then ME.Comment
+                        .ifErr(procedure(_: IError)
+                        begin
+                          Self.Log(TLine.Info, ME.FuncName)
+                        end)
+                        .&else(procedure(comment: string)
+                        begin
+                          Self.Log(TLine.Info, System.SysUtils.Format('%s - %s', [ME.FuncName, comment]))
+                        end);
+                      Self.Log(err);
                     end;
                     next(steps, index + 1, output, done);
                   end);
               end;
 
+              var checks: TChecks := nil;
+
               const done = procedure(const allow: Boolean; const prompted: TPrompted)
               begin
                 if allow then Self.AllowedTransactions.Add(params) else Self.BlockedTransactions.Add(params);
+                if Assigned(checks) then checks.Free;
                 common.afterTransaction;
                 callback(allow);
                 if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
               end;
 
-              const steps = (function(const checks: TChecks): TSteps
+              checks := TChecks.Create(FServer, aContext.Binding.Port, chain^, tx,
+                procedure(const prompted: TPrompted) // block
+                begin
+                  done(False, prompted);
+                end, Self.Log);
+
+              const steps = (function: TSteps
               begin
                 Result := [checks.Step1, checks.Step2, checks.Step3, checks.Step4, checks.Step5, checks.Step6, checks.Step7, checks.Step8, checks.Step9, checks.Step10, checks.Step11, checks.Step12, checks.Step13, checks.Step14, checks.Step15, checks.Step16];
                 if common.Simulate then
@@ -516,12 +522,7 @@ begin
                     end);
                   end)
                 end;
-              end)(
-              TChecks.Create(FServer, aContext.Binding.Port, chain^, tx,
-                procedure(const prompted: TPrompted) // block
-                begin
-                  done(False, prompted);
-                end, Self.Log));
+              end)();
 
               next(steps, 0, [],
                 procedure(const prompted: TPrompted) // allow
@@ -558,24 +559,15 @@ end;
 
 procedure TFrmMain.Log(const err: IError);
 begin
-  Log(err.Message);
+  Log(TLine.Error, err.Message);
 end;
 
-procedure TFrmMain.Log(const err: string);
+procedure TFrmMain.Log(const line: TLine; const row: string);
 begin
   if Assigned(FFrmLog) then
     thread.synchronize(procedure
     begin
-      FFrmLog.Add(TLine.Error, err);
-    end);
-end;
-
-procedure TFrmMain.Log(const err1, err2: string);
-begin
-  if Assigned(FFrmLog) then
-    thread.synchronize(procedure
-    begin
-      FFrmLog.Add(TLine.Error, err1, err2);
+      FFrmLog.Add(line, row);
     end);
 end;
 
