@@ -27,49 +27,59 @@ type
   TSteps = array of TStep;
 
 type
-  IChecks = interface
-    procedure Step1 (const prompted: TPrompted; const next: TNext);
-    procedure Step2 (const prompted: TPrompted; const next: TNext);
-    procedure Step3 (const prompted: TPrompted; const next: TNext);
-    procedure Step4 (const prompted: TPrompted; const next: TNext);
-    procedure Step5 (const prompted: TPrompted; const next: TNext);
-    procedure Step6 (const prompted: TPrompted; const next: TNext);
-    procedure Step7 (const prompted: TPrompted; const next: TNext);
-    procedure Step8 (const prompted: TPrompted; const next: TNext);
-    procedure Step9 (const prompted: TPrompted; const next: TNext);
-    procedure Step10(const prompted: TPrompted; const next: TNext);
-    procedure Step11(const prompted: TPrompted; const next: TNext);
-    procedure Step12(const prompted: TPrompted; const next: TNext);
-    procedure Step13(const prompted: TPrompted; const next: TNext);
-    procedure Step14(const prompted: TPrompted; const next: TNext);
-    procedure Step15(const prompted: TPrompted; const next: TNext);
-    procedure Step16(const prompted: TPrompted; const next: TNext);
-    procedure Fail  (const prompted: TPrompted; const next: TNext);
+  TComment = class(TCustomAttribute)
+  strict private
+    FValue: string;
+  public
+    constructor Create(const aValue: string);
+    property Value: string read FValue;
   end;
 
 type
-  TChecks = record // adapter, holds a reference to the interface
+  TChecks = class(TObject)
   strict private
-    FChecks: IChecks;
+    server: TEthereumRPCServer;
+    port  : TIdPort;
+    chain : TChain;
+    tx    : transaction.ITransaction;
+    block : TBlock;
+    log   : TLog;
   public
     constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
-    procedure Step1 (const prompted: TPrompted; const next: TNext);
-    procedure Step2 (const prompted: TPrompted; const next: TNext);
-    procedure Step3 (const prompted: TPrompted; const next: TNext);
-    procedure Step4 (const prompted: TPrompted; const next: TNext);
-    procedure Step5 (const prompted: TPrompted; const next: TNext);
-    procedure Step6 (const prompted: TPrompted; const next: TNext);
-    procedure Step7 (const prompted: TPrompted; const next: TNext);
-    procedure Step8 (const prompted: TPrompted; const next: TNext);
-    procedure Step9 (const prompted: TPrompted; const next: TNext);
+    [TComment('approve(address,uint256)')]
+    procedure Step1(const prompted: TPrompted; const next: TNext);
+    [TComment('transfer(address,uint256)')]
+    procedure Step2(const prompted: TPrompted; const next: TNext);
+    [TComment('setApprovalForAll(address,bool)')]
+    procedure Step3(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with (a) smart contract and (b) not verified with etherscan?')]
+    procedure Step4(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transferring more than $5k in ERC-20, translated to USD?')]
+    procedure Step5(const prompted: TPrompted; const next: TNext);
+    [TComment('are we sending more than $5k in ETH, translated to USD?')]
+    procedure Step6(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with a contract that has been identified as a phisher in the MobyMask Phisher Registry?')]
+    procedure Step7(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with a spam contract or receiving spam tokens?')]
+    procedure Step8(const prompted: TPrompted; const next: TNext);
+    [TComment('have we transacted with this address before?')]
+    procedure Step9(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with an unsupported contract or receiving unsupported tokens?')]
     procedure Step10(const prompted: TPrompted; const next: TNext);
+    [TComment('are we transacting with a sanctioned address?')]
     procedure Step11(const prompted: TPrompted; const next: TNext);
+    [TComment('are we receiving (or otherwise transacting with) a low-DEX-score token?')]
     procedure Step12(const prompted: TPrompted; const next: TNext);
+    [TComment('are we receiving (or otherwise transacting with) a token without a DEX pair?')]
     procedure Step13(const prompted: TPrompted; const next: TNext);
+    [TComment('are we receiving (or otherwise transacting with) a censorable token that can blacklist you?')]
     procedure Step14(const prompted: TPrompted; const next: TNext);
+    [TComment('are we buying a honeypot token?')]
     procedure Step15(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
     procedure Step16(const prompted: TPrompted; const next: TNext);
-    procedure Fail  (const prompted: TPrompted; const next: TNext);
+    [TComment('include this step if you want the transaction to fail')]
+    procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
 
 implementation
@@ -203,56 +213,17 @@ begin
   end);
 end;
 
-{------------------------------ TImplementation -------------------------------}
+{---------------------------------- TComment ----------------------------------}
 
-type
-  TImplementation = class(TInterfacedObject, IChecks)
-  strict private
-    server: TEthereumRPCServer;
-    port  : TIdPort;
-    chain : TChain;
-    tx    : transaction.ITransaction;
-    block : TBlock;
-    log   : TLog;
-  public
-    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
-    [TComment('approve(address,uint256)')]
-    procedure Step1(const prompted: TPrompted; const next: TNext);
-    [TComment('transfer(address,uint256)')]
-    procedure Step2(const prompted: TPrompted; const next: TNext);
-    [TComment('setApprovalForAll(address,bool)')]
-    procedure Step3(const prompted: TPrompted; const next: TNext);
-    [TComment('are we transacting with (a) smart contract and (b) not verified with etherscan?')]
-    procedure Step4(const prompted: TPrompted; const next: TNext);
-    [TComment('are we transferring more than $5k in ERC-20, translated to USD?')]
-    procedure Step5(const prompted: TPrompted; const next: TNext);
-    [TComment('are we sending more than $5k in ETH, translated to USD?')]
-    procedure Step6(const prompted: TPrompted; const next: TNext);
-    [TComment('are we transacting with a contract that has been identified as a phisher in the MobyMask Phisher Registry?')]
-    procedure Step7(const prompted: TPrompted; const next: TNext);
-    [TComment('are we transacting with a spam contract or receiving spam tokens?')]
-    procedure Step8(const prompted: TPrompted; const next: TNext);
-    [TComment('have we transacted with this address before?')]
-    procedure Step9(const prompted: TPrompted; const next: TNext);
-    [TComment('are we transacting with an unsupported contract or receiving unsupported tokens?')]
-    procedure Step10(const prompted: TPrompted; const next: TNext);
-    [TComment('are we transacting with a sanctioned address?')]
-    procedure Step11(const prompted: TPrompted; const next: TNext);
-    [TComment('are we receiving (or otherwise transacting with) a low-DEX-score token?')]
-    procedure Step12(const prompted: TPrompted; const next: TNext);
-    [TComment('are we receiving (or otherwise transacting with) a token without a DEX pair?')]
-    procedure Step13(const prompted: TPrompted; const next: TNext);
-    [TComment('are we receiving (or otherwise transacting with) a censorable token that can blacklist you?')]
-    procedure Step14(const prompted: TPrompted; const next: TNext);
-    [TComment('are we buying a honeypot token?')]
-    procedure Step15(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
-    procedure Step16(const prompted: TPrompted; const next: TNext);
-    [TComment('include this step if you want the transaction to fail')]
-    procedure Fail(const prompted: TPrompted; const next: TNext);
-  end;
+constructor TComment.Create(const aValue: string);
+begin
+  inherited Create;
+  FValue := aValue;
+end;
 
-constructor TImplementation.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+{---------------------------------- TChecks -----------------------------------}
+
+constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
 begin
   inherited Create;
   Self.server := server;
@@ -263,7 +234,7 @@ begin
   Self.log    := log;
 end;
 
-procedure TImplementation.Step1(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step1(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(_: IError) begin next(prompted, nil) end)
@@ -312,7 +283,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step2(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step2(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(_: IError) begin next(prompted, nil) end)
@@ -374,7 +345,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step3(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step3(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(_: IError) begin next(prompted, nil) end)
@@ -415,7 +386,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step4(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step4(const prompted: TPrompted; const next: TNext);
 begin
   tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
   begin
@@ -450,7 +421,7 @@ begin
   end);
 end;
 
-procedure TImplementation.Step5(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step5(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(_: IError) begin next(prompted, nil) end)
@@ -502,7 +473,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step6(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step6(const prompted: TPrompted; const next: TNext);
 begin
   if tx.Value = 0 then
     next(prompted, nil)
@@ -532,7 +503,7 @@ begin
   end;
 end;
 
-procedure TImplementation.Step7(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step7(const prompted: TPrompted; const next: TNext);
 begin
   isPhisher(tx.&To, procedure(result: Boolean; err: IError)
   begin
@@ -554,7 +525,7 @@ begin
   end);
 end;
 
-procedure TImplementation.Step8(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step8(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -610,7 +581,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step9(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step9(const prompted: TPrompted; const next: TNext);
 begin
   tx.From
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -647,7 +618,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step10(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step10(const prompted: TPrompted; const next: TNext);
 begin
   web3.eth.tokenlists.unsupported(chain, procedure(tokens: TTokens; err: IError)
   begin
@@ -688,7 +659,7 @@ begin
   end);
 end;
 
-procedure TImplementation.Step11(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step11(const prompted: TPrompted; const next: TNext);
 begin
   web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, tx.&To, procedure(value: Boolean; err: IError)
   begin
@@ -710,7 +681,7 @@ begin
   end);
 end;
 
-procedure Timplementation.Step12(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step12(const prompted: TPrompted; const next: TNext);
 begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
@@ -749,7 +720,7 @@ begin
   end);
 end;
 
-procedure TImplementation.Step13(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step13(const prompted: TPrompted; const next: TNext);
 begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
@@ -797,7 +768,7 @@ begin
   end);
 end;
 
-procedure TImplementation.Step14(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step14(const prompted: TPrompted; const next: TNext);
 begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
@@ -872,7 +843,7 @@ begin
   end);
 end;
 
-procedure TImplementation.Step15(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -913,7 +884,7 @@ begin
     end);
 end;
 
-procedure TImplementation.Step16(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step16(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -976,101 +947,9 @@ begin
     end);
 end;
 
-procedure TImplementation.Fail(const prompted: TPrompted; const next: TNext);
-begin
-  block(prompted);
-end;
-
-{---------------------------------- TChecks -----------------------------------}
-
-constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
-begin
-  Self.FChecks := TImplementation.Create(server, port, chain, tx, block, log);
-end;
-
-procedure TChecks.Step1(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step1(prompted, next);
-end;
-
-procedure TChecks.Step2(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step2(prompted, next);
-end;
-
-procedure TChecks.Step3(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step3(prompted, next);
-end;
-
-procedure TChecks.Step4(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step4(prompted, next);
-end;
-
-procedure TChecks.Step5(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step5(prompted, next);
-end;
-
-procedure TChecks.Step6(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step6(prompted, next);
-end;
-
-procedure TChecks.Step7(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step7(prompted, next);
-end;
-
-procedure TChecks.Step8(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step8(prompted, next);
-end;
-
-procedure TChecks.Step9(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step9(prompted, next);
-end;
-
-procedure TChecks.Step10(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step10(prompted, next);
-end;
-
-procedure TChecks.Step11(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step11(prompted, next);
-end;
-
-procedure TChecks.Step12(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step12(prompted, next);
-end;
-
-procedure TChecks.Step13(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step13(prompted, next);
-end;
-
-procedure TChecks.Step14(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step14(prompted, next);
-end;
-
-procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step15(prompted, next);
-end;
-
-procedure TChecks.Step16(const prompted: TPrompted; const next: TNext);
-begin
-  Self.FChecks.Step16(prompted, next);
-end;
-
 procedure TChecks.Fail(const prompted: TPrompted; const next: TNext);
 begin
-  Self.FChecks.Fail(prompted, next);
+  block(prompted);
 end;
 
 end.

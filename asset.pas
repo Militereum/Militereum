@@ -163,9 +163,12 @@ begin
   else
     web3.defillama.price(Self.Chain, FToken, procedure(price: Double; err: IError)
     begin
-      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      thread.synchronize(procedure
       begin
-        lblAmountText.Text := System.SysUtils.Format('$ %.2f', [(quantity.AsDouble / Round(Power(10, decimals))) * price]);
+        if Assigned(err) or (price = 0) then
+          lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.Format(quantity.AsDouble / Round(Power(10, decimals)))])
+        else
+          lblAmountText.Text := System.SysUtils.Format('$ %.2f', [(quantity.AsDouble / Round(Power(10, decimals))) * price]);
       end);
     end);
 end;

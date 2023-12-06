@@ -9,14 +9,6 @@ uses
   checks;
 
 type
-  TComment = class(TCustomAttribute)
-  strict private
-    FValue: string;
-  public
-    constructor Create(const aValue: string);
-    property Value: string read FValue;
-  end;
-
   IMilitereumError = interface(IError)
   ['{535E852A-0D54-4523-A370-BE4576B38695}']
     function FuncName: string;
@@ -30,14 +22,6 @@ implementation
 uses
   // Delphi
   System.Rtti;
-
-{ TComment }
-
-constructor TComment.Create(const aValue: string);
-begin
-  inherited Create;
-  FValue := aValue;
-end;
 
 { TMilitereumError }
 

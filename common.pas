@@ -46,6 +46,7 @@ function Simulate: Boolean;
 
 function Ethereum: TChain;
 function Etherscan(const chain: TChain): IResult<IEtherscan>;
+function Format(const value: Double): string;
 function GetTempFileName: string;
 function Headers: TNetHeaders;
 procedure Open(const URL: string);
@@ -242,6 +243,15 @@ begin
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_BASE))
   else
     Result := TResult<IEtherscan>.Err(nil, System.SysUtils.Format('not supported on %s', [chain.Name]));
+end;
+
+function Format(const value: Double): string;
+begin
+  Result := System.SysUtils.Format('%.6f', [value]);
+  while (Length(Result) > 0) and (Result[High(Result)] = '0') do
+    Delete(Result, High(Result), 1);
+  if (Length(Result) > 0) and (Result[High(Result)] = FormatSettings.DecimalSeparator) then
+    Delete(Result, High(Result), 1);
 end;
 
 function GetTempFileName: string;
