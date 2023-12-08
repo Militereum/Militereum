@@ -19,8 +19,8 @@ type
   TPrompted = set of TWarning;
 
 type
-  TBlock = reference to procedure(const prompted: TPrompted);
-  TNext  = reference to procedure(const prompted: TPrompted; const err: IError);
+  TDone = reference to procedure(const prompted: TPrompted);
+  TNext = reference to procedure(const prompted: TPrompted; const err: IError);
 
 type
   TStep  = procedure(const prompted: TPrompted; const next: TNext) of object;
@@ -42,10 +42,10 @@ type
     port  : TIdPort;
     chain : TChain;
     tx    : transaction.ITransaction;
-    block : TBlock;
+    block : TDone;
     log   : TLog;
   public
-    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLog);
     [TComment('approve(address,uint256)')]
     procedure Step1(const prompted: TPrompted; const next: TNext);
     [TComment('transfer(address,uint256)')]
@@ -103,6 +103,7 @@ uses
   // project
   airdrop,
   asset,
+  cache,
   censorable,
   common,
   dextools,
@@ -147,21 +148,13 @@ begin
   if Self.Action = taReceive then
     callback(True, nil)
   else
-    common.Etherscan(Self.Chain)
-      .ifErr(procedure(err: IError)
-      begin
-        callback(False, err);
-      end)
-      .&else(procedure(etherscan: IEtherscan)
-      begin
-        etherscan.getContractABI(address, procedure(abi: IContractABI; err: IError)
-        begin
-          if Assigned(err) then
-            callback(False, err)
-          else
-            callback(abi.IsERC20, nil);
-        end);
-      end);
+    cache.getContractABI(Self.Chain, address, procedure(abi: IContractABI; err: IError)
+    begin
+      if Assigned(err) then
+        callback(False, err)
+      else
+        callback(abi.IsERC20, nil);
+    end);
 end;
 
 {-------------------------------- getEachToken --------------------------------}
@@ -223,7 +216,7 @@ end;
 
 {---------------------------------- TChecks -----------------------------------}
 
-constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TBlock; const log: TLog);
+constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLog);
 begin
   inherited Create;
   Self.server := server;
@@ -788,7 +781,7 @@ begin
             if index >= Length(contracts) then
               next(prompted, nil)
             else
-              etherscan.getContractABI(contracts[index].Address, procedure(abi: IContractABI; err: IError)
+              cache.getContractABI(chain, contracts[index].Address, procedure(abi: IContractABI; err: IError)
               begin
                 if Assigned(err) then
                   next(prompted, error.wrap(err, Self.Step14))
