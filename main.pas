@@ -403,7 +403,7 @@ end;
 
 procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
 type
-  TNext = reference to procedure(const steps: TSteps; const index: Integer; const prompted: TPrompted; const done: TBlock);
+  TNext = reference to procedure(const steps: TSteps; const index: Integer; const prompted: TPrompted; const done: TDone);
 begin
   if not Assigned(aPayload) then
   begin
@@ -458,7 +458,7 @@ begin
               Self.Notify('Simulating your transaction');
 
               var next: TNext;
-              next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const done: TBlock)
+              next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const done: TDone)
               begin
                 if index >= Length(steps) then
                   done(input)

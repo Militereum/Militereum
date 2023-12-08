@@ -16,6 +16,7 @@ uses
   airdrop in 'airdrop.pas' {FrmAirdrop},
   asset in 'asset.pas' {FrmAsset},
   base in 'base.pas' {FrmBase},
+  cache in 'cache.pas',
   censorable in 'censorable.pas' {FrmCensorable},
   checks in 'checks.pas',
   common in 'common.pas',
