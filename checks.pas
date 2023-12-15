@@ -76,8 +76,10 @@ type
     procedure Step14(const prompted: TPrompted; const next: TNext);
     [TComment('are we buying a honeypot token?')]
     procedure Step15(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we receiving (or otherwise transacting with) a dormant token/contract?')]
     procedure Step16(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step17(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -86,6 +88,7 @@ implementation
 
 uses
   // Delphi
+  System.DateUtils,
   System.JSON,
   System.Math,
   System.SysUtils,
@@ -107,6 +110,7 @@ uses
   censorable,
   common,
   dextools,
+  dormant,
   error,
   firsttime,
   honeypot,
@@ -443,7 +447,7 @@ begin
                     if amount < common.LIMIT then
                       next(prompted, nil)
                     else
-                      common.Symbol(chain, tx.&To, procedure(symbol: string; err: IError)
+                      cache.getSymbol(chain, tx.&To, procedure(symbol: string; err: IError)
                       begin
                         if Assigned(err) then
                           next(prompted, error.wrap(err, Self.Step5))
@@ -766,73 +770,67 @@ begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
     if Assigned(err) then
-      next(prompted, error.wrap(err, Self.Step14))
-    else
-      common.Etherscan(chain)
-        .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step14));
+      EXIT;
+    end;
+    var step: TSubStep;
+    step := procedure(const index: Integer; const prompted: TPrompted)
+    begin
+      if index >= Length(contracts) then
+        next(prompted, nil)
+      else
+        cache.getContractABI(chain, contracts[index].Address, procedure(abi: IContractABI; err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step14))
-        end)
-        .&else(procedure(etherscan: IEtherscan)
-        begin
-          var step: TSubStep;
-          step := procedure(const index: Integer; const prompted: TPrompted)
-          begin
-            if index >= Length(contracts) then
-              next(prompted, nil)
-            else
-              cache.getContractABI(chain, contracts[index].Address, procedure(abi: IContractABI; err: IError)
+          if Assigned(err) then
+            next(prompted, error.wrap(err, Self.Step14))
+          else
+            if (function: Boolean // returns True if censorable, otherwise False
+            begin
+              if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
+                if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('blacklist', abi.Item(I).Name.ToLower) > 0) then
+                begin
+                  Result := True;
+                  EXIT;
+                end;
+              Result := False;
+            end)() then
+              thread.synchronize(procedure
               begin
-                if Assigned(err) then
-                  next(prompted, error.wrap(err, Self.Step14))
-                else
-                  if (function: Boolean // returns True if censorable, otherwise False
-                  begin
-                    if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
-                      if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('blacklist', abi.Item(I).Name.ToLower) > 0) then
-                      begin
-                        Result := True;
-                        EXIT;
-                      end;
-                    Result := False;
-                  end)() then
-                    thread.synchronize(procedure
-                    begin
-                      censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
-                      begin
-                        if allow then
-                          step(index + 1, prompted + [TWarning.Other])
-                        else
-                          block(prompted);
-                      end, log);
-                    end)
+                censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
+                begin
+                  if allow then
+                    step(index + 1, prompted + [TWarning.Other])
                   else
-                    if (function: Boolean // returns True if pausable, otherwise False
-                    begin
-                      if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
-                        if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('pause', abi.Item(I).Name.ToLower) > 0) then
-                        begin
-                          Result := True;
-                          EXIT;
-                        end;
-                      Result := False;
-                    end)() then
-                      thread.synchronize(procedure
-                      begin
-                        pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
-                        begin
-                          if allow then
-                            step(index + 1, prompted + [TWarning.Other])
-                          else
-                            block(prompted);
-                        end, log);
-                      end)
+                    block(prompted);
+                end, log);
+              end)
+            else
+              if (function: Boolean // returns True if pausable, otherwise False
+              begin
+                if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
+                  if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('pause', abi.Item(I).Name.ToLower) > 0) then
+                  begin
+                    Result := True;
+                    EXIT;
+                  end;
+                Result := False;
+              end)() then
+                thread.synchronize(procedure
+                begin
+                  pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
+                  begin
+                    if allow then
+                      step(index + 1, prompted + [TWarning.Other])
                     else
-                      step(index + 1, prompted);
-              end);
-          end;
-          step(0, prompted);
+                      block(prompted);
+                  end, log);
+                end)
+              else
+                step(index + 1, prompted);
         end);
+    end;
+    step(0, prompted);
   end);
 end;
 
@@ -879,6 +877,54 @@ end;
 
 procedure TChecks.Step16(const prompted: TPrompted; const next: TNext);
 begin
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
+  begin
+    if Assigned(err) then
+      next(prompted, error.wrap(err, Self.Step16))
+    else
+      common.Etherscan(chain)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step16))
+        end)
+        .&else(procedure(etherscan: IEtherscan)
+        begin
+          var step: TSubStep;
+          step := procedure(const index: Integer; const prompted: TPrompted)
+          begin
+            if index >= Length(contracts) then
+              next(prompted, nil)
+            else
+              etherscan.getLatestTransaction(contracts[index].Address, procedure(latest: ITransaction; err: IError)
+              begin
+                if Assigned(err) then
+                  next(prompted, error.wrap(err, Self.Step16))
+                else
+                  if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
+                    step(index + 1, prompted)
+                  else
+                    contracts[index].IsToken(procedure(isERC20: Boolean; err: IError)
+                    begin
+                      thread.synchronize(procedure
+                      begin
+                        dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow: Boolean)
+                        begin
+                          if allow then
+                            step(index + 1, prompted + [TWarning.Other])
+                          else
+                            block(prompted);
+                        end, log);
+                      end)
+                    end)
+              end);
+          end;
+          step(0, prompted);
+        end);
+  end);
+end;
+
+procedure TChecks.Step17(const prompted: TPrompted; const next: TNext);
+begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
     .&else(procedure(apiKey: string)
@@ -890,7 +936,7 @@ begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step16))
+              next(prompted, error.wrap(err, Self.Step17))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin

@@ -46,6 +46,7 @@ uses
   web3.eth.types,
   web3.utils,
   // project
+  cache,
   common,
   thread;
 
@@ -67,7 +68,7 @@ begin
   if common.Demo then
     lblTokenText.Text := string(value)
   else
-    common.Symbol(Self.Chain, FToken, procedure(symbol: string; err: IError)
+    cache.getSymbol(Self.Chain, FToken, procedure(symbol: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
