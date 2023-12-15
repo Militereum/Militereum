@@ -51,7 +51,6 @@ function GetTempFileName: string;
 function Headers: TNetHeaders;
 procedure Open(const URL: string);
 function ParseSemVer(const version: string): TSemVer;
-procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 
 function AutoRunEnabled: Boolean;
 procedure EnableAutoRun;
@@ -83,7 +82,6 @@ uses
 {$ENDIF POSIX}
   // web3
   web3.eth.alchemy,
-  web3.eth.erc20,
   // project
   docker;
 
@@ -304,11 +302,6 @@ begin
   finally
     SL.Free;
   end;
-end;
-
-procedure Symbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
-begin
-  web3.eth.erc20.create(TWeb3.Create(chain), token).Symbol(callback);
 end;
 
 function AutoRunEnabled: Boolean;

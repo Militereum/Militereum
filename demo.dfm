@@ -5,34 +5,38 @@ object dmDemo: TdmDemo
     Left = 304
     Top = 224
     object actApprove: TAction
-      Text = 'Unlimited allowance'
+      Text = 'You allowing someone else to spend all your money'
       OnExecute = actApproveExecute
       OnUpdate = actUpdate
     end
     object actLimit: TAction
-      Text = 'Monetary transfer above $5k'
+      Text = 'You transferring more than 5k in US dollars'
       OnExecute = actLimitExecute
       OnUpdate = actUpdate
     end
     object actSanctioned: TAction
-      Text = 'Transaction to a sanctioned address'
+      Text = 'You transacting with a sanctioned address'
       OnExecute = actSanctionedExecute
       OnUpdate = actUpdate
     end
     object actUnverified: TAction
       Text = 
-        'Transaction to a smart contract that has not been etherscan-veri' +
-        'fied'
+        'You transacting with a smart contract that has not been ethersca' +
+        'n-verified'
       OnExecute = actUnverifiedExecute
       OnUpdate = actUpdate
     end
     object actFirsttime: TAction
-      Text = 'Transaction to an address you have not transacted with before'
+      Text = 
+        'You transacting with an address you have not transacted with bef' +
+        'ore'
       OnExecute = actFirsttimeExecute
       OnUpdate = actUpdate
     end
     object actPhisher: TAction
-      Text = 'Transaction to an address that has been identified as a phisher'
+      Text = 
+        'You transacting with an address that has been identified as a ph' +
+        'isher'
       OnExecute = actPhisherExecute
       OnUpdate = actUpdate
     end
@@ -87,6 +91,13 @@ object dmDemo: TdmDemo
         'You buying a pausable token that can prevent you from swapping o' +
         'r selling'
       OnExecute = actPausableExecute
+      OnUpdate = actUpdate
+    end
+    object actDormant: TAction
+      Text = 
+        'You transacting with a dormant contract where the last transacti' +
+        'on with the contract was more than 30 days ago'
+      OnExecute = actDormantExecute
       OnUpdate = actUpdate
     end
   end

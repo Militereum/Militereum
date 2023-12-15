@@ -27,6 +27,7 @@ type
     actAirdrop: TAction;
     actCensorable: TAction;
     actPausable: TAction;
+    actDormant: TAction;
     procedure actApproveExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actSanctionedExecute(Sender: TObject);
@@ -43,6 +44,7 @@ type
     procedure actAirdropExecute(Sender: TObject);
     procedure actCensorableExecute(Sender: TObject);
     procedure actPausableExecute(Sender: TObject);
+    procedure actDormantExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -70,6 +72,7 @@ uses
   base,
   censorable,
   common,
+  dormant,
   firsttime,
   honeypot,
   limit,
@@ -106,6 +109,11 @@ end;
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
 begin
   censorable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actDormantExecute(Sender: TObject);
+begin
+  dormant.show(taTransact, common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', False, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);

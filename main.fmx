@@ -1391,6 +1391,12 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuDormant: TMenuItem
+        Action = dmDemo.actDormant
+        Enabled = True
+        Locked = True
+        ImageIndex = -1
+      end
       object mnuSetApprovalForAll: TMenuItem
         Action = dmDemo.actSetApprovalForAll
         Enabled = True

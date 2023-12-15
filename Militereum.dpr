@@ -23,6 +23,7 @@ uses
   demo in 'demo.pas' {dmDemo: TDataModule},
   dextools in 'dextools.pas',
   docker in 'docker.pas' {FrmDocker},
+  dormant in 'dormant.pas' {FrmDormant},
   error in 'error.pas',
   firsttime in 'firsttime.pas' {FrmFirstTime},
   honeypot in 'honeypot.pas' {FrmHoneypot},
