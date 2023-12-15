@@ -43,21 +43,22 @@ After your crypto wallet has approved the allowance, Militereum will intercept t
 ![image](assets/approve.png)
 
 Besides token allowances, Militereum will block...
-1. [monetary transfers above $5k](assets/limit.png)
-2. transactions to [a sanctioned address](assets/sanctioned.png)
-3. transactions to [a smart contract that has not been etherscan-verified](assets/unverified.png)
-4. transactions to [an address you have not transacted with before](assets/firsttime.png) (this warning will stop most phishing attacks)
-5. transactions to [an address that has been identified as a phisher in the MobyMask Phisher Registry](assets/phisher.png)
-6. you trusting someone else to be able to [transfer all your NFTs out of your wallet](assets/setApprovalForAll.png)
-7. you buying [a suspicious token that is probably an unwarranted airdrop](assets/airdrop.png)
-8. you buying [a token that lies about its own token supply](assets/spam.png)
-9. you buying [a honeypot token that is designed to pump but you cannot sell](assets/honeypot.png)
-10. you buying [a token that is unsupported by Uniswap](assets/unsupported.png)
-11. you buying [a censorable token that can blacklist you](assets/censorable.png)
-12. you buying [a pausable token that can prevent you from swapping or selling](assets/pausable.png)
-13. you receiving [a token without a DEX pair](assets/noDexPair.png)
-14. you receiving [a low-DEX-score token](assets/lowDexScore.png)
-15. deposits to a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
+1. you transferring [more than 5k in US dollars](assets/limit.png)
+2. you transacting with [a sanctioned address](assets/sanctioned.png)
+3. you transacting with [a smart contract that has not been etherscan-verified](assets/unverified.png)
+4. you transacting with [an address you have not transacted with before](assets/firsttime.png) (this warning will stop most phishing attacks)
+5. you transacting with [an address that has been identified as a phisher in the MobyMask Phisher Registry](assets/phisher.png)
+6. you transacting with [a dormant contract where the last transaction with the smart contract was more than 30 days ago](assets/dormant.png)
+7. you trusting someone else to be able to [transfer all your NFTs out of your wallet](assets/setApprovalForAll.png)
+8. you buying [a suspicious token that is probably an unwarranted airdrop](assets/airdrop.png)
+9. you buying [a token that lies about its own token supply](assets/spam.png)
+10. you buying [a honeypot token that is designed to pump but you cannot sell](assets/honeypot.png)
+11. you buying [a token that is unsupported by Uniswap](assets/unsupported.png)
+12. you buying [a censorable token that can blacklist you](assets/censorable.png)
+13. you buying [a pausable token that can prevent you from swapping or selling](assets/pausable.png)
+14. you receiving [a token without a DEX pair](assets/noDexPair.png)
+15. you receiving [a low-DEX-score token](assets/lowDexScore.png)
+16. you depositing money into a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
 
