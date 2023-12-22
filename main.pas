@@ -136,13 +136,10 @@ uses
   // FireMonkey
   FMX.Dialogs,
   FMX.Platform,
-  // Indy
-  IdGlobal,
   // web3
-  web3.eth.alchemy.api,
+  web3.eth.simulate,
   web3.utils,
   // project
-  base,
   checks,
   common,
   docker,

@@ -99,6 +99,7 @@ uses
   web3.eth.alchemy.api,
   web3.eth.breadcrumbs,
   web3.eth.etherscan,
+  web3.eth.simulate,
   web3.eth.tokenlists,
   web3.eth.types,
   web3.eth.utils,
