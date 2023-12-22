@@ -16,7 +16,7 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3,
-  web3.eth.alchemy.api,
+  web3.eth.simulate,
   web3.eth.tokenlists,
   // project
   base,
@@ -117,16 +117,16 @@ begin
 
   lblTokenText.Text := (function(const value: IAssetChange): string
   begin
-    if value.Name <> '' then
-      Result := value.Name
+    if value.Name.Value <> '' then
+      Result := value.Name.Value
     else
       Result := string(value.Contract);
   end)(value);
 
   Self.Kind := value.Change;
-  Self.Logo := value.Logo;
+  Self.Logo := value.Logo.Value;
   Self.Spender := value.&To;
-  Self.Amount(value.Symbol, value.Amount, value.Decimals);
+  Self.Amount(value.Symbol.Value, value.Amount, value.Decimals.Value);
 end;
 
 procedure TFrmAsset.SetLogo(value: TURL);

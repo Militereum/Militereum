@@ -9,7 +9,7 @@ uses
   Velthuis.BigIntegers,
   // web3
   web3,
-  web3.eth.alchemy.api,
+  web3.eth.simulate,
   web3.eth.types;
 
 type
@@ -40,9 +40,6 @@ function getTransactionArgs(const data: TBytes): IResult<TArray<TArg>>;
 implementation
 
 uses
-  // Delphi
-  System.Classes,
-  System.Threading,
   // web3
   web3.eth.gas,
   web3.eth.tx,
@@ -149,6 +146,7 @@ begin
 end;
 
 procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
+{$I keys/tenderly.api.key}
 begin
   if Assigned(FSimulated) then
     callback(FSimulated, nil)
@@ -160,7 +158,7 @@ begin
       end)
       .&else(procedure(from: TAddress)
       begin
-        web3.eth.alchemy.api.simulate(apiKey, chain, from, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
+        web3.eth.simulate.simulate(apiKey, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
         begin
           if (err = nil) then Self.FSimulated := changes;
           callback(changes, err);
