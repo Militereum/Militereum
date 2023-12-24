@@ -836,6 +836,7 @@ begin
 end;
 
 procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
+{$I keys/tenderly.api.key}
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
@@ -845,7 +846,7 @@ begin
         .ifErr(procedure(err: IError) begin next(prompted, err) end)
         .&else(procedure(from: TAddress)
         begin
-          web3.eth.alchemy.api.honeypots(apiKey, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
+          web3.eth.simulate.honeypots(apiKey, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
               next(prompted, error.wrap(err, Self.Step15))
