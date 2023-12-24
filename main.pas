@@ -513,7 +513,7 @@ begin
                         var S: IFMXClipboardService;
                         if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, S) then
                         begin
-                          S.SetClipboard(changes.Raw);
+                          S.SetClipboard(changes.ToString);
                           Self.Notify('Copied your simulated transaction to the clipboard');
                         end;
                       end;
