@@ -78,8 +78,10 @@ type
     procedure Step15(const prompted: TPrompted; const next: TNext);
     [TComment('are we receiving (or otherwise transacting with) a dormant token/contract?')]
     procedure Step16(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we receiving (or otherwise transacting with) a token with an unlock event coming up?')]
     procedure Step17(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step18(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -124,6 +126,7 @@ uses
   setApprovalForAll,
   spam,
   thread,
+  unlock,
   unsupported,
   unverified;
 
@@ -197,7 +200,7 @@ begin
               begin
                 const incoming: IAssetChanges = changes.Incoming(from);
                 try
-                  for var I := 0 to Pred(incoming.Count) do
+                  if Assigned(incoming) then for var I := 0 to Pred(incoming.Count) do
                     if incoming.Item(I).Contract.SameAs(tx.&To) then
                       // ignore tx.To
                     else
@@ -927,6 +930,54 @@ end;
 
 procedure TChecks.Step17(const prompted: TPrompted; const next: TNext);
 begin
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
+  begin
+    if Assigned(err) then
+    begin
+      next(prompted, error.wrap(err, Self.Step17));
+      EXIT;
+    end;
+    var step: TSubStep;
+    step := procedure(const index: Integer; const prompted: TPrompted)
+    begin
+      if index >= Length(contracts) then
+        next(prompted, nil)
+      else
+        contracts[index].IsToken(procedure(isToken: Boolean; err: IError)
+        begin
+          if Assigned(err) then
+            next(prompted, error.wrap(err, Self.Step17))
+          else
+            if not isToken then
+              step(index + 1, prompted)
+            else
+              dextools.unlock({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(dt: TDateTime; err: IError)
+              begin
+                if Assigned(err) then
+                  next(prompted, error.wrap(err, Self.Step17))
+                else
+                  if (dt = 0) or (MonthsBetween(System.SysUtils.Now, dt) > 3) then
+                    step(index + 1, prompted)
+                  else
+                    thread.synchronize(procedure
+                    begin
+                      unlock.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                      begin
+                        if allow then
+                          step(index + 1, prompted + [TWarning.Other])
+                        else
+                          block(prompted);
+                      end, log);
+                    end);
+              end);
+        end);
+    end;
+    step(0, prompted);
+  end);
+end;
+
+procedure TChecks.Step18(const prompted: TPrompted; const next: TNext);
+begin
   server.apiKey(port)
     .ifErr(procedure(err: IError) begin next(prompted, err) end)
     .&else(procedure(apiKey: string)
@@ -938,7 +989,7 @@ begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step17))
+              next(prompted, error.wrap(err, Self.Step18))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
