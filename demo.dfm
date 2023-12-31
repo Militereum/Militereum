@@ -100,5 +100,10 @@ object dmDemo: TdmDemo
       OnExecute = actDormantExecute
       OnUpdate = actUpdate
     end
+    object actUnlock: TAction
+      Text = 'You buying a token with an unlock event coming up'
+      OnExecute = actUnlockExecute
+      OnUpdate = actUpdate
+    end
   end
 end

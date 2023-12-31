@@ -40,6 +40,7 @@ uses
   spam in 'spam.pas' {FrmSpam},
   thread in 'thread.pas',
   transaction in 'transaction.pas',
+  unlock in 'unlock.pas' {FrmUnlock},
   unsupported in 'unsupported.pas' {FrmUnsupported},
   unverified in 'unverified.pas' {FrmUnverified},
   update in 'update.pas' {FrmUpdate};

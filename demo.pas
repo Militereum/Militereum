@@ -28,6 +28,7 @@ type
     actCensorable: TAction;
     actPausable: TAction;
     actDormant: TAction;
+    actUnlock: TAction;
     procedure actApproveExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actSanctionedExecute(Sender: TObject);
@@ -45,6 +46,7 @@ type
     procedure actCensorableExecute(Sender: TObject);
     procedure actPausableExecute(Sender: TObject);
     procedure actDormantExecute(Sender: TObject);
+    procedure actUnlockExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -84,6 +86,7 @@ uses
   setApprovalForAll,
   spam,
   thread,
+  unlock,
   unsupported,
   unverified;
 
@@ -164,6 +167,11 @@ end;
 procedure TdmDemo.actSpamExecute(Sender: TObject);
 begin
   spam.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actUnlockExecute(Sender: TObject);
+begin
+  unlock.show(taReceive, common.Ethereum, nil, '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actUnsupportedExecute(Sender: TObject);

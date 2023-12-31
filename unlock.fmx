@@ -1,0 +1,60 @@
+inherited FrmUnlock: TFrmUnlock
+  ClientHeight = 271
+  DesignerMasterStyle = 0
+  object lblTitle: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 24.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 'You are about to %s a token with an unlock event coming up'
+    TabOrder = 0
+  end
+  object lblTokenText: TLabel
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 24.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = '0x0000000000000000000000000000000000000000'
+    TabOrder = 1
+    OnClick = lblTokenTextClick
+  end
+  object Label1: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 167.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'Within 3 months, a batch of previously locked tokens are release' +
+      'd into the market.'
+    TabOrder = 2
+  end
+  object Label2: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 192.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'Token unlocks inflate the supply, leading to a potential decreas' +
+      'e in token price.'
+    TabOrder = 3
+  end
+end

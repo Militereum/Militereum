@@ -11,6 +11,7 @@ uses
 
 procedure pairs(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TJsonArray, IError>);
 procedure score(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<Integer, IError>);
+procedure unlock(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TDateTime, IError>);
 
 implementation
 
@@ -114,6 +115,40 @@ begin
             EXIT;
           end;
           callback(getPropAsInt(score, 'total'), nil);
+        end);
+    end);
+end;
+
+procedure unlock(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TDateTime, IError>);
+begin
+  network(chain)
+    .ifErr(procedure(err: IError)
+    begin
+      callback(0, err)
+    end)
+    .&else(procedure(network: string)
+    begin
+      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/locks', [network, address]), [TNetHeader.Create('X-BLOBR-KEY', apiKey)],
+        procedure(response: TJsonValue; err: IError)
+        begin
+          if Assigned(err) then
+          begin
+            callback(0, err);
+            EXIT;
+          end;
+          const data = getPropAsObj(response, 'data');
+          if not Assigned(data) then
+          begin
+            callback(0, TError.Create('data is null'));
+            EXIT;
+          end;
+          const next = getPropAsObj(data, 'nextUnlock');
+          if not Assigned(next) then
+          begin
+            callback(0, TError.Create('nextUnlock is null'));
+            EXIT;
+          end;
+          callback(ISO8601ToDate(getPropAsStr(next, 'unlockDate'), False), nil);
         end);
     end);
 end;
