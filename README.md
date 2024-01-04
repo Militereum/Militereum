@@ -11,7 +11,7 @@
 
 ## Reason to be
 
-Almost everybody in crypto — especially those who are in DeFi — has been a victim of phishing, a hack, a rug pull, or an exploit. Wallets are keepers of keys, but they don’t necessarily keep you safe. If the crypto ecosystem ever wants to reach mass adoption, this has to change. Militereum is a web3 firewall that once installed secures your crypto holdings. Militereum is chain-agnostic and works with every crypto wallet, including browser-based and native desktop wallets. Each and everyone of your transactions is simulated and potentially blocked if Militereum thinks it is unsafe. Because Militereum is rooted into your operating system, the software can start automatically when you log into your device, and dapps or wallets cannot bypass it.
+Almost everybody in crypto — especially those who are in DeFi — has been phished, drained, hacked, or a rug pulled. Wallets are keepers of keys, but they don’t necessarily keep you safe. If the crypto ecosystem ever wants to reach mass adoption, this has to change. Militereum is a web3 firewall that once installed secures your crypto holdings. Militereum is chain-agnostic and works with every crypto wallet, including browser-based and native desktop wallets. Each and everyone of your transactions is simulated and potentially blocked if Militereum thinks it is unsafe. Because Militereum is rooted into your operating system, the software can start automatically when you log into your device, and wallets or dapps cannot bypass it.
 
 ## Setup
 
