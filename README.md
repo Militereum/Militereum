@@ -45,7 +45,7 @@ After your crypto wallet has approved the allowance, Militereum will intercept t
 Besides token allowances, Militereum will block...
 1. you transferring [more than 5k in US dollars](assets/limit.png)
 2. you transacting with [a sanctioned address](assets/sanctioned.png)
-3. you transacting with [a smart contract that has not been etherscan-verified](assets/unverified.png)
+3. you transacting with [a smart contract that has not been verified](assets/unverified.png)
 4. you transacting with [an address you have not transacted with before](assets/firsttime.png) (this warning will stop most phishing attacks)
 5. you transacting with [an address that has been identified as a phisher in the MobyMask Phisher Registry](assets/phisher.png)
 6. you transacting with [a dormant contract where the last transaction with the smart contract was more than 30 days ago](assets/dormant.png)
@@ -56,9 +56,9 @@ Besides token allowances, Militereum will block...
 11. you buying [a token that is unsupported by Uniswap](assets/unsupported.png)
 12. you buying [a censorable token that can blacklist you](assets/censorable.png)
 13. you buying [a pausable token that can prevent you from swapping or selling](assets/pausable.png)
-14. you buying [a token with an unlock event coming up](assets/unlock.png)
-15. you receiving [a token without a DEX pair](assets/noDexPair.png)
-16. you receiving [a low-DEX-score token](assets/lowDexScore.png)
+14. you buying [a token with an unlock event coming up within 3 months](assets/unlock.png), inflating the supply and possibly decreasing the price
+15. you receiving [a token without a DEX pair](assets/noDexPair.png) that you won't have the option to sell
+16. you receiving [a low-DEX-score token](assets/lowDexScore.png) that has little or no liquidity
 17. you depositing money into a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
