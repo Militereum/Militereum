@@ -10,6 +10,10 @@ function autoRunEnabled: Boolean;
 procedure enableAutoRun;
 procedure disableAutoRun;
 
+function darkModeEnabled: Boolean;
+procedure enableDarkMode;
+procedure disableDarkMode;
+
 function activateMainWindow: BOOL;
 procedure initialize;
 procedure finalize;
@@ -24,6 +28,7 @@ uses
   WinAPI.Messages,
   // FireMonkey
   FMX.Platform.Win,
+  FMX.Styles,
   // project
   common,
   main,
@@ -77,6 +82,36 @@ begin
   finally
     R.Free;
   end;
+end;
+
+function darkModeEnabled: Boolean;
+begin
+  const R = TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKey('Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', False) then
+    try
+      Result := R.ReadInteger('AppsUseLightTheme') = 0;
+      EXIT;
+    finally
+      R.CloseKey;
+    end;
+  finally
+    R.Free;
+  end;
+  Result := False;
+end;
+
+{$R 'assets\nero_win.res'}
+
+procedure enableDarkMode;
+begin
+  TStyleManager.TrySetStyleFromResource('nero_win');
+end;
+
+procedure disableDarkMode;
+begin
+  TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, 'win10style', RT_RCDATA));
 end;
 
 const

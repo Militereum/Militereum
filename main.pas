@@ -82,6 +82,7 @@ type
     mnuPausable: TMenuItem;
     mnuDormant: TMenuItem;
     mnuUnlock: TMenuItem;
+    mnuDarkMode: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -90,6 +91,7 @@ type
     procedure mnuAutoRunClick(Sender: TObject);
     procedure lblHelpClick(Sender: TObject);
     procedure mnuShowTestNetworksClick(Sender: TObject);
+    procedure mnuDarkModeClick(Sender: TObject);
   strict private
     FCanNotify: Boolean;
     FNotified : Boolean;
@@ -178,6 +180,8 @@ begin
   edtCopy.Visible := False;
   btnCopy.Visible := False;
   lblHelp.Visible := False;
+
+  mnuDarkMode.IsChecked := common.DarkModeEnabled;
 
   const ports = server.ports(NUM_CHAINS);
   if ports.isErr then
@@ -592,6 +596,15 @@ begin
     common.EnableAutoRun
   else
     common.DisableAutoRun;
+end;
+
+procedure TFrmMain.mnuDarkModeClick(Sender: TObject);
+begin
+  mnuDarkMode.IsChecked := not mnuDarkMode.IsChecked;
+  if mnuDarkMode.IsChecked then
+    common.EnableDarkMode
+  else
+    common.DisableDarkMode;
 end;
 
 procedure TFrmMain.btnDismissClick(Sender: TObject);

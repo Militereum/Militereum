@@ -1345,6 +1345,10 @@ object FrmMain: TFrmMain
   object pmSettings: TPopupMenu
     Left = 40
     Top = 8
+    object mnuDarkMode: TMenuItem
+      Text = 'Dark mode'
+      OnClick = mnuDarkModeClick
+    end
     object mnuShowTestNetworks: TMenuItem
       Text = 'Show test networks'
       OnClick = mnuShowTestNetworksClick
