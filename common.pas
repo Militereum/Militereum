@@ -56,6 +56,10 @@ function AutoRunEnabled: Boolean;
 procedure EnableAutoRun;
 procedure DisableAutoRun;
 
+function DarkModeEnabled: Boolean;
+procedure EnableDarkMode;
+procedure DisableDarkMode;
+
 procedure initialize;
 procedure finalize;
 
@@ -334,6 +338,36 @@ begin
 {$ENDIF MSWINDOWS}
 end;
 
+function DarkModeEnabled: Boolean;
+begin
+{$IFDEF MACOS}
+  Result := common.mac.darkModeEnabled;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := common.win.darkModeEnabled;
+{$ENDIF MSWINDOWS}
+end;
+
+procedure EnableDarkMode;
+begin
+{$IFDEF MACOS}
+  common.mac.enableDarkMode;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  common.win.enableDarkMode;
+{$ENDIF MSWINDOWS}
+end;
+
+procedure DisableDarkMode;
+begin
+{$IFDEF MACOS}
+  common.mac.disableDarkMode;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  common.win.disableDarkMode;
+{$ENDIF MSWINDOWS}
+end;
+
 procedure initialize;
 begin
 {$IFDEF MACOS}
@@ -342,6 +376,7 @@ begin
 {$IFDEF MSWINDOWS}
   common.win.initialize;
 {$ENDIF MSWINDOWS}
+  if DarkModeEnabled then EnableDarkMode;
 end;
 
 procedure finalize;

@@ -6,6 +6,10 @@ function autoRunEnabled: Boolean;
 procedure enableAutoRun;
 procedure disableAutoRun;
 
+function darkModeEnabled: Boolean;
+procedure enableDarkMode;
+procedure disableDarkMode;
+
 procedure initialize;
 
 procedure beforeTransaction;
@@ -25,7 +29,9 @@ uses
   // FireMonkey
   FMX.Forms,
   FMX.Helpers.Mac,
+  FMX.Platform,
   FMX.Platform.Mac,
+  FMX.Styles,
   // web3
   web3.sync,
   // Project
@@ -81,6 +87,26 @@ end;
 procedure disableAutoRun;
 begin
   System.IOUtils.TFile.Delete(launchAgent);
+end;
+
+function darkModeEnabled: Boolean;
+begin
+  Result := False;
+  var S: IFMXSystemAppearanceService;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXSystemAppearanceService, S) then
+    Result := S.ThemeKind = TSystemThemeKind.Dark;
+end;
+
+{$R 'assets\nero_mac.res'}
+
+procedure enableDarkMode;
+begin
+  TStyleManager.TrySetStyleFromResource('nero_mac');
+end;
+
+procedure disableDarkMode;
+begin
+  TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, 'osxstyle', PChar(10)));
 end;
 
 type
