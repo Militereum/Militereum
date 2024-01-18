@@ -383,20 +383,20 @@ begin
       end);
   end);
 
-  if docker.supported and not docker.installed then
-  begin
-    const frmDocker = TFrmDocker.Create(Application);
-    try
-      docker.callback := function: TFrmDocker begin Result := frmDocker; end;
-      try
-        frmDocker.ShowModal;
-      finally
-        docker.callback := nil;
-      end;
-    finally
-      frmDocker.Free;
-    end;
-  end;
+//  if docker.supported and not docker.installed then
+//  begin
+//    const frmDocker = TFrmDocker.Create(Application);
+//    try
+//      docker.callback := function: TFrmDocker begin Result := frmDocker; end;
+//      try
+//        frmDocker.ShowModal;
+//      finally
+//        docker.callback := nil;
+//      end;
+//    finally
+//      frmDocker.Free;
+//    end;
+//  end;
 end;
 
 procedure TFrmMain.NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
