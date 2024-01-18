@@ -60,7 +60,7 @@ begin
     end)
     .&else(procedure(network: string)
     begin
-      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/pools?sort=creationTime&order=asc&from=2000-01-01&to=%4d-%2d-%2d', [network, address, YearOf(System.SysUtils.Now), MonthOf(System.SysUtils.Now), DayOf(System.SysUtils.Now)]), [TNetHeader.Create('X-BLOBR-KEY', apiKey)],
+      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/pools?sort=creationTime&order=asc&from=2010-01-01&to=%.4d-%.2d-%.2d', [network, address, YearOf(System.SysUtils.Now), MonthOf(System.SysUtils.Now), DayOf(System.SysUtils.Now)]), [TNetHeader.Create('X-BLOBR-KEY', apiKey)],
         procedure(response: TJsonValue; err: IError)
         begin
           if Assigned(err) then
@@ -74,13 +74,7 @@ begin
             callback(nil, TError.Create('data is null'));
             EXIT;
           end;
-          const results = getPropAsArr(data, 'results');
-          if not Assigned(results) then
-          begin
-            callback(nil, TError.Create('results is null'));
-            EXIT;
-          end;
-          callback(results, nil);
+          callback(getPropAsArr(data, 'results'), nil);
         end);
     end);
 end;
@@ -111,7 +105,7 @@ begin
           const score = getPropAsObj(data, 'dextScore');
           if not Assigned(score) then
           begin
-            callback(0, TError.Create('dextScore is null'));
+            callback(0, nil);
             EXIT;
           end;
           callback(getPropAsInt(score, 'total'), nil);
@@ -145,7 +139,7 @@ begin
           const next = getPropAsObj(data, 'nextUnlock');
           if not Assigned(next) then
           begin
-            callback(0, TError.Create('nextUnlock is null'));
+            callback(0, nil);
             EXIT;
           end;
           callback(ISO8601ToDate(getPropAsStr(next, 'unlockDate'), False), nil);
