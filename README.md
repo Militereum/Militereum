@@ -47,7 +47,7 @@ Besides token allowances, Militereum will block...
 2. you transacting with [a sanctioned address](assets/sanctioned.png)
 3. you transacting with [a smart contract that has not been verified](assets/unverified.png)
 4. you transacting with [an address you have not transacted with before](assets/firsttime.png) (this warning will stop most phishing attacks)
-5. you transacting with [an address that has been identified as a phisher in the MobyMask Phisher Registry](assets/phisher.png)
+5. you transacting with [an address that has been identified as a phisher](assets/phisher.png)
 6. you transacting with [a dormant contract where the last transaction with the smart contract was more than 30 days ago](assets/dormant.png)
 7. you trusting someone else to be able to [transfer all your NFTs out of your wallet](assets/setApprovalForAll.png)
 8. you buying [a suspicious token that is probably an unwarranted airdrop](assets/airdrop.png)
