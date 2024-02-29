@@ -1,4 +1,4 @@
-# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://apps.apple.com/app/militereum/id6446287995) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR)
+# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://apps.apple.com/app/militereum/id6446287995) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/detail/9nv0c48z57r4)
 
 * simulates your transactions
 * shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device
@@ -6,7 +6,7 @@
 * works with every EVM-compatible wallet, including browser-based (eg. [MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/)) and native desktop (eg. [Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb)) wallets
 * non-custodial, 100% uptime. you do not depend on our servers because there aren't any
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/) and [Base](https://base.org/)
-* available for [Windows](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR) and [macOS](https://apps.apple.com/app/militereum/id6446287995)
+* available for [Windows](https://apps.microsoft.com/detail/9nv0c48z57r4) and [macOS](https://apps.apple.com/app/militereum/id6446287995)
 * auditable open source code
 
 ## Reason to be
@@ -15,7 +15,7 @@ Almost everybody in crypto — especially those who are in DeFi — has been phi
 
 ## Setup
 
-1. Download Militereum for [Windows](https://apps.microsoft.com/store/detail/militereum/9MVF9Z4SWKDR) or [macOS](https://apps.apple.com/app/militereum/id6446287995)
+1. Download Militereum for [Windows](https://apps.microsoft.com/detail/9nv0c48z57r4) or [macOS](https://apps.apple.com/app/militereum/id6446287995)
 2. Launch Militereum. The following window appears. Click on `Copy`
 
 ![image](assets/main.png)
