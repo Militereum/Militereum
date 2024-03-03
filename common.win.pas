@@ -199,7 +199,9 @@ end;
 
 procedure initialize;
 begin
+{$WARN SYMBOL_PLATFORM OFF}
   if FindCmdLineSwitch('autorun') then System.CmdShow := SW_SHOWMINNOACTIVE;
+{$WARN SYMBOL_PLATFORM ON}
   msgWindow := allocateHwnd(MessageWindowClassName, TMessageWindow.Create.WndProc);
   appHook := SetWindowsHookEx(WH_CALLWNDPROC, @callWindowHook, 0, GetCurrentThreadId);
 end;
