@@ -83,6 +83,7 @@ uses
 {$ENDIF MSWINDOWS}
 {$IFDEF POSIX}
   Posix.Stdlib,
+  Posix.Unistd,
 {$ENDIF POSIX}
   // web3
   web3.eth.alchemy,
