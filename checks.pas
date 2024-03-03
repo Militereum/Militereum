@@ -201,7 +201,9 @@ begin
                 const incoming: IAssetChanges = changes.Incoming(from);
                 try
                   if Assigned(incoming) then for var I := 0 to Pred(incoming.Count) do
-                    if incoming.Item(I).Contract.SameAs(tx.&To) then
+                    if incoming.Item(I).Asset = native then
+                      // ignore native asset (probably ETH)
+                    else if incoming.Item(I).Contract.SameAs(tx.&To) then
                       // ignore tx.To
                     else
                       contracts := contracts + [TContract.Create(taReceive, incoming.Item(I).Contract, chain)];
