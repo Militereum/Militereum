@@ -4,6 +4,9 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   FMX.Types,
+{$IF CompilerVersion >= 36.0}
+  FMX.Skia,
+{$ENDIF}
 {$IFDEF MACOS}
   common.mac in 'common.mac.pas',
   docker.mac in 'docker.mac.pas',
@@ -48,7 +51,12 @@ uses
 {$R *.res}
 
 begin
+  // Use Skia in Delphi 12+, otherwise Metal
+{$IF CompilerVersion >= 36.0}
+  GlobalUseSkia := True;
+{$ELSE}
   GlobalUseMetal := True;
+{$ENDIF}
   Application.Initialize;
 {$IFDEF MSWINDOWS}
   const mutex = CreateMutex(nil, False, 'MilitereumMutex');
