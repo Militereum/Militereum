@@ -1,4 +1,4 @@
-# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://apps.apple.com/app/militereum/id6446287995) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/detail/9nv0c48z57r4)
+# ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![GitHub release](https://img.shields.io/github/release/svanas/Militereum)](https://github.com/svanas/Militereum/releases/latest) [![macOS](https://img.shields.io/badge/os-macOS-green)](https://apps.apple.com/app/militereum/id6446287995) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/detail/9nv0c48z57r4) [![macOS](https://img.shields.io/twitter/follow/militereum)](https://x.com/militereum)
 
 * simulates your transactions
 * shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device
