@@ -23,6 +23,7 @@ uses
   Macapi.CocoaTypes,
   Macapi.Foundation,
   Macapi.ObjectiveC,
+  System.Classes,
   System.IOUtils,
   System.Messaging,
   System.SysUtils,
@@ -56,6 +57,19 @@ end;
 function autoRunEnabled: Boolean;
 begin
   Result := System.IOUtils.TFile.Exists(launchAgent);
+  if Result then
+  begin
+    const plist = TStringList.Create;
+    try
+      for var line in plist do
+      begin
+        Result := SameText(line.Trim, System.SysUtils.Format('<string>%s</string>', [ParamStr(0)]));
+        if Result then EXIT;
+      end;
+    finally
+      plist.Free;
+    end;
+  end;
 end;
 
 procedure enableAutoRun;
