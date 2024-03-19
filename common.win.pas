@@ -42,6 +42,13 @@ begin
     if R.OpenKey('Software\Microsoft\Windows\CurrentVersion\Run', False) then
     try
       Result := R.ValueExists('Militereum');
+      if Result then
+      begin
+        var S := R.ReadString('Militereum').TrimLeft(['"']);
+        const I = S.LastIndexOf('"');
+        if I >= Low(S) then S := S.Remove(I);
+        Result := SameText(S, ParamStr(0));
+      end;
       EXIT;
     finally
       R.CloseKey;
