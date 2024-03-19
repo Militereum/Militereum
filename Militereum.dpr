@@ -4,7 +4,7 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   FMX.Types,
-{$IF CompilerVersion >= 36.0}
+{$IF DEFINED(MSWINDOWS) AND (CompilerVersion >= 36.0)}
   FMX.Skia,
 {$ENDIF}
 {$IFDEF MACOS}
@@ -51,8 +51,8 @@ uses
 {$R *.res}
 
 begin
-  // Use Skia in Delphi 12+, otherwise Metal
-{$IF CompilerVersion >= 36.0}
+  // Use Skia in Delphi 12+ on Windows, otherwise Metal
+{$IF DEFINED(MSWINDOWS) AND (CompilerVersion >= 36.0)}
   GlobalUseSkia := True;
 {$ELSE}
   GlobalUseMetal := True;
