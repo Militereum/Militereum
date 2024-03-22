@@ -98,7 +98,7 @@ begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
     Result := @web3.Ethereum
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
-    Result := @web3.Goerli
+    Result := @web3.Holesky
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
     Result := @web3.Sepolia
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
@@ -123,7 +123,7 @@ function TEthereumRPCServerHelper.port(const chain: TChain): IResult<TIdPort>;
 begin
   if (chain = web3.Ethereum) and (Self.Bindings.Count > 0) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[0].Port)
-  else if (chain = web3.Goerli) and (Self.Bindings.Count > 1) then
+  else if (chain = web3.Holesky) and (Self.Bindings.Count > 1) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[1].Port)
   else if (chain = web3.Sepolia) and (Self.Bindings.Count > 2) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[2].Port)
@@ -144,7 +144,7 @@ begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_ETHEREUM)
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
-    Result := TResult<string>.Ok(ALCHEMY_API_KEY_GOERLI)
+    Result := TResult<string>.Ok(ALCHEMY_API_KEY_HOLESKY)
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_SEPOLIA)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
@@ -164,7 +164,7 @@ begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Ethereum, ALCHEMY_API_KEY_ETHEREUM, core)
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
-    Result := web3.eth.alchemy.endpoint(web3.Goerli, ALCHEMY_API_KEY_GOERLI, core)
+    Result := web3.eth.alchemy.endpoint(web3.Holesky, ALCHEMY_API_KEY_HOLESKY, core)
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Sepolia, ALCHEMY_API_KEY_SEPOLIA, core)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
@@ -232,8 +232,8 @@ function Etherscan(const chain: TChain): IResult<IEtherscan>;
 begin
   if chain = web3.Ethereum then
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ETHEREUM))
-  else if chain = web3.Goerli then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_GOERLI))
+  else if chain = web3.Holesky then
+    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_HOLESKY))
   else if chain = web3.Sepolia then
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_SEPOLIA))
   else if chain = web3.Polygon then
