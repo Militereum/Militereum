@@ -32,12 +32,12 @@ type
     NC: TNotificationCenter;
     Grid: TGridPanelLayout;
     btnEthereum: TSpeedButton;
-    btnGoerli: TSpeedButton;
+    btnHolesky: TSpeedButton;
     btnPolygon: TSpeedButton;
     btnArbitrum: TSpeedButton;
     btnOptimism: TSpeedButton;
     imgEthereum: TImage;
-    imgGoerli: TImage;
+    imgHolesky: TImage;
     imgPolygon: TImage;
     imgArbitrum: TImage;
     imgOptimism: TImage;
@@ -47,7 +47,7 @@ type
     imgArbitrum1: TImage;
     imgOptimism1: TImage;
     imgPolygon1: TImage;
-    imgGoerli1: TImage;
+    imgHolesky1: TImage;
     imgEthereum1: TImage;
     btnSettings: TSpeedButton;
     pmSettings: TPopupMenu;
@@ -291,8 +291,8 @@ function TfrmMain.GetChain: PChain;
 begin
   if btnEthereum.IsPressed then
     Result := @web3.Ethereum
-  else if btnGoerli.IsPressed then
-    Result := @web3.Goerli
+  else if btnHolesky.IsPressed then
+    Result := @web3.Holesky
   else if btnSepolia.IsPressed then
     Result := @web3.Sepolia
   else if btnPolygon.IsPressed then

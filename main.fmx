@@ -77,7 +77,7 @@ object FrmMain: TFrmMain
       end
       item
         Column = 1
-        Control = btnGoerli
+        Control = btnHolesky
         Row = 0
       end
       item
@@ -244,7 +244,7 @@ object FrmMain: TFrmMain
         Visible = False
       end
     end
-    object btnGoerli: TSpeedButton
+    object btnHolesky: TSpeedButton
       Align = Client
       Margins.Left = 8.000000000000000000
       Margins.Top = 8.000000000000000000
@@ -253,10 +253,10 @@ object FrmMain: TFrmMain
       Size.Width = 64.000000000000000000
       Size.Height = 64.000000000000000000
       Size.PlatformDefault = False
-      Text = 'Goerli'
+      Text = 'Holesky'
       TextSettings.VertAlign = Trailing
       OnClick = btnNetworkClick
-      object imgGoerli: TImage
+      object imgHolesky: TImage
         MultiResBitmap = <
           item
             Width = 32
@@ -339,7 +339,7 @@ object FrmMain: TFrmMain
         Size.Height = 32.000000000000000000
         Size.PlatformDefault = False
       end
-      object imgGoerli1: TImage
+      object imgHolesky1: TImage
         Tag = 1
         MultiResBitmap = <
           item
@@ -1361,103 +1361,86 @@ object FrmMain: TFrmMain
       Text = 'Demo'
       object mnuApprove: TMenuItem
         Action = dmDemo.actApprove
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuLimit: TMenuItem
         Action = dmDemo.actLimit
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuSanctioned: TMenuItem
         Action = dmDemo.actSanctioned
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuUnverified: TMenuItem
         Action = dmDemo.actUnverified
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuFirsttime: TMenuItem
         Action = dmDemo.actFirsttime
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuPhisher: TMenuItem
         Action = dmDemo.actPhisher
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuDormant: TMenuItem
         Action = dmDemo.actDormant
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuSetApprovalForAll: TMenuItem
         Action = dmDemo.actSetApprovalForAll
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuAirdrop: TMenuItem
         Action = dmDemo.actAirdrop
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuSpam: TMenuItem
         Action = dmDemo.actSpam
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuHoneypot: TMenuItem
         Action = dmDemo.actHoneypot
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuUnsupported: TMenuItem
         Action = dmDemo.actUnsupported
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuCensorable: TMenuItem
         Action = dmDemo.actCensorable
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuPausable: TMenuItem
         Action = dmDemo.actPausable
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuUnlock: TMenuItem
         Action = dmDemo.actUnlock
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuNoDexPair: TMenuItem
         Action = dmDemo.actNoDexPair
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end
       object mnuLowDexScore: TMenuItem
         Action = dmDemo.actLowDexScore
-        Enabled = True
         Locked = True
         ImageIndex = -1
       end

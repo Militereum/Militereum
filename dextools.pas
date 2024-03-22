@@ -35,8 +35,6 @@ begin
     Result := TResult<string>.Ok('base')
   else if chain = Ethereum then
     Result := TResult<string>.Ok('ether')
-  else if chain = Goerli then
-    Result := TResult<string>.Ok('ethergoerli')
   else if chain = Fantom then
     Result := TResult<string>.Ok('fantom')
   else if chain = Gnosis then
