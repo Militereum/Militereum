@@ -119,6 +119,7 @@ uses
   honeypot,
   limit,
   lowDexScore,
+  moralis,
   noDexPair,
   pausable,
   phisher,
@@ -698,10 +699,25 @@ begin
     begin
       if index >= Length(contracts) then
         next(prompted, nil)
-      else
-        dextools.score({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(score: Integer; err: IError)
+      else (
+        procedure(const token: TAddress; const callback: TProc<Integer, IError>)
         begin
-          if Assigned(err) and not err.Message.ToLower.Contains('token not found') then
+          moralis.score({$I keys/moralis.api.key}, chain, token, procedure(score1: Integer; err1: IError)
+          begin
+            if (err1 = nil) or err1.Message.ToLower.Contains('address not found') then
+              callback(score1, nil)
+            else
+              dextools.score({$I keys/dextools.api.key}, chain, token, procedure(score2: Integer; err2: IError)
+              begin
+                if Assigned(err2) and not err2.Message.ToLower.Contains('token not found') then
+                  callback(0, err2)
+                else
+                  callback(score2, nil);
+              end);
+          end);
+        end)(contracts[index].Address, procedure(score: Integer; err: IError)
+        begin
+          if Assigned(err) then
             next(prompted, error.wrap(err, Self.Step12))
           else
             if (score = 0) or (score >= 50) then
@@ -745,8 +761,17 @@ begin
           else
             if not isToken then
               step(index + 1, prompted)
-            else
-              dextools.pairs({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(arr: TJsonArray; err: IError)
+            else (
+              procedure(const token: TAddress; const callback: TProc<TJsonArray, IError>)
+              begin
+                dextools.pairs({$I keys/dextools.api.key}, chain, token, procedure(arr: TJsonArray; err: IError)
+                begin
+                  if Assigned(arr) and not Assigned(err) then
+                    callback(arr, nil)
+                  else
+                    moralis.pairs({$I keys/moralis.api.key}, chain, token, callback);
+                end);
+              end)(contracts[index].Address, procedure(arr: TJsonArray; err: IError)
               begin
                 if Assigned(err) then
                   next(prompted, error.wrap(err, Self.Step13))
