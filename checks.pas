@@ -547,8 +547,23 @@ begin
         begin
           if index >= Length(contracts) then
             next(prompted, nil)
-          else
-            web3.eth.alchemy.api.detect(apiKey, chain, contracts[index].Address, procedure(contractType: TContractType; err: IError)
+          else ( // call Alchemy's API or Moralis API
+            procedure(const token: TAddress; const callback: TProc<TContractType, IError>)
+            begin
+              web3.eth.alchemy.api.detect(apiKey, chain, token, [TContractType.Airdrop, TContractType.Spam], procedure(contractType: TContractType; err: IError)
+              begin
+                if not Assigned(err) then
+                  callback(contractType, nil)
+                else
+                  moralis.isPossibleSpam({$I keys/moralis.api.key}, chain, token, procedure(spam: Boolean; err: IError)
+                  begin
+                    if spam then
+                      callback(TContractType.Spam, err)
+                    else
+                      callback(TContractType.Good, err);
+                  end);
+              end);
+            end)(contracts[index].Address, procedure(contractType: TContractType; err: IError)
             begin
               if Assigned(err) then
                 next(prompted, error.wrap(err, Self.Step8))
@@ -699,7 +714,7 @@ begin
     begin
       if index >= Length(contracts) then
         next(prompted, nil)
-      else (
+      else ( // call Moralis API or DEXTools API
         procedure(const token: TAddress; const callback: TProc<Integer, IError>)
         begin
           moralis.score({$I keys/moralis.api.key}, chain, token, procedure(score1: Integer; err1: IError)
@@ -761,7 +776,7 @@ begin
           else
             if not isToken then
               step(index + 1, prompted)
-            else (
+            else ( // call DEXTools API or Moralis API
               procedure(const token: TAddress; const callback: TProc<TJsonArray, IError>)
               begin
                 dextools.pairs({$I keys/dextools.api.key}, chain, token, procedure(arr: TJsonArray; err: IError)

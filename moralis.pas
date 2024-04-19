@@ -11,11 +11,13 @@ uses
 
 procedure pairs(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TJsonArray, IError>);
 procedure score(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<Integer, IError>);
+procedure isPossibleSpam(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<Boolean, IError>);
 
 implementation
 
 uses
   // Delphi
+  System.Generics.Collections,
   System.Net.URLClient,
   // web3
   web3.http,
@@ -117,6 +119,49 @@ begin
             callback(getPropAsInt(response, 'security_score'), nil);
         end);
     end);
+end;
+
+procedure metadata(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TJsonValue, IError>);
+begin
+  network(chain)
+    .ifErr(procedure(err: IError)
+    begin
+      callback(nil, err)
+    end)
+    .&else(procedure(network: string)
+    begin
+      web3.http.get(MORALIS_API_BASE + Format('nft/%s/metadata?chain=eth', [address, network]), [TNetHeader.Create('X-API-KEY', apiKey)],
+        procedure(response: TJsonValue; err: IError)
+        begin
+          if (err = nil) and Assigned(response) then
+            callback(response, nil)
+          else
+            web3.http.get(MORALIS_API_BASE + Format('erc20/metadata?chain=%s&addresses=%s', [network, address]), [TNetHeader.Create('X-API-KEY', apiKey)],
+              procedure(response: TJsonValue; err: IError)
+              begin
+                if Assigned(err) then
+                  callback(nil, err)
+                else
+                  if Assigned(response) and (response is TJsonArray) and (TJsonArray(response).Count > 0) then
+                    callback(TJsonArray(response).Items[0], nil)
+                  else
+                    callback(nil, TError.Create('response is null or not an array or an empty array'));
+              end);
+        end);
+    end);
+end;
+
+procedure isPossibleSpam(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<Boolean, IError>);
+begin
+  metadata(apiKey, chain, address, procedure(response: TJsonValue; err: IError)
+  begin
+    if Assigned(err) then
+      callback(False, err)
+    else if not Assigned(response) then
+      callback(False, TError.Create('response is null'))
+    else
+      callback(getPropAsBool(response, 'possible_spam'), nil);
+  end);
 end;
 
 end.
