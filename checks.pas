@@ -547,7 +547,7 @@ begin
           if index >= Length(contracts) then
             next(prompted, nil)
           else
-            web3.eth.alchemy.api.detect(apiKey, chain, contracts[index].Address, procedure(contractType: TContractType; err: IError)
+            web3.eth.alchemy.api.detect(apiKey, chain, contracts[index].Address, [TContractType.Airdrop, TContractType.Spam], procedure(contractType: TContractType; err: IError)
             begin
               if Assigned(err) then
                 next(prompted, error.wrap(err, Self.Step8))

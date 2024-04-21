@@ -37,6 +37,7 @@ uses
   noDexPair in 'noDexPair.pas' {FrmNoDexPair},
   pausable in 'pausable.pas' {FrmPausable},
   phisher in 'phisher.pas' {FrmPhisher},
+  revoke in 'revoke.pas' {FrmRevoke},
   sanctioned in 'sanctioned.pas' {FrmSanctioned},
   setApprovalForAll in 'setApprovalForAll.pas' {FrmSetApprovalForAll},
   server in 'server.pas',
