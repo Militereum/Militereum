@@ -714,17 +714,17 @@ begin
     begin
       if index >= Length(contracts) then
         next(prompted, nil)
-      else ( // call Moralis API or DEXTools API
+      else ( // call DEXTools API or Moralis API
         procedure(const token: TAddress; const callback: TProc<Integer, IError>)
         begin
-          moralis.score({$I keys/moralis.api.key}, chain, token, procedure(score1: Integer; err1: IError)
+          dextools.score({$I keys/dextools.api.key}, chain, token, procedure(score1: Integer; err1: IError)
           begin
-            if (err1 = nil) or err1.Message.ToLower.Contains('address not found') then
+            if (err1 = nil) or err1.Message.ToLower.Contains('token not found') then
               callback(score1, nil)
             else
-              dextools.score({$I keys/dextools.api.key}, chain, token, procedure(score2: Integer; err2: IError)
+              moralis.score({$I keys/moralis.api.key}, chain, token, procedure(score2: Integer; err2: IError)
               begin
-                if Assigned(err2) and not err2.Message.ToLower.Contains('token not found') then
+                if Assigned(err2) and not err2.Message.ToLower.Contains('address not found') then
                   callback(0, err2)
                 else
                   callback(score2, nil);
