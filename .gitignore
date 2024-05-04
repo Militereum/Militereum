@@ -2,7 +2,7 @@ AppxManifest.template.xml
 Entitlement.TemplateOSX.xml
 info.plist.TemplateOSX.xml
 Militereum.deployproj
-Militereum.dproj
+/Militereum.dproj
 Militereum.res
 OSX64/
 OSXARM64/

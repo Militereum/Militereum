@@ -23,7 +23,7 @@ uses
   web3.http,
   web3.json;
 
-const DEXTOOLS_API_BASE = 'https://open-api.dextools.io/free/';
+const DEXTOOLS_API_BASE = 'https://public-api.dextools.io/free/';
 
 function network(const chain: TChain): IResult<string>;
 begin
@@ -58,7 +58,7 @@ begin
     end)
     .&else(procedure(network: string)
     begin
-      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/pools?sort=creationTime&order=asc&from=2010-01-01&to=%.4d-%.2d-%.2d', [network, address, YearOf(System.SysUtils.Now), MonthOf(System.SysUtils.Now), DayOf(System.SysUtils.Now)]), [TNetHeader.Create('X-BLOBR-KEY', apiKey)],
+      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/pools?sort=creationTime&order=asc&from=2010-01-01&to=%.4d-%.2d-%.2d', [network, address, YearOf(System.SysUtils.Now), MonthOf(System.SysUtils.Now), DayOf(System.SysUtils.Now)]), [TNetHeader.Create('X-API-KEY', apiKey)],
         procedure(response: TJsonValue; err: IError)
         begin
           if Assigned(err) then
@@ -86,7 +86,7 @@ begin
     end)
     .&else(procedure(network: string)
     begin
-      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/score', [network, address]), [TNetHeader.Create('X-BLOBR-KEY', apiKey)],
+      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/score', [network, address]), [TNetHeader.Create('X-API-KEY', apiKey)],
         procedure(response: TJsonValue; err: IError)
         begin
           if Assigned(err) then
@@ -120,7 +120,7 @@ begin
     end)
     .&else(procedure(network: string)
     begin
-      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/locks', [network, address]), [TNetHeader.Create('X-BLOBR-KEY', apiKey)],
+      web3.http.get(DEXTOOLS_API_BASE + Format('v2/token/%s/%s/locks', [network, address]), [TNetHeader.Create('X-API-KEY', apiKey)],
         procedure(response: TJsonValue; err: IError)
         begin
           if Assigned(err) then
