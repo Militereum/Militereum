@@ -34,6 +34,7 @@ uses
   log in 'log.pas' {FrmLog},
   lowDexScore in 'lowDexScore.pas' {FrmLowDexScore},
   main in 'main.pas' {FrmMain},
+  moralis in 'moralis.pas',
   noDexPair in 'noDexPair.pas' {FrmNoDexPair},
   pausable in 'pausable.pas' {FrmPausable},
   phisher in 'phisher.pas' {FrmPhisher},
