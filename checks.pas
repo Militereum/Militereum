@@ -131,6 +131,67 @@ uses
   unsupported,
   unverified;
 
+{------- spender status (EOA, unverified, phisher, sanctioned, or good --------}
+
+procedure getSpenderStatus(const chain: TChain; const address: TAddress; const callback: TProc<TSpenderStatus, IError>);
+type
+  TStep = reference to procedure(const callback: TProc<Boolean, IError>);
+  TNext = reference to procedure(const steps: TArray<TStep>; const index: Integer);
+begin
+  var next: TNext;
+
+  // is the address an EOA? (there is never a good reason to approve an EOA)
+  const step1: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    address.IsEOA(TWeb3.Create(chain), callback);
+  end;
+
+  // is the contract not verified with etherscan?
+  const step2: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    common.Etherscan(chain)
+      .ifErr(procedure(err: IError)
+      begin
+        callback(False, err)
+      end)
+      .&else(procedure(etherscan: IEtherscan)
+      begin
+        etherscan.getContractSourceCode(address, procedure(src: string; err: IError)
+        begin
+          callback(src = '', err);
+        end)
+      end);
+  end;
+
+  // is the address a known phisher?
+  const step3: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    phisher.isPhisher(address, callback);
+  end;
+
+  // is the address sanctioned?
+  const step4: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+  end;
+
+  next := procedure(const steps: TArray<TStep>; const index: Integer)
+  begin
+    if index >= Length(steps) then
+      callback(isGood, nil) // we're good if none of the above steps was a problem
+    else
+      steps[index](procedure(bad: Boolean; err: IError)
+      begin
+        if bad or Assigned(err) then
+          callback(TSpenderStatus(index), err)
+        else
+          next(steps, index + 1);
+      end);
+  end;
+
+  next([step1, step2, step3, step4], 0); // MUST have the same order as TSpenderStatus
+end;
+
 {--------------------------------- TContract ----------------------------------}
 
 type
@@ -271,15 +332,21 @@ begin
                   else if not Assigned(token) then
                     next(prompted, nil)
                   else
-                    thread.synchronize(procedure
+                    getSpenderStatus(chain, args[0].ToAddress, procedure(status: TSpenderStatus; err: IError)
                     begin
-                      asset.approve(chain, tx, token, args[0].ToAddress, value, procedure(allow: Boolean)
-                      begin
-                        if allow then
-                          next(prompted + [TWarning.Approve], nil)
-                        else
-                          block(prompted);
-                      end, log);
+                      if Assigned(err) then
+                        next(prompted, error.wrap(err, Self.Step1))
+                      else
+                        thread.synchronize(procedure
+                        begin
+                          asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow: Boolean)
+                          begin
+                            if allow then
+                              next(prompted + [TWarning.Approve], nil)
+                            else
+                              block(prompted);
+                          end, log);
+                        end);
                     end);
                 end);
             end;
@@ -322,7 +389,7 @@ begin
                         if (index > -1) and (changes.Item(index).Amount > 0) then
                           thread.synchronize(procedure
                           begin
-                            asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                            asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
                             begin
                               if allow then
                                 next(prompted + [TWarning.TransferOut], nil)
@@ -509,7 +576,7 @@ end;
 
 procedure TChecks.Step7(const prompted: TPrompted; const next: TNext);
 begin
-  isPhisher(tx.&To, procedure(result: Boolean; err: IError)
+  phisher.isPhisher(tx.&To, procedure(result: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step7))
@@ -1063,16 +1130,34 @@ begin
                     or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TWarning.TransferOut in prompted)) then
                       step(index + 1, prompted)
                     else
-                      thread.synchronize(procedure
-                      begin
-                        asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                      if changes.Item(index).Change <> TChangeType.Approve then
+                        thread.synchronize(procedure
                         begin
-                          if allow then
-                            step(index + 1, prompted + [TWarning.Other])
+                          asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                          begin
+                            if allow then
+                              step(index + 1, prompted + [TWarning.Other])
+                            else
+                              block(prompted);
+                          end, log);
+                        end)
+                      else
+                        getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
+                        begin
+                          if Assigned(err) then
+                            next(prompted, error.wrap(err, Self.Step18))
                           else
-                            block(prompted);
-                        end, log);
-                      end);
+                            thread.synchronize(procedure
+                            begin
+                              asset.approve(chain, tx, changes.Item(index), status, procedure(allow: Boolean)
+                              begin
+                                if allow then
+                                  step(index + 1, prompted + [TWarning.Other])
+                                else
+                                  block(prompted);
+                              end, log);
+                            end)
+                        end);
               end;
               step(0, prompted);
             end;
