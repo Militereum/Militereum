@@ -3,6 +3,8 @@ unit checks;
 interface
 
 uses
+  // Delphi
+  System.SysUtils,
   // Indy
   IdGlobal,
   // web3
@@ -36,7 +38,29 @@ type
   end;
 
 type
-  TChecks = class(TObject)
+  TApproval = record
+  strict private
+    FChain  : TChain;
+    FToken  : TAddress;
+    FSpender: TAddress;
+  public
+    constructor Create(const aChain: TChain; const aToken, aSpender: TAddress);
+    procedure Active(const owner: TAddress; const callback: TProc<Boolean, IError>);
+    property Chain  : TChain   read FChain;
+    property Token  : TAddress read FToken;
+    property Spender: TAddress read FSpender;
+  end;
+
+type
+  TCustomChecks = class(TObject)
+  private
+    FApproved: TArray<TApproval>;
+  public
+    property Approved: TArray<TApproval> read FApproved;
+  end;
+
+type
+  TChecks = class(TCustomChecks)
   strict private
     server: TEthereumRPCServer;
     port  : TIdPort;
@@ -93,13 +117,13 @@ uses
   System.DateUtils,
   System.JSON,
   System.Math,
-  System.SysUtils,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
   web3.defillama,
   web3.eth.alchemy.api,
   web3.eth.breadcrumbs,
+  web3.eth.erc20,
   web3.eth.etherscan,
   web3.eth.simulate,
   web3.eth.tokenlists,
@@ -286,6 +310,23 @@ begin
   FValue := aValue;
 end;
 
+{--------------------------------- TApproval ----------------------------------}
+
+constructor TApproval.Create(const aChain: TChain; const aToken, aSpender: TAddress);
+begin
+  Self.FChain   := aChain;
+  Self.FToken   := aToken;
+  Self.FSpender := aSpender;
+end;
+
+procedure TApproval.Active(const owner: TAddress; const callback: TProc<Boolean, IError>);
+begin
+  web3.eth.erc20.create(TWeb3.Create(Self.Chain), Self.Token).Allowance(owner, Self.Spender, procedure(allowance: BigInteger; err: IError)
+  begin
+    callback(not allowance.IsZero, err);
+  end);
+end;
+
 {---------------------------------- TChecks -----------------------------------}
 
 constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLog);
@@ -342,8 +383,11 @@ begin
                           asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow: Boolean)
                           begin
                             if allow then
+                            try
+                              FApproved := FApproved + [TApproval.Create(chain, token.Address, args[0].ToAddress)];
+                            finally
                               next(prompted + [TWarning.Approve], nil)
-                            else
+                            end else
                               block(prompted);
                           end, log);
                         end);
@@ -1136,7 +1180,7 @@ begin
                           asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
                           begin
                             if allow then
-                              step(index + 1, prompted + [TWarning.Other])
+                              step(index + 1, prompted + [TWarning.TransferOut])
                             else
                               block(prompted);
                           end, log);
@@ -1152,8 +1196,11 @@ begin
                               asset.approve(chain, tx, changes.Item(index), status, procedure(allow: Boolean)
                               begin
                                 if allow then
-                                  step(index + 1, prompted + [TWarning.Other])
-                                else
+                                try
+                                  FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, changes.Item(index).&To)];
+                                finally
+                                  step(index + 1, prompted + [TWarning.Approve])
+                                end else
                                   block(prompted);
                               end, log);
                             end)

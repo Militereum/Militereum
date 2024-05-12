@@ -22,9 +22,11 @@ uses
   // web3
   web3,
   // project
+  checks,
   demo,
   log,
-  server;
+  server,
+  transaction;
 
 type
   TFrmMain = class(TForm)
@@ -101,6 +103,7 @@ type
     FAllowedTransactions: TStrings;
     FBlockedTransactions: TStrings;
     FShowTestNetworks: Boolean;
+    FApproved: TArray<TApproval>;
     procedure Dismiss;
     procedure Log(const err: IError); overload;
     procedure Log(const line: TLine; const row: string); overload;
@@ -109,6 +112,8 @@ type
     procedure ShowLogWindow;
     procedure SetShowTestNetworks(Value: Boolean);
   strict protected
+    procedure BeforeTransaction(const chain: TChain; const tx: ITransaction);
+    procedure AfterTransaction(const chain: TChain; const tx: ITransaction; const allowed: Boolean; const checked: TCustomChecks; const prompted: TPrompted);
     procedure DoShow; override;
     procedure DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
     procedure DoLog(const request, response: string; const success: Boolean);
@@ -141,14 +146,14 @@ uses
   FMX.Platform,
   // web3
   web3.eth.simulate,
+  web3.eth.types,
   web3.utils,
   // project
-  checks,
   common,
   docker,
   error,
+  revoke,
   thread,
-  transaction,
   update;
 
 { TFrmMain }
@@ -166,6 +171,7 @@ constructor TFrmMain.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
 
+  FApproved         := [];
   FFirstTime        := True;
   FShowTestNetworks := True;
 
@@ -404,6 +410,72 @@ begin
   FCanNotify := aIsGranted;
 end;
 
+procedure TFrmMain.BeforeTransaction(const chain: TChain; const tx: transaction.ITransaction);
+begin
+  common.beforeTransaction;
+  Self.Notify('Checking your transaction');
+end;
+
+procedure TFrmMain.AfterTransaction(
+  const chain   : TChain;                   // the network the user is transacting on
+  const tx      : transaction.ITransaction; // the transaction that passed through Militereum
+  const allowed : Boolean;                  // True if the user allowed for the transaction, otherwise False
+  const checked : TCustomChecks;            // reference to the checks that got performed on the transaction
+  const prompted: TPrompted);               // the warnings the user got prompted with
+begin
+  common.afterTransaction;
+  if allowed then
+  begin
+    if TWarning.Approve in prompted then Self.FApproved := Self.FApproved + checked.Approved;
+{-- <auto-revoke> -- begins here ----------------------------------------------}
+    tx.ToIsEOA(chain, procedure(eoa: Boolean; err: IError)
+    begin
+      // did we transact with a smart contract? (not with an EOA)
+      if not eoa then
+      begin
+        // did we previously approve this smart contract?
+        var approved := (function(const contract: TAddress): TArray<TApproval>
+        begin
+          Result := [];
+          for var approval in Self.FApproved do
+            if (approval.Chain = chain) and approval.Spender.SameAs(contract) then
+              Result := Result + [approval];
+        end)(tx.&To);
+        if Length(approved) > 0 then
+          tx.From.ifOk(procedure(owner: TAddress)
+          begin
+            // enumerate over the allowances we granted this smart contract
+            var next: TProc<Integer>;
+            next := procedure(index: Integer)
+            begin
+              if index >= Length(approved) then
+                { nothing else to do }
+              else
+                // is this allowance active? (eg. has not been revoked yet)
+                approved[index].Active(owner, procedure(active: Boolean; err: IError)
+                begin
+                  if Assigned(err) or not active then
+                    next(index + 1)
+                  else
+                    // prompt the user to revoke this spender/contract
+                    thread.synchronize(procedure
+                    begin
+                      revoke.show(approved[index].Chain, approved[index].Token, approved[index].Spender, procedure(revoke: Boolean)
+                      begin
+                        if revoke then common.Open(System.SysUtils.Format('https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [owner.ToChecksum, chain.Id, approved[index].Spender.ToChecksum]));
+                        next(index + 1);
+                      end)
+                    end)
+                end);
+            end;
+            next(0);
+          end);
+      end;
+    end);
+{-- </auto-revoke> -- ends here -----------------------------------------------}
+  end;
+end;
+
 procedure TFrmMain.DoRPC(const aContext: TIdContext; const aPayload: IPayload; const callback: TProc<Boolean>; const error: TProc<IError>);
 type
   TNext = reference to procedure(const steps: TSteps; const index: Integer; const prompted: TPrompted; const done: TDone);
@@ -456,9 +528,7 @@ begin
             const chain = FServer.chain(aContext.Binding.Port);
             if Assigned(chain) then
             begin
-              common.beforeTransaction;
-
-              Self.Notify('Simulating your transaction');
+              Self.BeforeTransaction(chain^, tx);
 
               var next: TNext;
               next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const done: TDone)
@@ -491,9 +561,12 @@ begin
               const done = procedure(const allow: Boolean; const prompted: TPrompted)
               begin
                 if allow then Self.AllowedTransactions.Add(params) else Self.BlockedTransactions.Add(params);
-                if Assigned(checks) then checks.Free;
-                common.afterTransaction;
-                callback(allow);
+                try
+                  callback(allow);
+                finally
+                  Self.AfterTransaction(chain^, tx, allow, checks, prompted);
+                  if Assigned(checks) then checks.Free;
+                end;
                 if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
               end;
 
