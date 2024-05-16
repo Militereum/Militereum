@@ -42,12 +42,14 @@ type
   strict private
     FChain  : TChain;
     FToken  : TAddress;
+    FOwner  : TAddress;
     FSpender: TAddress;
   public
-    constructor Create(const aChain: TChain; const aToken, aSpender: TAddress);
-    procedure Active(const owner: TAddress; const callback: TProc<Boolean, IError>);
+    constructor Create(const aChain: TChain; const aToken, aOwner, aSpender: TAddress);
+    procedure Active(const callback: TProc<Boolean, IError>);
     property Chain  : TChain   read FChain;
     property Token  : TAddress read FToken;
+    property Owner  : TAddress read FOwner;
     property Spender: TAddress read FSpender;
   end;
 
@@ -272,7 +274,10 @@ begin
       contracts := contracts + [TContract.Create(taTransact, tx.&To, chain)];
     // step #2: incoming tokens
     server.apiKey(port)
-      .ifErr(procedure(err: IError) begin callback(contracts, err) end)
+      .ifErr(procedure(err: IError)
+      begin
+        callback(contracts, err)
+      end)
       .&else(procedure(apiKey: string)
       begin
         tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
@@ -281,7 +286,10 @@ begin
             callback(contracts, err)
           else
             tx.From
-              .ifErr(procedure(err: IError) begin callback(contracts, err) end)
+              .ifErr(procedure(err: IError)
+              begin
+                callback(contracts, err)
+              end)
               .&else(procedure(from: TAddress)
               begin
                 const incoming: IAssetChanges = changes.Incoming(from);
@@ -312,16 +320,17 @@ end;
 
 {--------------------------------- TApproval ----------------------------------}
 
-constructor TApproval.Create(const aChain: TChain; const aToken, aSpender: TAddress);
+constructor TApproval.Create(const aChain: TChain; const aToken, aOwner, aSpender: TAddress);
 begin
   Self.FChain   := aChain;
   Self.FToken   := aToken;
+  Self.FOwner   := aOwner;
   Self.FSpender := aSpender;
 end;
 
-procedure TApproval.Active(const owner: TAddress; const callback: TProc<Boolean, IError>);
+procedure TApproval.Active(const callback: TProc<Boolean, IError>);
 begin
-  web3.eth.erc20.create(TWeb3.Create(Self.Chain), Self.Token).Allowance(owner, Self.Spender, procedure(allowance: BigInteger; err: IError)
+  web3.eth.erc20.create(TWeb3.Create(Self.Chain), Self.Token).Allowance(Self.Owner, Self.Spender, procedure(allowance: BigInteger; err: IError)
   begin
     callback(not allowance.IsZero, err);
   end);
@@ -343,14 +352,20 @@ end;
 procedure TChecks.Step1(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0x095EA7B3') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step1))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -378,19 +393,27 @@ begin
                       if Assigned(err) then
                         next(prompted, error.wrap(err, Self.Step1))
                       else
-                        thread.synchronize(procedure
-                        begin
-                          asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow: Boolean)
+                        tx.From
+                          .ifErr(procedure(err: IError)
                           begin
-                            if allow then
-                            try
-                              FApproved := FApproved + [TApproval.Create(chain, token.Address, args[0].ToAddress)];
-                            finally
-                              next(prompted + [TWarning.Approve], nil)
-                            end else
-                              block(prompted);
-                          end, log);
-                        end);
+                            next(prompted, error.wrap(err, Self.Step1))
+                          end)
+                          .&else(procedure(from: TAddress)
+                          begin
+                            thread.synchronize(procedure
+                            begin
+                              asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow: Boolean)
+                              begin
+                                if allow then
+                                try
+                                  FApproved := FApproved + [TApproval.Create(chain, token.Address, from, args[0].ToAddress)];
+                                finally
+                                  next(prompted + [TWarning.Approve], nil)
+                                end else
+                                  block(prompted);
+                              end, log);
+                            end);
+                          end);
                     end);
                 end);
             end;
@@ -401,14 +424,20 @@ end;
 procedure TChecks.Step2(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step2))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -419,7 +448,10 @@ begin
                 next(prompted, nil)
               else
                 server.apiKey(port)
-                  .ifErr(procedure(err: IError) begin next(prompted, err) end)
+                  .ifErr(procedure(err: IError)
+                  begin
+                    next(prompted, error.wrap(err, Self.Step2))
+                  end)
                   .&else(procedure(apiKey: string)
                   begin
                     tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
@@ -463,14 +495,20 @@ end;
 procedure TChecks.Step3(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA22CB465') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step3))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -511,7 +549,10 @@ begin
       next(prompted, nil)
     else
       common.Etherscan(chain)
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step4))
+        end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getContractSourceCode(tx.&To, procedure(src: string; err: IError)
@@ -539,14 +580,20 @@ end;
 procedure TChecks.Step5(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step5))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -643,7 +690,10 @@ end;
 procedure TChecks.Step8(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step8))
+    end)
     .&else(procedure(apiKey: string)
     begin
       getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
@@ -714,11 +764,17 @@ end;
 procedure TChecks.Step9(const prompted: TPrompted; const next: TNext);
 begin
   tx.From
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step9))
+    end)
     .&else(procedure(from: TAddress)
     begin
       common.Etherscan(chain)
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step9))
+        end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getTransactions(from, procedure(txs: ITransactions; err: IError)
@@ -995,11 +1051,17 @@ procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
 {$I keys/tenderly.api.key}
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step15))
+    end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step15))
+        end)
         .&else(procedure(from: TAddress)
         begin
           web3.eth.simulate.honeypots(apiKey, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
@@ -1132,11 +1194,17 @@ end;
 procedure TChecks.Step18(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step18))
+    end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step18))
+        end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
@@ -1197,7 +1265,7 @@ begin
                               begin
                                 if allow then
                                 try
-                                  FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, changes.Item(index).&To)];
+                                  FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
                                 finally
                                   step(index + 1, prompted + [TWarning.Approve])
                                 end else
