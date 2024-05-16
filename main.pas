@@ -426,23 +426,50 @@ begin
   common.afterTransaction;
   if allowed then
   begin
-    if TWarning.Approve in prompted then Self.FApproved := Self.FApproved + checked.Approved;
-{-- <auto-revoke> -- begins here ----------------------------------------------}
-    tx.ToIsEOA(chain, procedure(eoa: Boolean; err: IError)
+    if TWarning.Approve in prompted then thread.lock(Self, procedure
     begin
-      // did we transact with a smart contract? (not with an EOA)
-      if not eoa then
+      Self.FApproved := Self.FApproved + checked.Approved;
+    end);
+    tx.From.ifOk(procedure(owner: TAddress)
+    begin
+      // clean up after the approvals that aren't active anymore (eg. have been revoked)
+      thread.lock(Self, procedure(done: TCallback)
       begin
-        // did we previously approve this smart contract?
-        var approved := (function(const contract: TAddress): TArray<TApproval>
+        var next: TProc<Integer>;
+        next := procedure(index: Integer)
         begin
-          Result := [];
-          for var approval in Self.FApproved do
-            if (approval.Chain = chain) and approval.Spender.SameAs(contract) then
-              Result := Result + [approval];
-        end)(tx.&To);
-        if Length(approved) > 0 then
-          tx.From.ifOk(procedure(owner: TAddress)
+          if index >= Length(Self.FApproved) then
+            done
+          else
+            // is this allowance active? (eg. has not been revoked yet)
+            Self.FApproved[index].Active(owner, procedure(active: Boolean; err: IError)
+            begin
+              if active or Assigned(err) then
+                next(index + 1)
+              else try
+                Delete(Self.FApproved, index, 1);
+              finally
+                next(index);
+              end;
+            end);
+        end;
+        next(0);
+      end);
+      // auto-revoke: https://medium.com/@svanas/introducing-auto-revoke-dba9f3222414
+      tx.ToIsEOA(chain, procedure(eoa: Boolean; err: IError)
+      begin
+        // did we transact with a smart contract? (not with an EOA)
+        if not eoa then
+        begin
+          // did we previously approve this smart contract?
+          const approved = thread.TLock.get<TArray<TApproval>>(Self, function: TArray<TApproval>
+          begin
+            Result := [];
+            for var approval in Self.FApproved do
+              if (approval.Chain = chain) and approval.Spender.SameAs(tx.&To) then
+                Result := Result + [approval];
+          end);
+          if Length(approved) > 0 then
           begin
             // enumerate over the allowances we granted this smart contract
             var next: TProc<Integer>;
@@ -462,17 +489,18 @@ begin
                     begin
                       revoke.show(approved[index].Chain, approved[index].Token, approved[index].Spender, procedure(revoke: Boolean)
                       begin
-                        if revoke then common.Open(System.SysUtils.Format('https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [owner.ToChecksum, chain.Id, approved[index].Spender.ToChecksum]));
+                        if revoke then common.Open(System.SysUtils.Format(
+                          'https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [owner.ToChecksum, chain.Id, approved[index].Spender.ToChecksum]));
                         next(index + 1);
                       end)
                     end)
                 end);
             end;
             next(0);
-          end);
-      end;
+          end;
+        end;
+      end);
     end);
-{-- </auto-revoke> -- ends here -----------------------------------------------}
   end;
 end;
 
