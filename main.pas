@@ -430,32 +430,32 @@ begin
     begin
       Self.FApproved := Self.FApproved + checked.Approved;
     end);
-    tx.From.ifOk(procedure(owner: TAddress)
+    // clean up after the approvals that aren't active anymore (eg. have been revoked)
+    thread.lock(Self, procedure(done: TCallback)
     begin
-      // clean up after the approvals that aren't active anymore (eg. have been revoked)
-      thread.lock(Self, procedure(done: TCallback)
+      var next: TProc<Integer>;
+      next := procedure(index: Integer)
       begin
-        var next: TProc<Integer>;
-        next := procedure(index: Integer)
-        begin
-          if index >= Length(Self.FApproved) then
-            done
-          else
-            // is this allowance active? (eg. has not been revoked yet)
-            Self.FApproved[index].Active(owner, procedure(active: Boolean; err: IError)
-            begin
-              if active or Assigned(err) then
-                next(index + 1)
-              else try
-                Delete(Self.FApproved, index, 1);
-              finally
-                next(index);
-              end;
-            end);
-        end;
-        next(0);
-      end);
-      // auto-revoke: https://medium.com/@svanas/introducing-auto-revoke-dba9f3222414
+        if index >= Length(Self.FApproved) then
+          done
+        else
+          // is this allowance active? (eg. has not been revoked yet)
+          Self.FApproved[index].Active(procedure(active: Boolean; err: IError)
+          begin
+            if active or Assigned(err) then
+              next(index + 1)
+            else try
+              Delete(Self.FApproved, index, 1);
+            finally
+              next(index);
+            end;
+          end);
+      end;
+      next(0);
+    end);
+    // auto-revoke: https://medium.com/@svanas/introducing-auto-revoke-dba9f3222414
+    tx.From.ifOk(procedure(from: TAddress)
+    begin
       tx.ToIsEOA(chain, procedure(eoa: Boolean; err: IError)
       begin
         // did we transact with a smart contract? (not with an EOA)
@@ -466,7 +466,7 @@ begin
           begin
             Result := [];
             for var approval in Self.FApproved do
-              if (approval.Chain = chain) and approval.Spender.SameAs(tx.&To) then
+              if (approval.Chain = chain) and approval.Owner.SameAs(from) and approval.Spender.SameAs(tx.&To) then
                 Result := Result + [approval];
           end);
           if Length(approved) > 0 then
@@ -479,7 +479,7 @@ begin
                 { nothing else to do }
               else
                 // is this allowance active? (eg. has not been revoked yet)
-                approved[index].Active(owner, procedure(active: Boolean; err: IError)
+                approved[index].Active(procedure(active: Boolean; err: IError)
                 begin
                   if Assigned(err) or not active then
                     next(index + 1)
@@ -490,7 +490,7 @@ begin
                       revoke.show(approved[index].Chain, approved[index].Token, approved[index].Spender, procedure(revoke: Boolean)
                       begin
                         if revoke then common.Open(System.SysUtils.Format(
-                          'https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [owner.ToChecksum, chain.Id, approved[index].Spender.ToChecksum]));
+                          'https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [from.ToChecksum, chain.Id, approved[index].Spender.ToChecksum]));
                         next(index + 1);
                       end)
                     end)
