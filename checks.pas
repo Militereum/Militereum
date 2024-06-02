@@ -132,6 +132,7 @@ uses
   unlock,
   unsupported,
   unverified,
+  vault,
   vaults.fyi;
 
 {--------------------------------- TContract ----------------------------------}
@@ -1097,14 +1098,26 @@ begin
         next(prompted, nil)
       else
         // if another vault provides for a higher APY while holding the same TVL (or more), display a warning
-        vaults.fyi.better(chain, tx.&To, procedure(vault: IVault; err: IError)
+        vaults.fyi.better(chain, tx.&To, procedure(other: IVault; err: IError)
         begin
           if Assigned(err) then
             next(prompted, error.wrap(err, Self.Step18))
-          else if not Assigned(vault) then
+          else if not Assigned(other) then
             next(prompted, nil)
           else
-            // ToDo: display a nice "you are about to deposit your %symbol% into a vault earning x% yield" dialog
+            thread.synchronize(procedure
+            begin
+              vault.show(chain, tx, other.Token.Symbol, procedure(allow: Boolean)
+              begin
+                if allow then
+                  next(prompted + [TWarning.Other], nil)
+                else try
+                  common.Open(other.URL);
+                finally
+                  block(prompted);
+                end;
+              end, log);
+            end);
         end);
     end);
 end;

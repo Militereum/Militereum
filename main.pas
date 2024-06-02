@@ -83,6 +83,7 @@ type
     mnuDormant: TMenuItem;
     mnuUnlock: TMenuItem;
     mnuDarkMode: TMenuItem;
+    mnuVault: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
