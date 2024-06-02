@@ -1,0 +1,43 @@
+inherited FrmVault: TFrmVault
+  ClientHeight = 239
+  DesignerMasterStyle = 0
+  object lblTitle: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 24.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 'You are about to deposit your %s into a vault'
+    TabOrder = 0
+  end
+  object Label1: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'Our system has detected another vault that earns you higher yiel' +
+      'd.'
+    TabOrder = 1
+  end
+  object Label2: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 160.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'Click Allow to continue, or click Block and find out about the o' +
+      'ther vault.'
+    TabOrder = 2
+  end
+end
