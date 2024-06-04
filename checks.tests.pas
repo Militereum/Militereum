@@ -15,6 +15,8 @@ type
     procedure Step12;
     [Test]
     procedure Step13;
+    [Test]
+    procedure Step18;
   end;
 
 implementation
@@ -30,7 +32,8 @@ uses
   web3.json,
   // project
   dextools,
-  moralis;
+  moralis,
+  vaults.fyi;
 
 {$I keys/alchemy.api.key}
 
@@ -119,6 +122,25 @@ begin
 
   if Assigned(arr) then arr.Free;
   if Assigned(err) then Assert.Fail(err.Message);
+end;
+
+// are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?
+procedure TChecks.Step18;
+const
+  COMPOUND_V2_DAI = '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643';
+begin
+  var vault: IVault := nil;
+  var error: IError := nil;
+
+  vaults.fyi.better(web3.Ethereum, COMPOUND_V2_DAI, procedure(other: IVault; err: IError)
+  begin
+    vault := other;
+    error := err;
+  end);
+
+  while (error = nil) and (vault = nil) do TThread.Sleep(100);
+
+  if Assigned(error) then Assert.Fail(error.Message) else if (vault = nil) then Assert.Fail('vault is nil, expected better than Compound v2 DAI');
 end;
 
 initialization

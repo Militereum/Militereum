@@ -211,12 +211,12 @@ begin
             else
               vault(network, steps[index], procedure(that: IVault; err: IError)
               begin
-                if Assigned(err) then
+                if Assigned(err) and not err.Message.Contains('does not exists on network') then
                 begin
                   callback(nil, err);
                   EXIT;
                 end;
-                if (that.APY > this.APY) and (that.TVL >= this.TVL) then
+                if Assigned(that) and (that.APY > this.APY) and (that.TVL >= this.TVL) then
                   callback(that, nil)
                 else
                   next(steps, index + 1);
