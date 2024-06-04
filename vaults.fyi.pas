@@ -28,7 +28,8 @@ type
 
 procedure network(const chain: TChain; const callback: TProc<string, IError>);
 procedure vault(const network: string; const contract: TAddress; const callback: TProc<IVault, IError>);
-procedure vaults(const network, symbol: string; const callback: TProc<TArray<TAddress>, IError>);
+procedure vaults1(const network, symbol: string; const callback: TProc<TArray<TAddress>, IError>);
+procedure vaults2(const network, symbol: string; const callback: TProc<TArray<IVault>, IError>);
 procedure better(const chain: TChain; const contract: TAddress; const callback: TProc<IVault, IError>);
 
 implementation
@@ -152,7 +153,7 @@ begin
     end);
 end;
 
-procedure vaults(const network, symbol: string; const callback: TProc<TArray<TAddress>, IError>);
+procedure vaults1(const network, symbol: string; const callback: TProc<TArray<TAddress>, IError>);
 begin
   web3.http.get(VAULTS_API_BASE + Format('vaults?network=%s&token=%s', [network, symbol]), [TNetHeader.Create('accept', 'application/json')],
     procedure(response: TJsonValue; err: IError)
@@ -171,9 +172,38 @@ begin
     end);
 end;
 
-procedure better(const chain: TChain; const contract: TAddress; const callback: TProc<IVault, IError>);
+procedure vaults2(const network, symbol: string; const callback: TProc<TArray<IVault>, IError>);
 type
-  TNext = reference to procedure(const steps: TArray<TAddress>; const index: Integer);
+  TNext = reference to procedure(const page: Integer);
+begin
+  var next  : TNext;
+  var result: TArray<IVault> := [];
+  try
+    next := procedure(const page: Integer)
+    begin
+      web3.http.get(VAULTS_API_BASE + Format('detailed/vaults?network=%s&token=%s&page=%d', [network, symbol, page]), [TNetHeader.Create('accept', 'application/json')],
+        procedure(response: TJsonValue; err: IError)
+        begin
+          const data = getPropAsArr(response, 'data');
+          if not Assigned(data) then
+          begin
+            callback([], TError.Create('data is not an array'));
+            EXIT;
+          end;
+          for var vault in data do result := result + [TVault.Create(vault)];
+          const page = getPropAsInt(response, 'next_page');
+          if page > 0 then
+            next(page)
+          else
+            callback(result, nil);
+        end);
+    end;
+  finally
+    next(0);
+  end;
+end;
+
+procedure better(const chain: TChain; const contract: TAddress; const callback: TProc<IVault, IError>);
 begin
   // first of all, get the vaults.fyi network string
   network(chain, procedure(network: string; err: IError)
@@ -192,7 +222,7 @@ begin
         EXIT;
       end;
       // if yes, compare the APY with the other vaults in the vaults.fyi API
-      vaults(network, this.Token.Symbol, procedure(vaults: TArray<TAddress>; err: IError)
+      vaults2(network, this.Token.Symbol, procedure(vaults: TArray<IVault>; err: IError)
       begin
         if Assigned(err) then
         begin
@@ -200,29 +230,12 @@ begin
           EXIT;
         end;
         // if another vault provides for a higher APY while holding the same TVL (or more), return the better vault
-        var next: TNext;
-        next := procedure(const steps: TArray<TAddress>; const index: Integer)
+        for var that in vaults do if (not that.Address.SameAs(this.Address)) and (that.APY > this.APY) and (that.TVL >= this.TVL) then
         begin
-          if index >= Length(steps) then
-            callback(nil, nil)
-          else
-            if steps[index].SameAs(contract) then
-              next(steps, index + 1)
-            else
-              vault(network, steps[index], procedure(that: IVault; err: IError)
-              begin
-                if Assigned(err) and not err.Message.Contains('does not exists on network') then
-                begin
-                  callback(nil, err);
-                  EXIT;
-                end;
-                if Assigned(that) and (that.APY > this.APY) and (that.TVL >= this.TVL) then
-                  callback(that, nil)
-                else
-                  next(steps, index + 1);
-              end);
+          callback(that, nil);
+          EXIT;
         end;
-        next(vaults, 0);
+        callback(nil, nil);
       end);
     end);
   end);
