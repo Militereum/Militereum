@@ -80,7 +80,7 @@ begin
   begin
     if symbol <> '' then thread.synchronize(procedure
     begin
-      lblTitle.Text := Format('Your % are at risk', [symbol]);
+      lblTitle.Text := Format('Your %s are at risk', [symbol]);
     end);
   end);
 end;
