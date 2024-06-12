@@ -12,8 +12,8 @@ procedure disableDarkMode;
 
 procedure initialize;
 
-procedure beforeTransaction;
-procedure afterTransaction;
+procedure beforeShowDialog;
+procedure afterShowDialog;
 
 implementation
 
@@ -166,11 +166,11 @@ begin
       const main = TMainFormChangedMessage(Msg).Value;
       if Assigned(main) and main.Visible then
       begin
-        beforeTransaction;
+        beforeShowDialog;
         try
           main.Visible := False;
         finally
-          afterTransaction;
+          afterShowDialog;
         end;
       end;
     end);
@@ -180,7 +180,7 @@ begin
   app.setDelegate(IApplicationDelegate(new));
 end;
 
-procedure beforeTransaction;
+procedure beforeShowDialog;
 begin
   counter.Enter;
   try
@@ -190,7 +190,7 @@ begin
   end;
 end;
 
-procedure afterTransaction;
+procedure afterShowDialog;
 begin
   counter.Enter;
   try

@@ -63,8 +63,8 @@ procedure DisableDarkMode;
 procedure initialize;
 procedure finalize;
 
-procedure beforeTransaction;
-procedure afterTransaction;
+procedure beforeShowDialog;
+procedure afterShowDialog;
 
 implementation
 
@@ -387,17 +387,17 @@ begin
 {$ENDIF MSWINDOWS}
 end;
 
-procedure beforeTransaction;
+procedure beforeShowDialog;
 begin
 {$IFDEF MACOS}
-  common.mac.beforeTransaction;
+  common.mac.beforeShowDialog;
 {$ENDIF MACOS}
 end;
 
-procedure afterTransaction;
+procedure afterShowDialog;
 begin
 {$IFDEF MACOS}
-  common.mac.afterTransaction;
+  common.mac.afterShowDialog;
 {$ENDIF MACOS}
 end;
 

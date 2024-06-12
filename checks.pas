@@ -3,6 +3,8 @@ unit checks;
 interface
 
 uses
+  // Delphi
+  System.SysUtils,
   // Indy
   IdGlobal,
   // web3
@@ -36,7 +38,31 @@ type
   end;
 
 type
-  TChecks = class(TObject)
+  TApproval = record
+  strict private
+    FChain  : TChain;
+    FToken  : TAddress;
+    FOwner  : TAddress;
+    FSpender: TAddress;
+  public
+    constructor Create(const aChain: TChain; const aToken, aOwner, aSpender: TAddress);
+    procedure Active(const callback: TProc<Boolean, IError>);
+    property Chain  : TChain   read FChain;
+    property Token  : TAddress read FToken;
+    property Owner  : TAddress read FOwner;
+    property Spender: TAddress read FSpender;
+  end;
+
+type
+  TCustomChecks = class(TObject)
+  private
+    FApproved: TArray<TApproval>;
+  public
+    property Approved: TArray<TApproval> read FApproved;
+  end;
+
+type
+  TChecks = class(TCustomChecks)
   strict private
     server: TEthereumRPCServer;
     port  : TIdPort;
@@ -93,13 +119,13 @@ uses
   System.DateUtils,
   System.JSON,
   System.Math,
-  System.SysUtils,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
   web3.defillama,
   web3.eth.alchemy.api,
   web3.eth.breadcrumbs,
+  web3.eth.erc20,
   web3.eth.etherscan,
   web3.eth.simulate,
   web3.eth.tokenlists,
@@ -130,6 +156,67 @@ uses
   unlock,
   unsupported,
   unverified;
+
+{------- spender status (EOA, unverified, phisher, sanctioned, or good --------}
+
+procedure getSpenderStatus(const chain: TChain; const address: TAddress; const callback: TProc<TSpenderStatus, IError>);
+type
+  TStep = reference to procedure(const callback: TProc<Boolean, IError>);
+  TNext = reference to procedure(const steps: TArray<TStep>; const index: Integer);
+begin
+  var next: TNext;
+
+  // is the address an EOA? (there is never a good reason to approve an EOA)
+  const step1: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    address.IsEOA(TWeb3.Create(chain), callback);
+  end;
+
+  // is the contract not verified with etherscan?
+  const step2: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    common.Etherscan(chain)
+      .ifErr(procedure(err: IError)
+      begin
+        callback(False, err)
+      end)
+      .&else(procedure(etherscan: IEtherscan)
+      begin
+        etherscan.getContractSourceCode(address, procedure(src: string; err: IError)
+        begin
+          callback(src = '', err);
+        end)
+      end);
+  end;
+
+  // is the address a known phisher?
+  const step3: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    phisher.isPhisher(address, callback);
+  end;
+
+  // is the address sanctioned?
+  const step4: TStep = procedure(const callback: TProc<Boolean, IError>)
+  begin
+    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+  end;
+
+  next := procedure(const steps: TArray<TStep>; const index: Integer)
+  begin
+    if index >= Length(steps) then
+      callback(isGood, nil) // we're good if none of the above steps was a problem
+    else
+      steps[index](procedure(bad: Boolean; err: IError)
+      begin
+        if bad or Assigned(err) then
+          callback(TSpenderStatus(index), err)
+        else
+          next(steps, index + 1);
+      end);
+  end;
+
+  next([step1, step2, step3, step4], 0); // MUST have the same order as TSpenderStatus
+end;
 
 {--------------------------------- TContract ----------------------------------}
 
@@ -187,7 +274,10 @@ begin
       contracts := contracts + [TContract.Create(taTransact, tx.&To, chain)];
     // step #2: incoming tokens
     server.apiKey(port)
-      .ifErr(procedure(err: IError) begin callback(contracts, err) end)
+      .ifErr(procedure(err: IError)
+      begin
+        callback(contracts, err)
+      end)
       .&else(procedure(apiKey: string)
       begin
         tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
@@ -196,7 +286,10 @@ begin
             callback(contracts, err)
           else
             tx.From
-              .ifErr(procedure(err: IError) begin callback(contracts, err) end)
+              .ifErr(procedure(err: IError)
+              begin
+                callback(contracts, err)
+              end)
               .&else(procedure(from: TAddress)
               begin
                 const incoming: IAssetChanges = changes.Incoming(from);
@@ -225,6 +318,24 @@ begin
   FValue := aValue;
 end;
 
+{--------------------------------- TApproval ----------------------------------}
+
+constructor TApproval.Create(const aChain: TChain; const aToken, aOwner, aSpender: TAddress);
+begin
+  Self.FChain   := aChain;
+  Self.FToken   := aToken;
+  Self.FOwner   := aOwner;
+  Self.FSpender := aSpender;
+end;
+
+procedure TApproval.Active(const callback: TProc<Boolean, IError>);
+begin
+  web3.eth.erc20.create(TWeb3.Create(Self.Chain), Self.Token).Allowance(Self.Owner, Self.Spender, procedure(allowance: BigInteger; err: IError)
+  begin
+    callback(not allowance.IsZero, err);
+  end);
+end;
+
 {---------------------------------- TChecks -----------------------------------}
 
 constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLog);
@@ -241,14 +352,20 @@ end;
 procedure TChecks.Step1(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0x095EA7B3') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step1))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -271,15 +388,32 @@ begin
                   else if not Assigned(token) then
                     next(prompted, nil)
                   else
-                    thread.synchronize(procedure
+                    getSpenderStatus(chain, args[0].ToAddress, procedure(status: TSpenderStatus; err: IError)
                     begin
-                      asset.approve(chain, tx, token, args[0].ToAddress, value, procedure(allow: Boolean)
-                      begin
-                        if allow then
-                          next(prompted + [TWarning.Approve], nil)
-                        else
-                          block(prompted);
-                      end, log);
+                      if Assigned(err) then
+                        next(prompted, error.wrap(err, Self.Step1))
+                      else
+                        tx.From
+                          .ifErr(procedure(err: IError)
+                          begin
+                            next(prompted, error.wrap(err, Self.Step1))
+                          end)
+                          .&else(procedure(from: TAddress)
+                          begin
+                            thread.synchronize(procedure
+                            begin
+                              asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow: Boolean)
+                              begin
+                                if allow then
+                                try
+                                  FApproved := FApproved + [TApproval.Create(chain, token.Address, from, args[0].ToAddress)];
+                                finally
+                                  next(prompted + [TWarning.Approve], nil)
+                                end else
+                                  block(prompted);
+                              end, log);
+                            end);
+                          end);
                     end);
                 end);
             end;
@@ -290,14 +424,20 @@ end;
 procedure TChecks.Step2(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step2))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -308,7 +448,10 @@ begin
                 next(prompted, nil)
               else
                 server.apiKey(port)
-                  .ifErr(procedure(err: IError) begin next(prompted, err) end)
+                  .ifErr(procedure(err: IError)
+                  begin
+                    next(prompted, error.wrap(err, Self.Step2))
+                  end)
                   .&else(procedure(apiKey: string)
                   begin
                     tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
@@ -322,7 +465,7 @@ begin
                         if (index > -1) and (changes.Item(index).Amount > 0) then
                           thread.synchronize(procedure
                           begin
-                            asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                            asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
                             begin
                               if allow then
                                 next(prompted + [TWarning.TransferOut], nil)
@@ -352,14 +495,20 @@ end;
 procedure TChecks.Step3(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA22CB465') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step3))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -400,7 +549,10 @@ begin
       next(prompted, nil)
     else
       common.Etherscan(chain)
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step4))
+        end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getContractSourceCode(tx.&To, procedure(src: string; err: IError)
@@ -428,14 +580,20 @@ end;
 procedure TChecks.Step5(const prompted: TPrompted; const next: TNext);
 begin
   getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError) begin next(prompted, nil) end)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
     .&else(procedure(func: TFourBytes)
     begin
       if not SameText(fourBytestoHex(func), '0xA9059CBB') then
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
-          .ifErr(procedure(err: IError) begin next(prompted, err) end)
+          .ifErr(procedure(err: IError)
+          begin
+            next(prompted, error.wrap(err, Self.Step5))
+          end)
           .&else(procedure(args: TArray<TArg>)
           begin
             if Length(args) = 0 then
@@ -509,7 +667,7 @@ end;
 
 procedure TChecks.Step7(const prompted: TPrompted; const next: TNext);
 begin
-  isPhisher(tx.&To, procedure(result: Boolean; err: IError)
+  phisher.isPhisher(tx.&To, procedure(result: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step7))
@@ -532,7 +690,10 @@ end;
 procedure TChecks.Step8(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step8))
+    end)
     .&else(procedure(apiKey: string)
     begin
       getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
@@ -603,11 +764,17 @@ end;
 procedure TChecks.Step9(const prompted: TPrompted; const next: TNext);
 begin
   tx.From
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step9))
+    end)
     .&else(procedure(from: TAddress)
     begin
       common.Etherscan(chain)
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step9))
+        end)
         .&else(procedure(etherscan: IEtherscan)
         begin
           etherscan.getTransactions(from, procedure(txs: ITransactions; err: IError)
@@ -884,11 +1051,17 @@ procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
 {$I keys/tenderly.api.key}
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step15))
+    end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step15))
+        end)
         .&else(procedure(from: TAddress)
         begin
           web3.eth.simulate.honeypots(apiKey, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
@@ -1021,11 +1194,17 @@ end;
 procedure TChecks.Step18(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
-    .ifErr(procedure(err: IError) begin next(prompted, err) end)
+    .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step18))
+    end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
-        .ifErr(procedure(err: IError) begin next(prompted, err) end)
+        .ifErr(procedure(err: IError)
+        begin
+          next(prompted, error.wrap(err, Self.Step18))
+        end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
@@ -1063,16 +1242,37 @@ begin
                     or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TWarning.TransferOut in prompted)) then
                       step(index + 1, prompted)
                     else
-                      thread.synchronize(procedure
-                      begin
-                        asset.show(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                      if changes.Item(index).Change <> TChangeType.Approve then
+                        thread.synchronize(procedure
                         begin
-                          if allow then
-                            step(index + 1, prompted + [TWarning.Other])
+                          asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                          begin
+                            if allow then
+                              step(index + 1, prompted + [TWarning.TransferOut])
+                            else
+                              block(prompted);
+                          end, log);
+                        end)
+                      else
+                        getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
+                        begin
+                          if Assigned(err) then
+                            next(prompted, error.wrap(err, Self.Step18))
                           else
-                            block(prompted);
-                        end, log);
-                      end);
+                            thread.synchronize(procedure
+                            begin
+                              asset.approve(chain, tx, changes.Item(index), status, procedure(allow: Boolean)
+                              begin
+                                if allow then
+                                try
+                                  FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
+                                finally
+                                  step(index + 1, prompted + [TWarning.Approve])
+                                end else
+                                  block(prompted);
+                              end, log);
+                            end)
+                        end);
               end;
               step(0, prompted);
             end;
