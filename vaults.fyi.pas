@@ -28,8 +28,7 @@ type
 
 procedure network(const chain: TChain; const callback: TProc<string, IError>);
 procedure vault(const network: string; const contract: TAddress; const callback: TProc<IVault, IError>);
-procedure vaults1(const network, symbol: string; const callback: TProc<TArray<TAddress>, IError>);
-procedure vaults2(const network, symbol: string; const callback: TProc<TArray<IVault>, IError>);
+procedure vaults(const network, symbol: string; const callback: TProc<TArray<IVault>, IError>);
 procedure better(const chain: TChain; const contract: TAddress; const callback: TProc<IVault, IError>);
 
 implementation
@@ -153,26 +152,7 @@ begin
     end);
 end;
 
-procedure vaults1(const network, symbol: string; const callback: TProc<TArray<TAddress>, IError>);
-begin
-  web3.http.get(VAULTS_API_BASE + Format('vaults?network=%s&token=%s', [network, symbol]), [TNetHeader.Create('accept', 'application/json')],
-    procedure(response: TJsonValue; err: IError)
-    begin
-      if not(response is TJsonArray) then
-      begin
-        callback([], TError.Create('response is not an array'));
-        EXIT;
-      end;
-      var result: TArray<TAddress> := [];
-      try
-        for var vault in response as TJsonArray do result := result + [TAddress.Create(getPropAsStr(vault, 'address'))];
-      finally
-        callback(result, nil);
-      end;
-    end);
-end;
-
-procedure vaults2(const network, symbol: string; const callback: TProc<TArray<IVault>, IError>);
+procedure vaults(const network, symbol: string; const callback: TProc<TArray<IVault>, IError>);
 type
   TNext = reference to procedure(const page: Integer);
 begin
@@ -222,7 +202,7 @@ begin
         EXIT;
       end;
       // if yes, compare the APY with the other vaults in the vaults.fyi API
-      vaults2(network, this.Token.Symbol, procedure(vaults: TArray<IVault>; err: IError)
+      vaults(network, this.Token.Symbol, procedure(vaults: TArray<IVault>; err: IError)
       begin
         if Assigned(err) then
         begin
