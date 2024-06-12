@@ -412,7 +412,7 @@ end;
 
 procedure TFrmMain.BeforeTransaction(const chain: TChain; const tx: transaction.ITransaction);
 begin
-  common.beforeTransaction;
+  common.beforeShowDialog;
   Self.Notify('Checking your transaction');
 end;
 
@@ -423,7 +423,7 @@ procedure TFrmMain.AfterTransaction(
   const checked : TCustomChecks;            // reference to the checks that got performed on the transaction
   const prompted: TPrompted);               // the warnings the user got prompted with
 begin
-  common.afterTransaction;
+  common.afterShowDialog;
   if allowed then
   begin
     if TWarning.Approve in prompted then thread.lock(Self, procedure
@@ -470,34 +470,27 @@ begin
                 Result := Result + [approval];
           end);
           if Length(approved) > 0 then
-          begin
-            // enumerate over the allowances we granted this smart contract
-            var next: TProc<Integer>;
-            next := procedure(index: Integer)
+            // is this allowance active? (eg. has not been revoked yet)
+            approved[0].Active(procedure(active: Boolean; err: IError)
             begin
-              if index >= Length(approved) then
-                { nothing else to do }
-              else
-                // is this allowance active? (eg. has not been revoked yet)
-                approved[index].Active(procedure(active: Boolean; err: IError)
-                begin
-                  if Assigned(err) or not active then
-                    next(index + 1)
-                  else
-                    // prompt the user to revoke this spender/contract
-                    thread.synchronize(procedure
+              if Assigned(err) or not active then
+                { nothing to do }
+              else begin
+                common.beforeShowDialog;
+                try
+                  // prompt the user to revoke this spender/contract
+                  thread.synchronize(procedure
+                  begin
+                    revoke.show(approved[0].Chain, approved[0].Token, approved[0].Spender, procedure(revoke: Boolean)
                     begin
-                      revoke.show(approved[index].Chain, approved[index].Token, approved[index].Spender, procedure(revoke: Boolean)
-                      begin
-                        if revoke then common.Open(System.SysUtils.Format(
-                          'https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [from.ToChecksum, chain.Id, approved[index].Spender.ToChecksum]));
-                        next(index + 1);
-                      end)
+                      if revoke then common.Open(System.SysUtils.Format('https://revoke.cash/address/%s?chainId=%d&spenderSearch=%s', [from.ToChecksum, chain.Id, approved[0].Spender.ToChecksum]));
                     end)
-                end);
-            end;
-            next(0);
-          end;
+                  end)
+                finally
+                  common.afterShowDialog;
+                end;
+              end;
+            end);
         end;
       end);
     end);
