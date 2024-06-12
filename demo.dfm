@@ -105,5 +105,12 @@ object dmDemo: TdmDemo
       OnExecute = actUnlockExecute
       OnUpdate = actUpdate
     end
+    object actVault: TAction
+      Text = 
+        'You depositing a token in a vault but another vault earns you hi' +
+        'gher yeild'
+      OnExecute = actVaultExecute
+      OnUpdate = actUpdate
+    end
   end
 end

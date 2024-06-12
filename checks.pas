@@ -106,8 +106,10 @@ type
     procedure Step16(const prompted: TPrompted; const next: TNext);
     [TComment('are we receiving (or otherwise transacting with) a token with an unlock event coming up?')]
     procedure Step17(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?')]
     procedure Step18(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step19(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -155,7 +157,9 @@ uses
   thread,
   unlock,
   unsupported,
-  unverified;
+  unverified,
+  vault,
+  vaults.fyi;
 
 {------- spender status (EOA, unverified, phisher, sanctioned, or good --------}
 
@@ -358,7 +362,7 @@ begin
     end)
     .&else(procedure(func: TFourBytes)
     begin
-      if not SameText(fourBytestoHex(func), '0x095EA7B3') then
+      if not SameText(fourBytestoHex(func), '0x095EA7B3') then // approve(address,uint256)
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
@@ -381,7 +385,7 @@ begin
               if value = 0 then
                 next(prompted, nil)
               else
-                web3.eth.tokenlists.token(chain, tx.&To, procedure(token: IToken; err: IError)
+                web3.eth.tokenlists.token(chain, tx.&To, procedure(token: web3.eth.tokenlists.IToken; err: IError)
                 begin
                   if Assigned(err) then
                     next(prompted, error.wrap(err, Self.Step1))
@@ -430,7 +434,7 @@ begin
     end)
     .&else(procedure(func: TFourBytes)
     begin
-      if not SameText(fourBytestoHex(func), '0xA9059CBB') then
+      if not SameText(fourBytestoHex(func), '0xA9059CBB') then // transfer(address,uint256)
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
@@ -501,7 +505,7 @@ begin
     end)
     .&else(procedure(func: TFourBytes)
     begin
-      if not SameText(fourBytestoHex(func), '0xA22CB465') then
+      if not SameText(fourBytestoHex(func), '0xA22CB465') then // setApprovalForAll(address,bool)
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
@@ -586,7 +590,7 @@ begin
     end)
     .&else(procedure(func: TFourBytes)
     begin
-      if not SameText(fourBytestoHex(func), '0xA9059CBB') then
+      if not SameText(fourBytestoHex(func), '0xA9059CBB') then // transfer(address,uint256)
         next(prompted, nil)
       else
         getTransactionArgs(tx.Data)
@@ -1193,24 +1197,73 @@ end;
 
 procedure TChecks.Step18(const prompted: TPrompted; const next: TNext);
 begin
+  getTransactionFourBytes(tx.Data)
+    .ifErr(procedure(_: IError)
+    begin
+      next(prompted, nil)
+    end)
+    .&else(procedure(func: TFourBytes)
+    begin
+      // returns the first 4 (hex-encoded) bytes of a function signature after hashing
+      const getSelector = function(const signature: string): string
+      begin
+        Result := web3.utils.toHex(Copy(web3.utils.sha3(web3.utils.toHex(signature)), 0, 4));
+      end;
+      // returns True if any of the function signatures match the function selector, otherwise False
+      const isSelector = function(const selector: TFourBytes; const signatures: TArray<string>): Boolean
+      begin
+        Result := False; for var sig in signatures do if SameText(fourBytestoHex(selector), getSelector(sig)) then EXIT(True);
+      end;
+      if not isSelector(func, [
+      'deposit(address)', 'deposit(address,address)', 'deposit(address,uint256)', 'deposit(address,address,uint256)', 'deposit(address,uint256,address)',
+      'deposit(uint256)', 'deposit(uint256,uint256)', 'deposit(uint256,address)', 'deposit(uint256,uint256,address)', 'deposit(uint256,address,uint256)']) then
+        next(prompted, nil)
+      else
+        // if another vault provides for a higher APY while holding the same TVL (or more), display a warning
+        vaults.fyi.better(chain, tx.&To, procedure(other: IVault; err: IError)
+        begin
+          if Assigned(err) then
+            next(prompted, error.wrap(err, Self.Step18))
+          else if not Assigned(other) then
+            next(prompted, nil)
+          else
+            thread.synchronize(procedure
+            begin
+              vault.show(chain, tx, other.Token.Symbol, procedure(allow: Boolean)
+              begin
+                if allow then
+                  next(prompted + [TWarning.Other], nil)
+                else try
+                  common.Open(other.URL);
+                finally
+                  block(prompted);
+                end;
+              end, log);
+            end);
+        end);
+    end);
+end;
+
+procedure TChecks.Step19(const prompted: TPrompted; const next: TNext);
+begin
   server.apiKey(port)
     .ifErr(procedure(err: IError)
     begin
-      next(prompted, error.wrap(err, Self.Step18))
+      next(prompted, error.wrap(err, Self.Step19))
     end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step18))
+          next(prompted, error.wrap(err, Self.Step19))
         end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step18))
+              next(prompted, error.wrap(err, Self.Step19))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin

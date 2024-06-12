@@ -29,6 +29,7 @@ type
     actPausable: TAction;
     actDormant: TAction;
     actUnlock: TAction;
+    actVault: TAction;
     procedure actApproveExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actSanctionedExecute(Sender: TObject);
@@ -47,6 +48,7 @@ type
     procedure actPausableExecute(Sender: TObject);
     procedure actDormantExecute(Sender: TObject);
     procedure actUnlockExecute(Sender: TObject);
+    procedure actVaultExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -88,7 +90,8 @@ uses
   thread,
   unlock,
   unsupported,
-  unverified;
+  unverified,
+  vault;
 
 procedure TdmDemo.actUpdate(Sender: TObject);
 begin
@@ -97,6 +100,11 @@ begin
     (Sender as TCustomAction).Enabled := common.Demo;
     (Sender as TCustomAction).Visible := common.Demo;
   end;
+end;
+
+procedure TdmDemo.actVaultExecute(Sender: TObject);
+begin
+  vault.show(common.Ethereum, nil, 'DAI', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actAirdropExecute(Sender: TObject);

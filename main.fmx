@@ -1444,6 +1444,11 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuVault: TMenuItem
+        Action = dmDemo.actVault
+        Locked = True
+        ImageIndex = -1
+      end
     end
   end
   object lblHelp: TLabel
