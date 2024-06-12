@@ -47,6 +47,7 @@ type
     btnAllow: TButton;
     lblGasFee: TLabel;
     imgGasFee: TImage;
+    imgError: TImage;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
@@ -54,11 +55,13 @@ type
     FChain   : TChain;
     FCallback: TProc<Boolean>;
     FOnLog   : TLog;
+    procedure SetBlocked(value: Boolean);
   protected
     procedure DoShow; override;
     procedure Resize; override;
     procedure Log(const err: IError);
     property Chain: TChain read FChain;
+    property Blocked: Boolean write SetBlocked;
   public
     constructor Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog); reintroduce; virtual;
   end;
@@ -175,6 +178,13 @@ begin
       end);
     end);
   end);
+end;
+
+procedure TFrmBase.SetBlocked(value: Boolean);
+begin
+  btnAllow.Enabled   := not Value;
+  imgError.Visible   := value;
+  imgWarning.Visible := not value;
 end;
 
 procedure TFrmBase.DoShow;

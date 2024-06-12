@@ -21,7 +21,7 @@ inherited FrmAsset: TFrmAsset
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You are about to allow someone else to spend your money'
+    Text = 'You are about to allow %s to spend your money'
     TabOrder = 0
   end
   object lblTokenTitle: TLabel

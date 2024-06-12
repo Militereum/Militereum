@@ -22,6 +22,9 @@ uses
   base,
   transaction;
 
+type // MUST have the same order as the steps in checks.getSpenderStatus()
+  TSpenderStatus = (isEOA, isUnverified, isPhisher, isSanctioned, isGood);
+
 type
   TFrmAsset = class(TFrmBase)
     imgLogo: TImage;
@@ -36,22 +39,41 @@ type
     procedure lblSpenderTextClick(Sender: TObject);
   strict private
     FToken: TAddress;
-    procedure SetKind(value: TChangeType);
     procedure SetToken(value: IToken);
     procedure SetChange(value: IAssetChange);
     procedure SetLogo(value: TURL);
     procedure SetSpender(value: TAddress);
+    procedure SetStatus(const value: TSpenderStatus);
   public
     procedure Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
-    property Kind: TChangeType write SetKind;
     property Token: IToken write SetToken;
     property Change: IAssetChange write SetChange;
     property Logo: TURL write SetLogo;
     property Spender: TAddress write SetSpender;
+    property Status: TSpenderStatus write SetStatus;
   end;
 
-procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>; const log: TLog);
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>; const log: TLog);
+procedure approve(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const token   : IToken;
+  const spender : TAddress;
+  const status  : TSpenderStatus;
+  const quantity: BigInteger;
+  const callback: TProc<Boolean>; const log: TLog); overload;
+
+procedure transfer(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const change  : IAssetChange;
+  const callback: TProc<Boolean>; const log: TLog);
+
+procedure approve(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const change  : IAssetChange;
+  const status  : TSpenderStatus;
+  const callback: TProc<Boolean>; const log: TLog); overload;
 
 implementation
 
@@ -69,32 +91,50 @@ uses
 
 {$R *.fmx}
 
-procedure approve(const chain: TChain; const tx: transaction.ITransaction; const token: IToken; const spender: TAddress; const quantity: BigInteger; const callback: TProc<Boolean>; const log: TLog);
+procedure approve(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const token   : IToken;
+  const spender : TAddress;
+  const status  : TSpenderStatus;
+  const quantity: BigInteger;
+  const callback: TProc<Boolean>; const log: TLog);
 begin
   const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Token   := token;
   frmAsset.Spender := spender;
+  frmAsset.Status  := status;
   frmAsset.Amount(token.Symbol, quantity, token.Decimals);
   frmAsset.Show;
 end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const change: IAssetChange; const callback: TProc<Boolean>; const log: TLog);
+procedure transfer(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const change  : IAssetChange;
+  const callback: TProc<Boolean>; const log: TLog);
 begin
   const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Change := change;
+  frmAsset.lblTitle.Text        := 'The following token is about to leave your wallet';
+  frmAsset.lblSpenderTitle.Text := 'Recipient';
+  frmAsset.Show;
+end;
+
+procedure approve(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const change  : IAssetChange;
+  const status  : TSpenderStatus;
+  const callback: TProc<Boolean>; const log: TLog);
+begin
+  const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
+  frmAsset.Change := change;
+  frmAsset.Status := status;
   frmAsset.Show;
 end;
 
 { TFrmAsset }
-
-procedure TFrmAsset.SetKind(value: TChangeType);
-begin
-  if value = Transfer then
-  begin
-    lblTitle.Text := 'The following token is about to leave your wallet';
-    lblSpenderTitle.Text := 'Recipient';
-  end;
-end;
 
 procedure TFrmAsset.SetToken(value: IToken);
 begin
@@ -123,8 +163,7 @@ begin
       Result := string(value.Contract);
   end)(value);
 
-  Self.Kind := value.Change;
-  Self.Logo := value.Logo.Value;
+  Self.Logo    := value.Logo.Value;
   Self.Spender := value.&To;
   Self.Amount(value.Symbol.Value, value.Amount, value.Decimals.Value);
 end;
@@ -154,6 +193,26 @@ begin
         lblSpenderText.Text := ens;
       end);
     end);
+end;
+
+procedure TFrmAsset.SetStatus(const value: TSpenderStatus);
+const
+  RS_AN_EOA                 = 'an EOA';
+  RS_AN_UNVERIFIED_CONTRACT = 'an unverified contract';
+  RS_A_KNOWN_PHISHER        = 'a known phisher';
+  RS_A_SANCTIONED_ADDRESS   = 'a sanctioned address';
+  RS_SOMEONE_ELSE           = 'someone else';
+const
+  SpenderTitle: array[TSpenderStatus] of string = (
+    RS_AN_EOA,                 // isEOA
+    RS_AN_UNVERIFIED_CONTRACT, // isUnverified
+    RS_A_KNOWN_PHISHER,        // isPhisher
+    RS_A_SANCTIONED_ADDRESS,   // isSanctioned
+    RS_SOMEONE_ELSE            // isGood
+  );
+begin
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [SpenderTitle[value]]);
+  Self.Blocked  := value <> TSpenderStatus.isGood;
 end;
 
 procedure TFrmAsset.Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
