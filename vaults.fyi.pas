@@ -46,7 +46,7 @@ const VAULTS_API_BASE = 'https://api.vaults.fyi/v1/';
 
 procedure network(const chain: TChain; const callback: TProc<string, IError>);
 begin
-  web3.http.get(VAULTS_API_BASE + 'networks', [TNetHeader.Create('accept', 'application/json')],
+  web3.http.get(VAULTS_API_BASE + 'networks', [TNetHeader.Create('accept', 'application/json'), TNetHeader.Create('x-api-key', {$I keys/vaults.fyi.api.key})],
     procedure(response: TJsonValue; err: IError)
     begin
       if Assigned(err) then
@@ -140,7 +140,7 @@ type
 
 procedure vault(const network: string; const contract: TAddress; const callback: TProc<IVault, IError>);
 begin
-  web3.http.get(VAULTS_API_BASE + Format('vaults/%s/%s', [network, contract.ToChecksum]), [TNetHeader.Create('accept', 'application/json')],
+  web3.http.get(VAULTS_API_BASE + Format('vaults/%s/%s', [network, contract.ToChecksum]), [TNetHeader.Create('accept', 'application/json'), TNetHeader.Create('x-api-key', {$I keys/vaults.fyi.api.key})],
     procedure(response: TJsonValue; err: IError)
     begin
       if Assigned(err) then
@@ -161,7 +161,7 @@ begin
   try
     next := procedure(const page: Integer)
     begin
-      web3.http.get(VAULTS_API_BASE + Format('detailed/vaults?network=%s&token=%s&page=%d', [network, symbol, page]), [TNetHeader.Create('accept', 'application/json')],
+      web3.http.get(VAULTS_API_BASE + Format('detailed/vaults?network=%s&token=%s&page=%d', [network, symbol, page]), [TNetHeader.Create('accept', 'application/json'), TNetHeader.Create('x-api-key', {$I keys/vaults.fyi.api.key})],
         procedure(response: TJsonValue; err: IError)
         begin
           const data = getPropAsArr(response, 'data');
@@ -209,13 +209,17 @@ begin
           callback(nil, err);
           EXIT;
         end;
-        // if another vault provides for a higher APY while holding the same TVL (or more), return the better vault
-        for var that in vaults do if (not that.Address.SameAs(this.Address)) and (that.APY > this.APY) and (that.TVL >= this.TVL) then
-        begin
-          callback(that, nil);
-          EXIT;
+        var best: IVault := nil;
+        try
+          // if another vault provides for a higher APY while holding the same TVL (or more), return the better vault
+          for var that in vaults do if (not that.Address.SameAs(this.Address)) and (that.APY > this.APY) and (that.TVL >= this.TVL) then
+          begin
+            this := that;
+            best := that;
+          end;
+        finally
+          callback(best, nil);
         end;
-        callback(nil, nil);
       end);
     end);
   end);
