@@ -58,10 +58,7 @@ end;
 
 procedure TFrmUnsupported.SetAction(value: TTokenAction);
 begin
-  thread.synchronize(procedure
-  begin
-    lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value]]);
-  end);
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value]]);
 end;
 
 procedure TFrmUnsupported.SetToken(value: TAddress);
