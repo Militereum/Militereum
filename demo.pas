@@ -114,7 +114,7 @@ end;
 
 procedure TdmDemo.actApproveExecute(Sender: TObject);
 begin
-  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', web3.Infinite, procedure(allow: Boolean) begin end, nil);
+  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', isGood, web3.Infinite, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
