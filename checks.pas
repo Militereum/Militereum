@@ -656,7 +656,7 @@ begin
         else
           thread.synchronize(procedure
           begin
-            limit.show(chain, tx, chain.Symbol, tx.&To, amount, procedure(allow: Boolean)
+            limit.show(chain, tx, string(chain.Symbol), tx.&To, amount, procedure(allow: Boolean)
             begin
               if allow then
                 next(prompted + [TWarning.Other], nil)

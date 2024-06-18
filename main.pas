@@ -154,8 +154,7 @@ uses
   docker,
   error,
   revoke,
-  thread,
-  update;
+  thread;
 
 { TFrmMain }
 
