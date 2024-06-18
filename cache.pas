@@ -12,6 +12,7 @@ uses
 procedure getContractABI(const chain: TChain; const contract: TAddress; const callback: TProc<IContractABI, IError>);
 procedure getSymbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 procedure getFriendlyName(const chain: TChain; const address: TAddress; const callback: TProc<string, IError>);
+procedure fromName(const name: string; const callback: TProc<TAddress, IError>);
 
 implementation
 
@@ -157,6 +158,16 @@ begin
       callback(string(address), err);
     end);
   end);
+end;
+
+procedure fromName(const name: string; const callback: TProc<TAddress, IError>);
+begin
+  for var pair in friendly do if pair.Value = name then
+  begin
+    callback(pair.Key, nil);
+    EXIT;
+  end;
+  TAddress.FromName(TWeb3.Create(common.Ethereum), name, callback);
 end;
 
 initialization

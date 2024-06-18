@@ -83,7 +83,6 @@ uses
   System.Net.HttpClient,
   // web3
   web3.defillama,
-  web3.eth.types,
   web3.http,
   // project
   cache,
@@ -240,7 +239,7 @@ end;
 
 procedure TFrmAsset.lblSpenderTextClick(Sender: TObject);
 begin
-  TAddress.FromName(TWeb3.Create(common.Ethereum), lblSpenderText.Text, procedure(address: TAddress; err: IError)
+  cache.fromName(lblSpenderText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
       common.Open(Self.Chain.Explorer + '/address/' + string(address))

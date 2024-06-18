@@ -43,7 +43,6 @@ implementation
 
 uses
   // web3
-  web3.eth.types,
   web3.utils,
   // project
   cache,
@@ -97,7 +96,7 @@ end;
 
 procedure TFrmHoneypot.lblRecipientTextClick(Sender: TObject);
 begin
-  TAddress.FromName(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
+  cache.fromName(lblRecipientText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
       common.Open(Self.Chain.Explorer + '/address/' + string(address))

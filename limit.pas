@@ -44,8 +44,6 @@ procedure show(const chain: TChain; const tx: transaction.ITransaction; const sy
 implementation
 
 uses
-  // web3
-  web3.eth.types,
   // project
   cache,
   common,
@@ -95,7 +93,7 @@ end;
 
 procedure TFrmLimit.lblRecipientTextClick(Sender: TObject);
 begin
-  TAddress.FromName(TWeb3.Create(common.Ethereum), lblRecipientText.Text, procedure(address: TAddress; err: IError)
+  cache.fromName(lblRecipientText.Text, procedure(address: TAddress; err: IError)
   begin
     if not Assigned(err) then
       common.Open(Self.Chain.Explorer + '/address/' + string(address))

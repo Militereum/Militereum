@@ -39,8 +39,6 @@ procedure show(const action: TTokenAction; const chain: TChain; const tx: transa
 implementation
 
 uses
-  // web3
-  web3.eth.types,
   // project
   cache,
   common,
@@ -86,7 +84,7 @@ end;
 
 procedure TFrmPausable.lblTokenClick(Sender: TObject);
 begin
-  TAddress.FromName(TWeb3.Create(common.Ethereum), lblToken.Text, procedure(address: TAddress; err: IError)
+  cache.fromName(lblToken.Text, procedure(address: TAddress; err: IError)
   begin
     if Assigned(err) then
       common.Open(Self.Chain.Explorer + '/address/' + lblToken.Text)
