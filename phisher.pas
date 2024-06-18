@@ -48,6 +48,7 @@ uses
   web3.eth,
   web3.eth.types,
   // project
+  cache,
   common,
   thread;
 
@@ -89,11 +90,11 @@ end;
 procedure TFrmPhisher.SetAddress(value: TAddress);
 begin
   lblAddressText.Text := string(value);
-  value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+  cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
   begin
     if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
     begin
-      lblAddressText.Text := ens;
+      lblAddressText.Text := friendly;
     end);
   end);
 end;

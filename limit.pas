@@ -47,6 +47,7 @@ uses
   // web3
   web3.eth.types,
   // project
+  cache,
   common,
   thread;
 
@@ -78,11 +79,11 @@ procedure TFrmLimit.SetRecipient(value: TAddress);
 begin
   lblRecipientText.Text := string(value);
   if not common.Demo then
-    value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
-        lblRecipientText.Text := ens;
+        lblRecipientText.Text := friendly;
       end);
     end);
 end;

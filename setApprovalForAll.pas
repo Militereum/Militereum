@@ -49,6 +49,7 @@ uses
   web3.eth.erc721,
   web3.eth.types,
   // project
+  cache,
   common,
   thread;
 
@@ -82,11 +83,11 @@ procedure TFrmSetApprovalForAll.SetSpender(value: TAddress);
 begin
   lblSpenderText.Text := string(value);
   if not common.Demo then
-    value.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
-        lblSpenderText.Text := ens;
+        lblSpenderText.Text := friendly;
       end);
     end);
 end;

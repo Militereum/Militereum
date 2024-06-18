@@ -11,10 +11,13 @@ uses
 
 procedure getContractABI(const chain: TChain; const contract: TAddress; const callback: TProc<IContractABI, IError>);
 procedure getSymbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
+procedure getFriendlyName(const chain: TChain; const address: TAddress; const callback: TProc<string, IError>);
 
 implementation
 
 uses
+  // Delphi
+  System.Generics.Collections,
   // project
   common,
   // web3
@@ -112,5 +115,55 @@ begin
     callback(symbol, err);
   end);
 end;
+
+var friendly: TDictionary<TAddress, string> = nil;
+
+procedure getFriendlyName(const chain: TChain; const address: TAddress; const callback: TProc<string, IError>);
+begin
+  var value: string;
+  if friendly.TryGetValue(address, value) then
+  begin
+    callback(value, nil);
+    EXIT;
+  end;
+  getContractABI(chain, address, procedure(abi: IContractABI; err: IError)
+  begin
+    if Assigned(abi) and abi.IsERC20 and not Assigned(err) then
+    begin
+      web3.eth.erc20.create(TWeb3.Create(chain), address).Name(procedure(name: string; err: IError)
+      begin
+        getSymbol(chain, address, procedure(symbol: string; err: IError)
+        begin
+          if (name <> '') and (symbol <> '') then
+          begin
+            value := System.SysUtils.Format('%s (%s)', [name, symbol]);
+            friendly.Add(address, value);
+            callback(value, err);
+            EXIT;
+          end;
+          callback(string(address), err);
+        end);
+      end);
+      EXIT;
+    end;
+    address.ToString(TWeb3.Create(common.Ethereum), procedure(ens: string; err: IError)
+    begin
+      if (ens <> '') and not Assigned(err) then
+      begin
+        friendly.Add(address, ens);
+        callback(ens, err);
+        EXIT;
+      end;
+      callback(string(address), err);
+    end);
+  end);
+end;
+
+initialization
+  friendly := TDictionary<TAddress, string>.Create;
+
+finalization
+  if Assigned(friendly) then friendly.Free;
+
 
 end.
