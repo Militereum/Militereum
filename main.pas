@@ -381,14 +381,14 @@ begin
 
   if common.Debug then ShowLogWindow;
 
-  update.latestRelease(procedure(tag: string)
-  begin
-    if common.ParseSemVer(tag) > common.ParseSemVer({$I Militereum.version}) then
-      thread.synchronize(procedure
-      begin
-        update.show(tag);
-      end);
-  end);
+//  update.latestRelease(procedure(tag: string)
+//  begin
+//    if common.ParseSemVer(tag) > common.ParseSemVer({$I Militereum.version}) then
+//      thread.synchronize(procedure
+//      begin
+//        update.show(tag);
+//      end);
+//  end);
 
 //  if docker.supported and not docker.installed then
 //  begin
