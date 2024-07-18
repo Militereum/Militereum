@@ -10,6 +10,8 @@ type
   TChecks = class
   public
     [Test]
+    procedure Step4;
+    [Test]
     procedure Step8;
     [Test]
     procedure Step12;
@@ -29,13 +31,55 @@ uses
   // web3
   web3,
   web3.eth.alchemy.api,
+  web3.eth.etherscan,
+  web3.eth.types,
   web3.json,
   // project
+  common,
   dextools,
   moralis,
   vaults.fyi;
 
 {$I keys/alchemy.api.key}
+
+// are we transacting with (a) smart contract and (b) not verified with etherscan?
+procedure TChecks.Step4;
+const
+  UNISWAP_V2_ROUTER: TAddress = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
+begin
+  var done: Boolean := False;
+  var err : IError  := nil;
+
+  UNISWAP_V2_ROUTER.IsEOA(TWeb3.Create(common.Ethereum), procedure(isEOA: Boolean; err1: IError)
+  begin
+    if Assigned(err1) then
+      err := err1
+    else if isEOA then
+      err := TError.Create('%s is an EOA, expected a smart contract', [UNISWAP_V2_ROUTER])
+    else
+      common.Etherscan(common.Ethereum)
+        .ifErr(procedure(err2: IError)
+        begin
+          err := err2
+        end)
+        .&else(procedure(etherscan: IEtherscan)
+        begin
+          etherscan.getContractSourceCode(UNISWAP_V2_ROUTER, procedure(src: string; err3: IError)
+          begin
+            if Assigned(err3) then
+              err := err3
+            else if src <> '' then
+              done := True
+            else
+              err := TError.Create('%s''s source code is null, expected non-empty string', [UNISWAP_V2_ROUTER])
+          end);
+        end);
+  end);
+
+  while (err = nil) and (not done) do TThread.Sleep(100);
+
+  if Assigned(err) then Assert.Fail(err.Message);
+end;
 
 // are we transacting with a spam contract or receiving spam tokens?
 procedure TChecks.Step8;
