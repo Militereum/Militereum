@@ -12,6 +12,8 @@ type
     [Test]
     procedure Step4;
     [Test]
+    procedure Step5;
+    [Test]
     procedure Step8;
     [Test]
     procedure Step12;
@@ -30,6 +32,7 @@ uses
   System.SysUtils,
   // web3
   web3,
+  web3.defillama,
   web3.eth.alchemy.api,
   web3.eth.etherscan,
   web3.eth.types,
@@ -41,6 +44,10 @@ uses
   vaults.fyi;
 
 {$I keys/alchemy.api.key}
+
+const
+  TEST_TIMEOUT  = 60000; // 60 seconds
+  TEST_INTERVAL = 100;   // 0.1 second
 
 // are we transacting with (a) smart contract and (b) not verified with etherscan?
 procedure TChecks.Step4;
@@ -74,6 +81,29 @@ begin
               err := TError.Create('%s''s source code is null, expected non-empty string', [UNISWAP_V2_ROUTER])
           end);
         end);
+  end);
+
+  while (err = nil) and (not done) do TThread.Sleep(100);
+
+  if Assigned(err) then Assert.Fail(err.Message);
+end;
+
+// test DefiLlama's "current price of token by contract address" API
+procedure TChecks.Step5;
+const
+  TETHER = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+begin
+  var done: Boolean := False;
+  var err : IError := nil;
+
+  web3.defillama.coin(web3.Ethereum, TETHER, procedure(coin: ICoin; err1: IError)
+  begin
+    if Assigned(err1) then
+      err := err1
+    else if Round(coin.Price) <> 1 then
+      err := TError.Create('price is %f, expected $1.00')
+    else
+      done := True;
   end);
 
   while (err = nil) and (not done) do TThread.Sleep(100);
@@ -171,20 +201,24 @@ end;
 // are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?
 procedure TChecks.Step18;
 const
-  COMPOUND_V2_DAI = '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643';
+  YEARN_V2_USDC = '0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE';
 begin
   var vault: IVault := nil;
   var error: IError := nil;
 
-  vaults.fyi.better(web3.Ethereum, COMPOUND_V2_DAI, procedure(other: IVault; err: IError)
+  vaults.fyi.better(web3.Ethereum, YEARN_V2_USDC, procedure(other: IVault; err: IError)
   begin
     vault := other;
     error := err;
   end);
 
-  while (error = nil) and (vault = nil) do TThread.Sleep(100);
+  var waited: Integer := 0;
+  while (error = nil) and (vault = nil) and (waited < TEST_TIMEOUT) do
+  begin
+    TThread.Sleep(TEST_INTERVAL); waited := waited + TEST_INTERVAL;
+  end;
 
-  if Assigned(error) then Assert.Fail(error.Message) else if (vault = nil) then Assert.Fail('vault is nil, expected better than Compound v2 DAI');
+  if Assigned(error) then Assert.Fail(error.Message) else if (vault = nil) then Assert.Fail('vault is nil, expected better than Yearn v2 USDC');
 end;
 
 initialization
