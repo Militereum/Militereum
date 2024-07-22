@@ -14,6 +14,8 @@ type
     [Test]
     procedure Step5;
     [Test]
+    procedure Step6;
+    [Test]
     procedure Step8;
     [Test]
     procedure Step12;
@@ -32,8 +34,10 @@ uses
   System.SysUtils,
   // web3
   web3,
+  web3.coincap,
   web3.defillama,
   web3.eth.alchemy.api,
+  web3.eth.chainlink,
   web3.eth.etherscan,
   web3.eth.types,
   web3.json,
@@ -49,7 +53,7 @@ const
   TEST_TIMEOUT  = 60000; // 60 seconds
   TEST_INTERVAL = 100;   // 0.1 second
 
-// are we transacting with (a) smart contract and (b) not verified with etherscan?
+// are we transacting with (a) smart contract and (b) verified with etherscan?
 procedure TChecks.Step4;
 const
   UNISWAP_V2_ROUTER: TAddress = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
@@ -104,6 +108,35 @@ begin
       err := TError.Create('price is %f, expected $1.00')
     else
       done := True;
+  end);
+
+  while (err = nil) and (not done) do TThread.Sleep(100);
+
+  if Assigned(err) then Assert.Fail(err.Message);
+end;
+
+// test Chainlink and CoinCap price oracles
+procedure TChecks.Step6;
+begin
+  var done: Boolean := False;
+  var err : IError  := nil;
+
+  const client: IWeb3 = TWeb3.Create(common.Ethereum);
+
+  web3.eth.chainlink.TAggregatorV3.Create(client, client.Chain.Chainlink).Price(procedure(price1: Double; err1: IError)
+  begin
+    if Assigned(err1) then
+      err := err1
+    else
+      web3.coincap.price(string(client.chain.Symbol), procedure(price2: Double; err2: IError)
+      begin
+        if Assigned(err2) then
+          err := err2
+        else if Round(price2 / 10) = Round(price1 / 10) then
+          done := True
+        else
+          err := TError.Create('CoinCap price is $%.2f, expected $%.2f (Chainlink)', [price2, price1])
+      end);
   end);
 
   while (err = nil) and (not done) do TThread.Sleep(100);
