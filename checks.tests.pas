@@ -22,6 +22,8 @@ type
     [Test]
     procedure Step6;
     [Test]
+    procedure Step7;
+    [Test]
     procedure Step8;
     [Test]
     procedure Step12;
@@ -52,6 +54,7 @@ uses
   common,
   dextools,
   moralis,
+  phisher,
   vaults.fyi;
 
 {$I keys/alchemy.api.key}
@@ -159,6 +162,25 @@ begin
   end);
 end;
 
+// test the MobyMask Phisher Registry
+procedure TChecks.Step7;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    HOOLIGAN_BEAR: TAddress = '0x408cfD714C3bca3859650f6D85bAc1500620961e';
+  begin
+    phisher.isPhisher(HOOLIGAN_BEAR, procedure(result: Boolean; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if result then
+        ok
+      else
+        err(TError.Create('isPhisher(''eip155:1:%s'') returned false, expected true', [HOOLIGAN_BEAR]));
+    end);
+  end);
+end;
+
 // are we transacting with a spam contract or receiving spam tokens?
 procedure TChecks.Step8;
 begin
@@ -253,7 +275,7 @@ begin
   end);
 end;
 
-// are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?
+// test the vaults.fyi API
 procedure TChecks.Step18;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
