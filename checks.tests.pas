@@ -28,6 +28,8 @@ type
     [Test]
     procedure Step13;
     [Test]
+    procedure Step17;
+    [Test]
     procedure Step18;
   end;
 
@@ -119,7 +121,7 @@ procedure TChecks.Step5;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    TETHER = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+    TETHER: TAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
   begin
     web3.defillama.coin(web3.Ethereum, TETHER, procedure(coin: ICoin; error: IError)
     begin
@@ -162,7 +164,7 @@ procedure TChecks.Step8;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    BORED_APE_NIKE_CLUB = '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3';
+    BORED_APE_NIKE_CLUB: TAddress = '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3';
   begin
     web3.eth.alchemy.api.detect(ALCHEMY_API_KEY_ETHEREUM, web3.Ethereum, BORED_APE_NIKE_CLUB, [TContractType.Spam], procedure(contractType: TContractType; err1: IError)
     begin
@@ -187,7 +189,7 @@ procedure TChecks.Step12;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    RED_EYED_FROG = '0x4DB5C8875ef00ce8040A9685581fF75C3c61aDC8';
+    RED_EYED_FROG: TAddress = '0x4DB5C8875ef00ce8040A9685581fF75C3c61aDC8';
   begin
     dextools.score({$I keys/dextools.api.key}, web3.Ethereum, RED_EYED_FROG, procedure(score1: Integer; err1: IError)
     begin
@@ -212,7 +214,7 @@ procedure TChecks.Step13;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    BETHEREUM = '0x14C926F2290044B647e1Bf2072e67B495eff1905';
+    BETHEREUM: TAddress = '0x14C926F2290044B647e1Bf2072e67B495eff1905';
   begin
     dextools.pairs({$I keys/dextools.api.key}, web3.Ethereum, BETHEREUM, procedure(arr1: TJsonArray; err1: IError)
     begin
@@ -232,12 +234,31 @@ begin
   end);
 end;
 
+// are we receiving (or otherwise transacting with) a token with an unlock event coming up?
+procedure TChecks.Step17;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    UNI: TAddress = '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984';
+  begin
+    dextools.unlock({$I keys/dextools.api.key}, web3.Ethereum, UNI, procedure(next: TDateTime; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if next > 0 then
+        ok
+      else
+        err(TError.Create('UNI''s next unlock date is zero, expected some future date'));
+    end);
+  end);
+end;
+
 // are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?
 procedure TChecks.Step18;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    YEARN_V2_USDC = '0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE';
+    YEARN_V2_USDC: TAddress = '0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE';
   begin
     vaults.fyi.better(web3.Ethereum, YEARN_V2_USDC, procedure(other: IVault; error: IError)
     begin
