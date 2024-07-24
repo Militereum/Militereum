@@ -26,6 +26,8 @@ type
     [Test]
     procedure Step8;
     [Test]
+    procedure Step10;
+    [Test]
     procedure Step12;
     [Test]
     procedure Step13;
@@ -48,6 +50,7 @@ uses
   web3.eth.alchemy.api,
   web3.eth.chainlink,
   web3.eth.etherscan,
+  web3.eth.tokenlists,
   web3.eth.types,
   web3.json,
   // project
@@ -202,6 +205,25 @@ begin
           else
             err(TError.Create('spam is false, expected true'));
         end)
+    end);
+  end);
+end;
+
+// test Uniswap's unsupported tokens list
+procedure TChecks.Step10;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    ZELDA_WHIRLWIND_CASH: TAddress = '0x249A198d59b57FDa5DDa90630FeBC86fd8c7594c';
+  begin
+    web3.eth.tokenlists.unsupported(web3.Ethereum, procedure(tokens: TTokens; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if tokens.IndexOf(ZELDA_WHIRLWIND_CASH) > -1 then
+        ok
+      else
+        err(TError.Create('%s is supported, expected unsupported', [ZELDA_WHIRLWIND_CASH]));
     end);
   end);
 end;
