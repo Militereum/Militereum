@@ -28,6 +28,8 @@ type
     [Test]
     procedure Step10;
     [Test]
+    procedure Step11;
+    [Test]
     procedure Step12;
     [Test]
     procedure Step13;
@@ -48,6 +50,7 @@ uses
   web3.coincap,
   web3.defillama,
   web3.eth.alchemy.api,
+  web3.eth.breadcrumbs,
   web3.eth.chainlink,
   web3.eth.etherscan,
   web3.eth.tokenlists,
@@ -224,6 +227,25 @@ begin
         ok
       else
         err(TError.Create('%s is supported, expected unsupported', [ZELDA_WHIRLWIND_CASH]));
+    end);
+  end);
+end;
+
+// test the Breadcrumbs sanctioned address API
+procedure TChecks.Step11;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    TORNADO_CASH: TAddress = '0x8589427373D6D84E98730D7795D8f6f8731FDA16';
+  begin
+    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, web3.Ethereum, TORNADO_CASH, procedure(value: Boolean; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if value then
+        ok
+      else
+        err(TError.Create('%s is not sanctioned, expected sanctioned', [TORNADO_CASH]));
     end);
   end);
 end;
