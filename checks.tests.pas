@@ -26,6 +26,8 @@ type
     [Test]
     procedure Step8;
     [Test]
+    procedure Step9;
+    [Test]
     procedure Step10;
     [Test]
     procedure Step11;
@@ -209,6 +211,33 @@ begin
             err(TError.Create('spam is false, expected true'));
         end)
     end);
+  end);
+end;
+
+// test etherscan's txlist
+procedure TChecks.Step9;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    VITALIK_DOT_ETH = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+  begin
+    common.Etherscan(web3.Ethereum)
+      .ifErr(procedure(err1: IError)
+      begin
+        err(err1);
+      end)
+      .&else(procedure(etherscan: IEtherscan)
+      begin
+        etherscan.getTransactions(VITALIK_DOT_ETH, procedure(txs: ITransactions; err2: IError)
+        begin
+          if Assigned(err2) then
+            err(err2)
+          else if Assigned(txs) and (txs.Count > 0) then
+            ok
+          else
+            err(TError.Create('etherscan''s txlist returned 0 transactions, expected many more'));
+        end);
+      end);
   end);
 end;
 
