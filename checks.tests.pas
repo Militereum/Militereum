@@ -36,6 +36,8 @@ type
     [Test]
     procedure Step13;
     [Test]
+    procedure Step14;
+    [Test]
     procedure Step17;
     [Test]
     procedure Step18;
@@ -59,6 +61,7 @@ uses
   web3.eth.types,
   web3.json,
   // project
+  cache,
   common,
   dextools,
   moralis,
@@ -67,6 +70,7 @@ uses
 
 {$I keys/alchemy.api.key}
 
+// executes an async test. the text is expected to call back into the 1st arg on success, otherwise the 2nd ags when an error occurred
 procedure TChecks.Execute(const proc: TProc<TProc, TProc<IError>>);
 const
   TEST_TIMEOUT  = 60000; // 60 seconds
@@ -141,7 +145,7 @@ begin
       else if Round(coin.Price) = 1 then
         ok
       else
-        err(TError.Create('TETHER''s price is %f, expected $1.00'))
+        err(TError.Create('Tether''s price is %f, expected $1.00'))
     end);
   end);
 end;
@@ -325,6 +329,47 @@ begin
           else
             err(TError.Create('pairs is nil, expected []'));
         end);
+    end);
+  end);
+end;
+
+// test etherscan's getabi
+procedure TChecks.Step14;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    TETHER: TAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+  begin
+    cache.getContractABI(web3.Ethereum, TETHER, procedure(abi: IContractABI; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else
+        if (function(const abi: IContractABI): Boolean // returns True if censorable, otherwise False
+        begin
+          if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
+            if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('blacklist', abi.Item(I).Name.ToLower) > 0) then
+            begin
+              Result := True;
+              EXIT;
+            end;
+          Result := False;
+        end)(abi) then
+         ok
+        else
+          if (function(const abi: IContractABI): Boolean // returns True if pausable, otherwise False
+          begin
+            if Assigned(abi) then for var I := 0 to Pred(abi.Count) do
+              if (abi.Item(I).SymbolType = TSymbolType.Function) and (System.Pos('pause', abi.Item(I).Name.ToLower) > 0) then
+              begin
+                Result := True;
+                EXIT;
+              end;
+            Result := False;
+          end)(abi) then
+            ok
+          else
+            err(TError.Create('Tether is neither censorable nor pausable, expected to have a blacklist'));
     end);
   end);
 end;
