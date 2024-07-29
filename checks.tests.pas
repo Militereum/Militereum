@@ -38,6 +38,8 @@ type
     [Test]
     procedure Step14;
     [Test]
+    procedure Step15;
+    [Test]
     procedure Step17;
     [Test]
     procedure Step18;
@@ -53,10 +55,12 @@ uses
   // web3
   web3.coincap,
   web3.defillama,
+  web3.eth.abi,
   web3.eth.alchemy.api,
   web3.eth.breadcrumbs,
   web3.eth.chainlink,
   web3.eth.etherscan,
+  web3.eth.simulate,
   web3.eth.tokenlists,
   web3.eth.types,
   web3.json,
@@ -370,6 +374,38 @@ begin
             ok
           else
             err(TError.Create('Tether is neither censorable nor pausable, expected to have a blacklist'));
+    end);
+  end);
+end;
+
+// test for honeypot token on Sepolia
+procedure TChecks.Step15;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  {$I keys/tenderly.api.key}
+  const
+    OWNER   : TAddress = '0x7033A74F69a49652A51ec1c5B6f952e420795C86'; // deployer/owner (is allowed to transfer)
+    OTHER   : TAddress = '0x81B4a9f9Ab3b55Bf224407A3046b82BDFB32Af4d'; // brandly.eth (not allowed to transfer)
+    HONEYPOT: TAddress = '0xdd8c2c0b62f1644ee1c7e67789dab758ba0e798b';
+  begin
+    // step 1: check if anyone (other than the owner) can transfer the token after a mint
+    web3.eth.simulate.honeypots(ALCHEMY_API_KEY_ETHEREUM, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, web3.Sepolia, OTHER, HONEYPOT, 0, web3.eth.abi.encode('mint(uint256)', [1000000000000000000]), procedure(honeypots1: IAssetChanges; err1: IError)
+    begin
+      if Assigned(err1) then
+        err(err1)
+      else if (honeypots1 = nil) or (honeypots1.Count = 0) then
+        err(TError.Create('%s is a honeypot token and should be detected as such', [HONEYPOT]))
+      else
+        // step 2: now that we have confirmed the token to be a honeypot, double-check our logic and verify the owner *is* allowed to transfer
+        web3.eth.simulate.honeypots(ALCHEMY_API_KEY_ETHEREUM, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, web3.Sepolia, OWNER, HONEYPOT, 0, web3.eth.abi.encode('mint(uint256)', [1000000000000000000]), procedure(honeypots2: IAssetChanges; err2: IError)
+        begin
+          if Assigned(err2) then
+            err(err2)
+          else if (honeypots2 = nil) or (honeypots2.Count = 0) then
+            ok
+          else
+            err(TError.Create('owner %s should be allowed to transfer token %s', [OWNER, HONEYPOT]));
+        end);
     end);
   end);
 end;
