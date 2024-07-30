@@ -40,6 +40,8 @@ type
     [Test]
     procedure Step15;
     [Test]
+    procedure Step16;
+    [Test]
     procedure Step17;
     [Test]
     procedure Step18;
@@ -50,6 +52,7 @@ implementation
 uses
   // Delphi
   System.Classes,
+  System.DateUtils,
   System.JSON,
   System.Math,
   // web3
@@ -407,6 +410,33 @@ begin
             err(TError.Create('owner %s should be allowed to transfer token %s', [OWNER, HONEYPOT]));
         end);
     end);
+  end);
+end;
+
+// test for a dormant smart contract
+procedure TChecks.Step16;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  begin
+    common.Etherscan(web3.Ethereum)
+      .ifErr(procedure(err1: IError)
+      begin
+        err(err1)
+      end)
+      .&else(procedure(etherscan: IEtherscan)
+      const
+        POS_DUMMY_STATE_SENDER: TAddress = '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39';
+      begin
+        etherscan.getLatestTransaction(POS_DUMMY_STATE_SENDER, procedure(latest: ITransaction; err2: IError)
+        begin
+          if Assigned(err2) then
+            err(err2)
+          else if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
+            err(TError.Create('%s had a transcation less than 30 days ago, expected the smart contract to be dormant', [POS_DUMMY_STATE_SENDER]))
+          else
+            ok
+        end);
+      end);
   end);
 end;
 
