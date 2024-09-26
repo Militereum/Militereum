@@ -136,7 +136,7 @@ begin
   else if (chain = web3.Base) and (Self.Bindings.Count > 6) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[6].Port)
   else
-    Result := TResult<TIdPort>.Err(0, System.SysUtils.Format('invalid chain: %s', [chain.Name]));
+    Result := TResult<TIdPort>.Err(System.SysUtils.Format('invalid chain: %s', [chain.Name]));
 end;
 
 function TEthereumRPCServerHelper.apiKey(const port: TIdPort): IResult<string>;
@@ -156,7 +156,7 @@ begin
   else if (Self.Bindings.Count > 6) and (port = Self.Bindings[6].Port) then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_BASE)
   else
-    Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
+    Result := TResult<string>.Err(System.SysUtils.Format('invalid port: %d', [port]));
 end;
 
 function TEthereumRPCServerHelper.endpoint(const port: TIdPort): IResult<string>;
@@ -176,7 +176,7 @@ begin
   else if (Self.Bindings.Count> 6) and (port = Self.Bindings[6].Port) then
     Result := web3.eth.alchemy.endpoint(web3.Base, ALCHEMY_API_KEY_BASE, core)
   else
-    Result := TResult<string>.Err('', System.SysUtils.Format('invalid port: %d', [port]));
+    Result := TResult<string>.Err(System.SysUtils.Format('invalid port: %d', [port]));
   if Result.isOk then
     if docker.getContainerId(RPCh_CONTAINER_NAME) <> '' then
       Result := TResult<string>.Ok(Self.URI(RPCh_PORT_NUMBER) + '/?provider=' + Result.Value);
@@ -245,7 +245,7 @@ begin
   else if chain = web3.Base then
     Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_BASE))
   else
-    Result := TResult<IEtherscan>.Err(nil, System.SysUtils.Format('not supported on %s', [chain.Name]));
+    Result := TResult<IEtherscan>.Err(System.SysUtils.Format('not supported on %s', [chain.Name]));
 end;
 
 function Format(const value: Double): string;

@@ -890,15 +890,15 @@ begin
         begin
           dextools.score({$I keys/dextools.api.key}, chain, token, procedure(score1: Integer; err1: IError)
           begin
-            if (err1 = nil) or err1.Message.ToLower.Contains('token not found') then
+            if (score1 > 0) and not Assigned(err1) then
               callback(score1, nil)
             else
-              moralis.score({$I keys/moralis.api.key}, chain, token, procedure(score2: Integer; err2: IError)
+              moralis.securityScore({$I keys/moralis.api.key}, chain, token, procedure(score2: Integer; err2: IError)
               begin
-                if Assigned(err2) and not err2.Message.ToLower.Contains('address not found') then
-                  callback(0, err2)
+                if (score2 > 0) and not Assigned(err2) then
+                  callback(score2, nil)
                 else
-                  callback(score2, nil);
+                  callback(0, err2);
               end);
           end);
         end)(contracts[index].Address, procedure(score: Integer; err: IError)

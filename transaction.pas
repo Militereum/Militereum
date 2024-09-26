@@ -181,7 +181,7 @@ begin
   const decoded = web3.rlp.decode(encoded);
   if decoded.isErr then
   begin
-    Result := TResult<ITransaction>.Err(nil, decoded.Error);
+    Result := TResult<ITransaction>.Err(decoded.Error);
     EXIT;
   end;
 
@@ -195,7 +195,7 @@ begin
       const signature = web3.rlp.decode(i1.Bytes);
       if signature.isErr then
       begin
-        Result := TResult<ITransaction>.Err(nil, signature.Error);
+        Result := TResult<ITransaction>.Err(signature.Error);
         EXIT;
       end;
       if Length(signature.Value) > 7 then
@@ -218,7 +218,7 @@ begin
     const signature = web3.rlp.decode(decoded.Value[0].Bytes);
     if signature.isErr then
     begin
-      Result := TResult<ITransaction>.Err(nil, signature.Error);
+      Result := TResult<ITransaction>.Err(signature.Error);
       EXIT;
     end;
     if Length(signature.Value) > 5 then
@@ -234,7 +234,7 @@ begin
     end;
   end;
 
-  Result := TResult<ITransaction>.Err(nil, 'unknown transaction encoding');
+  Result := TResult<ITransaction>.Err('unknown transaction encoding');
 end;
 
 // input the transaction "data", returns the 4-byte function signature
@@ -248,7 +248,7 @@ begin
     Result := TResult<TFourBytes>.Ok(func);
   end
   else
-    Result := TResult<TFourBytes>.Err(func, 'no 4-byte function signature');
+    Result := TResult<TFourBytes>.Err('no 4-byte function signature');
 end;
 
 function fourBytesToHex(const input: TFourBytes): string;
@@ -265,7 +265,7 @@ begin
   const func = getTransactionFourBytes(data);
   if func.isErr then
   begin
-    Result := TResult<TArray<TArg>>.Err([], func.Error);
+    Result := TResult<TArray<TArg>>.Err(func.Error);
     EXIT;
   end;
   var input : TBytes := Copy(data, 4, Length(data) - 4);

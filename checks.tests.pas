@@ -302,7 +302,7 @@ begin
       if (score1 > 0) and not Assigned(err1) then
         ok
       else
-        moralis.score({$I keys/moralis.api.key}, web3.Ethereum, RED_EYED_FROG, procedure(score2: Integer; err2: IError)
+        moralis.securityScore({$I keys/moralis.api.key}, web3.Ethereum, RED_EYED_FROG, procedure(score2: Integer; err2: IError)
         begin
           if Assigned(err2) then
             err(err2)

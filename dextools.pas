@@ -46,7 +46,7 @@ begin
   else if chain = Pulsechain then
     Result := TResult<string>.Ok('pulse')
   else
-    Result := TResult<string>.Err('', TError.Create('%s not supported', [chain.Name]));
+    Result := TResult<string>.Err(TError.Create('%s not supported', [chain.Name]));
 end;
 
 procedure pairs(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TJsonArray, IError>);

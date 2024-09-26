@@ -65,7 +65,7 @@ begin
   if Assigned(FComment) then
     Result := TResult<string>.Ok(FComment.Value)
   else
-    Result := TResult<string>.Err('', 'no comment');
+    Result := TResult<string>.Err('no comment');
 end;
 
 function wrap(const inner: IError; const step: TStep): IMilitereumError;

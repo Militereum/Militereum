@@ -96,7 +96,7 @@ begin
             port := port - 1
           else
           begin
-            Result := TResult<TArray<TIdPort>>.Err(nil, TError.Create(E.Message));
+            Result := TResult<TArray<TIdPort>>.Err(TError.Create(E.Message));
             EXIT;
           end;
         end;
@@ -113,7 +113,7 @@ begin
           port := port - 1
         else
         begin
-          Result := TResult<TArray<TIdPort>>.Err(nil, System.SysUtils.Format('ports out of range %d..%d', [MIN_PORT_NO, MAX_PORT_NO]));
+          Result := TResult<TArray<TIdPort>>.Err(System.SysUtils.Format('ports out of range %d..%d', [MIN_PORT_NO, MAX_PORT_NO]));
           EXIT;
         end;
       finally
@@ -141,7 +141,7 @@ begin
           port := port - 1
         else
         begin
-          Result := TResult<TEthereumRPCServer>.Err(nil, TError.Create(E.Message));
+          Result := TResult<TEthereumRPCServer>.Err(TError.Create(E.Message));
           EXIT;
         end;
       end;
@@ -165,7 +165,7 @@ begin
   except
     on E: Exception do
     begin
-      Result := TResult<TEthereumRPCServer>.Err(nil, TError.Create(E.Message));
+      Result := TResult<TEthereumRPCServer>.Err(TError.Create(E.Message));
       EXIT;
     end;
   end;
@@ -176,7 +176,7 @@ function start(const ports: TArray<TIdPort>): IResult<TEthereumRPCServer>;
 begin
   if Length(ports) = 0 then
   begin
-    Result := TResult<TEthereumRPCServer>.Err(nil, 'nothing to do');
+    Result := TResult<TEthereumRPCServer>.Err('nothing to do');
     EXIT;
   end;
   if Length(ports) = 1 then
@@ -191,7 +191,7 @@ begin
   except
     on E: Exception do
     begin
-      Result := TResult<TEthereumRPCServer>.Err(nil, TError.Create(E.Message));
+      Result := TResult<TEthereumRPCServer>.Err(TError.Create(E.Message));
       EXIT;
     end;
   end;
