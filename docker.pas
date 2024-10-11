@@ -43,7 +43,7 @@ function getContainerId(const name: string): string;
 function stop(const containerId: string): Boolean;
 
 const
-  RPCh_DOCKER_IMAGE   = 'europe-west6-docker.pkg.dev/rpch-375921/rpch/rpc-server:0.10.0';
+  RPCh_DOCKER_IMAGE   = 'europe-west3-docker.pkg.dev/hoprassociation/docker-images/rpc-server:stable';
   RPCh_CONTAINER_NAME = 'rpc-server';
   RPCh_PORT_NUMBER    = 45750;
 

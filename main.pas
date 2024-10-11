@@ -524,6 +524,7 @@ begin
   and (docker.getContainerId(RPCh_CONTAINER_NAME) = '')
   and docker.pull(RPCh_DOCKER_IMAGE)
   and docker.run(RPCh_CONTAINER_NAME,
+    '--pull always ' +
     '--platform=linux/amd64 ' +
     '-e FORCE_ZERO_HOP=true ' +
     '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
