@@ -44,6 +44,7 @@ function Debug: Boolean;
 function Demo: Boolean;
 function Simulate: Boolean;
 
+function Base: TChain;
 function Ethereum: TChain;
 function Etherscan(const chain: TChain): IResult<IEtherscan>;
 function Format(const value: Double): string;
@@ -219,6 +220,13 @@ end;
 class operator TSemVer.GreaterThanOrEqual(const A, B: TSemVer): Boolean;
 begin
   Result := (A > B) or (A = B);
+end;
+
+function Base: TChain;
+begin
+  Result := web3.Base.SetRPC(
+    web3.eth.alchemy.endpoint(web3.Base, ALCHEMY_API_KEY_BASE, core).Value
+  );
 end;
 
 function Ethereum: TChain;

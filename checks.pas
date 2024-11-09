@@ -10,6 +10,7 @@ uses
   // web3
   web3,
   // project
+  asset,
   base,
   server,
   transaction;
@@ -114,6 +115,8 @@ type
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
 
+procedure getSpenderStatus(const chain: TChain; const spender: TAddress; const callback: TProc<TSpenderStatus, IError>);
+
 implementation
 
 uses
@@ -136,7 +139,6 @@ uses
   web3.utils,
   // project
   airdrop,
-  asset,
   cache,
   censorable,
   common,
@@ -163,17 +165,17 @@ uses
 
 {------- spender status (EOA, unverified, phisher, sanctioned, or good --------}
 
-procedure getSpenderStatus(const chain: TChain; const address: TAddress; const callback: TProc<TSpenderStatus, IError>);
+procedure getSpenderStatus(const chain: TChain; const spender: TAddress; const callback: TProc<TSpenderStatus, IError>);
 type
   TStep = reference to procedure(const callback: TProc<Boolean, IError>);
   TNext = reference to procedure(const steps: TArray<TStep>; const index: Integer);
 begin
   var next: TNext;
 
-  // is the address an EOA? (there is never a good reason to approve an EOA)
+  // is the spender an EOA? (there is never a good reason to approve an EOA)
   const step1: TStep = procedure(const callback: TProc<Boolean, IError>)
   begin
-    address.IsEOA(TWeb3.Create(chain), callback);
+    spender.IsEOA(TWeb3.Create(chain), callback);
   end;
 
   // is the contract not verified with etherscan?
@@ -186,23 +188,23 @@ begin
       end)
       .&else(procedure(etherscan: IEtherscan)
       begin
-        etherscan.getContractSourceCode(address, procedure(src: string; err: IError)
+        etherscan.getContractSourceCode(spender, procedure(src: string; err: IError)
         begin
           callback(src = '', err);
         end)
       end);
   end;
 
-  // is the address a known phisher?
+  // is the spender a known phisher?
   const step3: TStep = procedure(const callback: TProc<Boolean, IError>)
   begin
-    phisher.isPhisher(address, callback);
+    phisher.isPhisher(spender, callback);
   end;
 
-  // is the address sanctioned?
+  // is the spender sanctioned?
   const step4: TStep = procedure(const callback: TProc<Boolean, IError>)
   begin
-    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, spender, callback);
   end;
 
   next := procedure(const steps: TArray<TStep>; const index: Integer)

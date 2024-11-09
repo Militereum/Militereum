@@ -16,6 +16,8 @@ type
     procedure Execute(const proc: TProc<TProc, TProc<IError>>);
   public
     [Test]
+    procedure Issue14;
+    [Test]
     procedure Step4;
     [Test]
     procedure Step5;
@@ -68,7 +70,9 @@ uses
   web3.eth.types,
   web3.json,
   // project
+  asset,
   cache,
+  checks,
   common,
   dextools,
   moralis,
@@ -101,6 +105,25 @@ begin
   end;
 
   if Assigned(err) then Assert.Fail(err.Message) else if waited >= TEST_TIMEOUT then Assert.Fail('test timed out');
+end;
+
+// test TSpenderStatus on Base
+procedure TChecks.Issue14;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    SPENDER: TAddress = '0x2397edd0c7c327f7d3661e0037c168de0206124b';
+  begin
+    getSpenderStatus(common.Base, SPENDER, procedure(status: TSpenderStatus; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if status = isGood then
+        ok
+      else
+        err(TError.Create('%s''s status on Base is %d, expected to be good', [SPENDER, Ord(status)]))
+    end);
+  end);
 end;
 
 // are we transacting with (a) smart contract and (b) verified with etherscan?
