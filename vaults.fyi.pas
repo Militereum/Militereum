@@ -114,7 +114,11 @@ type
 
   function TVault.TVL: BigInteger;
   begin
-    Result := getPropAsBigInt(FJsonValue, 'tvl');
+    const details = getPropAsObj(FJsonValue, 'tvlDetails');
+    if Assigned(details) then
+      Result := getPropAsBigInt(details, 'tvlNative')
+    else
+      Result := getPropAsBigInt(FJsonValue, 'tvl');
   end;
 
   function TVault.Token: IToken;
