@@ -123,12 +123,18 @@ type
   end;
 
   function TVault.APY: Double;
+  const
+    SEVEN_DAY = '7day';
   begin
     Result := 0;
     const apy = getPropAsObj(FJsonValue, 'apy');
     if Assigned(apy) then
     begin
-      Result := getPropAsInt(apy, '7day');
+      const total = getPropAsObj(apy, 'total');
+      if Assigned(total) then
+        Result := getPropAsInt(total, SEVEN_DAY)
+      else
+        Result := getPropAsInt(apy, SEVEN_DAY);
       if Result > 0 then Result := Result / 100;
     end;
   end;
