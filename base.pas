@@ -59,6 +59,7 @@ type
   protected
     procedure DoShow; override;
     procedure Resize; override;
+    procedure LoadGasFeeImage(const img: TImage);
     procedure Log(const err: IError);
     property Chain: TChain read FChain;
     property Blocked: Boolean write SetBlocked;
@@ -82,6 +83,7 @@ uses
   web3.eth.gas,
   web3.eth.utils,
   // project
+  common,
   thread;
 
 procedure centerOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
@@ -172,6 +174,7 @@ begin
         if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
         begin
           lblGasFee.Text := System.SysUtils.Format('$ %.2f', [dotToFloat(fromWei(qty * price, ether)) * ticker]);
+          LoadGasFeeImage(imgGasFee);
           lblGasFee.Visible := True;
           imgGasFee.Visible := True;
         end);
@@ -201,6 +204,24 @@ begin
   btnBlock.Position.Y := Self.ClientHeight - btnBlock.Height - 16;
   btnAllow.Position.X := M + 4;
   btnAllow.Position.Y := Self.ClientHeight - btnAllow.Height - 16;
+end;
+
+{$R 'assets\gas_pump.res'}
+
+procedure TFrmBase.LoadGasFeeImage(const img: TImage);
+begin
+  const RS = TResourceStream.Create(hInstance, (function: string
+  begin
+    if common.DarkModeEnabled then
+      Result := 'GAS_PUMP_DARK'
+    else
+      Result := 'GAS_PUMP_LIGHT';
+  end)(), RT_RCDATA);
+  try
+    img.Bitmap.LoadFromStream(RS);
+  finally
+    RS.Free;
+  end;
 end;
 
 procedure TFrmBase.Log(const err: IError);

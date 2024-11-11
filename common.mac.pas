@@ -6,7 +6,7 @@ function autoRunEnabled: Boolean;
 procedure enableAutoRun;
 procedure disableAutoRun;
 
-function darkModeEnabled: Boolean;
+function systemIsDarkMode: Boolean;
 procedure enableDarkMode;
 procedure disableDarkMode;
 
@@ -103,7 +103,7 @@ begin
   System.IOUtils.TFile.Delete(launchAgent);
 end;
 
-function darkModeEnabled: Boolean;
+function systemIsDarkMode: Boolean;
 begin
   Result := False;
   var S: IFMXSystemAppearanceService;

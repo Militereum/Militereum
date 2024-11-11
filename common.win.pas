@@ -10,7 +10,7 @@ function autoRunEnabled: Boolean;
 procedure enableAutoRun;
 procedure disableAutoRun;
 
-function darkModeEnabled: Boolean;
+function systemIsDarkMode: Boolean;
 procedure enableDarkMode;
 procedure disableDarkMode;
 
@@ -91,7 +91,7 @@ begin
   end;
 end;
 
-function darkModeEnabled: Boolean;
+function systemIsDarkMode: Boolean;
 begin
   const R = TRegistry.Create;
   try
