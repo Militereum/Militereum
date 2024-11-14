@@ -18,6 +18,7 @@ type
 
 procedure getCoinId(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 procedure getCoin(const Id: string; const callback: TProc<ICoin, IError>);
+procedure score(const chain: TChain; const token: TAddress; const callback: TProc<Double, IError>);
 
 implementation
 
@@ -161,11 +162,8 @@ begin
       callback([], TError.Create('response is not an array'));
       EXIT;
     end;
-    try
-      for var coin in (response as TJsonArray) do cache := cache + [TCoin.Create(coin)];
-    finally
-      callback(cache, nil);
-    end;
+    for var coin in (response as TJsonArray) do cache := cache + [TCoin.Create(coin)];
+    callback(cache, nil);
   end);
 end;
 
@@ -178,14 +176,15 @@ begin
       callback('', err);
       EXIT;
     end;
-    for var coin in coins do coin.Address(chain).ifOk(procedure(address: TAddress)
+    for var coin in coins do
     begin
-      if address.SameAs(token) then
+      const address = coin.Address(chain);
+      if address.isOk and address.Value.SameAs(token) then
       begin
         callback(coin.Id, nil);
         EXIT;
       end;
-    end);
+    end;
     callback('', TError.Create('token %s does not exist on %s', [token, chain.Name]));
   end);
 end;
@@ -198,6 +197,23 @@ begin
       callback(nil, err)
     else
       callback(TCoin.Create(response), nil);
+  end);
+end;
+
+procedure score(const chain: TChain; const token: TAddress; const callback: TProc<Double, IError>);
+begin
+  getCoinId(chain, token, procedure(id: string; err1: IError)
+  begin
+    if Assigned(err1) then
+      callback(0, err1)
+    else
+      getCoin(id, procedure(coin: ICoin; err2: IError)
+      begin
+        if Assigned(err2) then
+          callback(0, err2)
+        else
+          callback(coin.Score, nil);
+      end);
   end);
 end;
 

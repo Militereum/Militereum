@@ -141,6 +141,7 @@ uses
   airdrop,
   cache,
   censorable,
+  coingecko,
   common,
   dextools,
   dormant,
@@ -609,7 +610,7 @@ begin
               if quantity = 0 then
                 next(prompted, nil)
               else
-                web3.defillama.coin(chain, tx.&To, procedure(coin: ICoin; err: IError)
+                web3.defillama.coin(chain, tx.&To, procedure(coin: web3.defillama.ICoin; err: IError)
                 begin
                   if Assigned(err) or not Assigned(coin) then
                     next(prompted, error.wrap(err, Self.Step5))
@@ -887,8 +888,8 @@ begin
     begin
       if index >= Length(contracts) then
         next(prompted, nil)
-      else ( // call DEXTools API or Moralis API
-        procedure(const token: TAddress; const callback: TProc<Integer, IError>)
+      else ( // call DEXTools API or Moralis API or Coingecko API
+        procedure(const token: TAddress; const callback: TProc<Double, IError>)
         begin
           dextools.score({$I keys/dextools.api.key}, chain, token, procedure(score1: Integer; err1: IError)
           begin
@@ -900,10 +901,16 @@ begin
                 if (score2 > 0) and not Assigned(err2) then
                   callback(score2, nil)
                 else
-                  callback(0, err2);
+                  coingecko.score(chain, token, procedure(score3: Double; err3: IError)
+                  begin
+                    if (score3 > 0) and not Assigned(err3) then
+                      callback(score3, nil)
+                    else
+                      callback(0, err3);
+                  end);
               end);
           end);
-        end)(contracts[index].Address, procedure(score: Integer; err: IError)
+        end)(contracts[index].Address, procedure(score: Double; err: IError)
         begin
           if Assigned(err) then
             next(prompted, error.wrap(err, Self.Step12))

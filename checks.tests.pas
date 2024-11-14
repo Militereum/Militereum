@@ -73,6 +73,7 @@ uses
   asset,
   cache,
   checks,
+  coingecko,
   common,
   dextools,
   moralis,
@@ -168,7 +169,7 @@ begin
   const
     TETHER: TAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
   begin
-    web3.defillama.coin(web3.Ethereum, TETHER, procedure(coin: ICoin; error: IError)
+    web3.defillama.coin(web3.Ethereum, TETHER, procedure(coin: web3.defillama.ICoin; error: IError)
     begin
       if Assigned(error) then
         err(error)
@@ -327,12 +328,18 @@ begin
       else
         moralis.securityScore({$I keys/moralis.api.key}, web3.Ethereum, RED_EYED_FROG, procedure(score2: Integer; err2: IError)
         begin
-          if Assigned(err2) then
-            err(err2)
-          else if score2 > 0 then
+          if (score2 > 0) and not Assigned(err2) then
             ok
           else
-            err(TError.Create('score is 0, expected value between 1 and 100'));
+            coingecko.score(web3.Ethereum, RED_EYED_FROG, procedure(score3: Double; err3: IError)
+            begin
+              if Assigned(err3) then
+                err(err3)
+              else if score3 > 0 then
+                ok
+              else
+                err(TError.Create('score is 0, expected value between 1 and 100'));
+            end);
         end);
     end);
   end);
