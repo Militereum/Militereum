@@ -19,6 +19,7 @@ uses
   cache in 'cache.pas',
   censorable in 'censorable.pas' {FrmCensorable},
   checks in 'checks.pas',
+  coingecko in 'coingecko.pas',  
   common in 'common.pas',
   demo in 'demo.pas' {dmDemo: TDataModule},
   dextools in 'dextools.pas',
