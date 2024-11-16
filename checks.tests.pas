@@ -141,23 +141,15 @@ begin
       else if isEOA then
         err(TError.Create('%s is an EOA, expected a smart contract', [UNISWAP_V2_ROUTER]))
       else
-        common.Etherscan(common.Ethereum)
-          .ifErr(procedure(err2: IError)
-          begin
+        common.Etherscan(common.Ethereum).getContractSourceCode(UNISWAP_V2_ROUTER, procedure(src: string; err2: IError)
+        begin
+          if Assigned(err2) then
             err(err2)
-          end)
-          .&else(procedure(etherscan: IEtherscan)
-          begin
-            etherscan.getContractSourceCode(UNISWAP_V2_ROUTER, procedure(src: string; err3: IError)
-            begin
-              if Assigned(err3) then
-                err(err3)
-              else if src <> '' then
-                ok
-              else
-                err(TError.Create('%s''s source code is null, expected non-empty string', [UNISWAP_V2_ROUTER]));
-            end);
-          end);
+          else if src <> '' then
+            ok
+          else
+            err(TError.Create('%s''s source code is null, expected non-empty string', [UNISWAP_V2_ROUTER]));
+        end);
     end);
   end);
 end;
@@ -256,23 +248,15 @@ begin
   const
     VITALIK_DOT_ETH = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
   begin
-    common.Etherscan(web3.Ethereum)
-      .ifErr(procedure(err1: IError)
-      begin
-        err(err1);
-      end)
-      .&else(procedure(etherscan: IEtherscan)
-      begin
-        etherscan.getTransactions(VITALIK_DOT_ETH, procedure(txs: ITransactions; err2: IError)
-        begin
-          if Assigned(err2) then
-            err(err2)
-          else if Assigned(txs) and (txs.Count > 0) then
-            ok
-          else
-            err(TError.Create('etherscan''s txlist returned 0 transactions, expected many more'));
-        end);
-      end);
+    common.Etherscan(web3.Ethereum).getTransactions(VITALIK_DOT_ETH, procedure(txs: ITransactions; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if Assigned(txs) and (txs.Count > 0) then
+        ok
+      else
+        err(TError.Create('etherscan''s txlist returned 0 transactions, expected many more'));
+    end);
   end);
 end;
 
@@ -447,26 +431,18 @@ end;
 procedure TChecks.Step16;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    POS_DUMMY_STATE_SENDER: TAddress = '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39';
   begin
-    common.Etherscan(web3.Ethereum)
-      .ifErr(procedure(err1: IError)
-      begin
-        err(err1)
-      end)
-      .&else(procedure(etherscan: IEtherscan)
-      const
-        POS_DUMMY_STATE_SENDER: TAddress = '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39';
-      begin
-        etherscan.getLatestTransaction(POS_DUMMY_STATE_SENDER, procedure(latest: ITransaction; err2: IError)
-        begin
-          if Assigned(err2) then
-            err(err2)
-          else if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
-            err(TError.Create('%s had a transcation less than 30 days ago, expected the smart contract to be dormant', [POS_DUMMY_STATE_SENDER]))
-          else
-            ok
-        end);
-      end);
+    common.Etherscan(web3.Ethereum).getLatestTransaction(POS_DUMMY_STATE_SENDER, procedure(latest: ITransaction; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
+        err(TError.Create('%s had a transcation less than 30 days ago, expected the smart contract to be dormant', [POS_DUMMY_STATE_SENDER]))
+      else
+        ok
+    end);
   end);
 end;
 

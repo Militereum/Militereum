@@ -46,7 +46,7 @@ function Simulate: Boolean;
 
 function Base: TChain;
 function Ethereum: TChain;
-function Etherscan(const chain: TChain): IResult<IEtherscan>;
+function Etherscan(const chain: TChain): IEtherscan;
 function Format(const value: Double): string;
 function GetTempFileName: string;
 function Headers: TNetHeaders;
@@ -93,7 +93,6 @@ uses
   docker;
 
 {$I keys/alchemy.api.key}
-{$I keys/etherscan.api.key}
 
 function TEthereumRPCServerHelper.chain(const port: TIdPort): PChain;
 begin
@@ -237,24 +236,9 @@ begin
   );
 end;
 
-function Etherscan(const chain: TChain): IResult<IEtherscan>;
+function Etherscan(const chain: TChain): IEtherscan;
 begin
-  if chain = web3.Ethereum then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ETHEREUM))
-  else if chain = web3.Holesky then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_HOLESKY))
-  else if chain = web3.Sepolia then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_SEPOLIA))
-  else if chain = web3.Polygon then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_POLYGON))
-  else if chain = web3.Arbitrum then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_ARBITRUM))
-  else if chain = web3.Optimism then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_OPTIMISM))
-  else if chain = web3.Base then
-    Result := TResult<IEtherscan>.Ok(web3.eth.etherscan.create(chain, ETHERSCAN_API_KEY_BASE))
-  else
-    Result := TResult<IEtherscan>.Err(System.SysUtils.Format('not supported on %s', [chain.Name]));
+  Result := web3.eth.etherscan.create(chain, {$I keys/etherscan.api.key});
 end;
 
 function Format(const value: Double): string;

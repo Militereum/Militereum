@@ -55,24 +55,16 @@ begin
       callback(contractABIs[I].ContractABI, nil);
       EXIT;
     end;
-  common.Etherscan(chain)
-    .ifErr(procedure(err: IError)
+  common.Etherscan(chain).getContractABI(contract, procedure(abi: IContractABI; err: IError)
+  begin
+    if Assigned(err) then
     begin
       callback(nil, err);
-    end)
-    .&else(procedure(etherscan: IEtherscan)
-    begin
-      etherscan.getContractABI(contract, procedure(abi: IContractABI; err: IError)
-      begin
-        if Assigned(err) then
-        begin
-          callback(nil, err);
-          EXIT;
-        end;
-        contractABIs := contractABIs + [TContractABI.Create(chain, contract, abi)];
-        callback(abi, err);
-      end);
-    end);
+      EXIT;
+    end;
+    contractABIs := contractABIs + [TContractABI.Create(chain, contract, abi)];
+    callback(abi, err);
+  end);
 end;
 
 type

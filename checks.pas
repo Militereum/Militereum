@@ -182,18 +182,10 @@ begin
   // is the contract not verified with etherscan?
   const step2: TStep = procedure(const callback: TProc<Boolean, IError>)
   begin
-    common.Etherscan(chain)
-      .ifErr(procedure(err: IError)
-      begin
-        callback(False, err)
-      end)
-      .&else(procedure(etherscan: IEtherscan)
-      begin
-        etherscan.getContractSourceCode(spender, procedure(src: string; err: IError)
-        begin
-          callback(src = '', err);
-        end)
-      end);
+    common.Etherscan(chain).getContractSourceCode(spender, procedure(src: string; err: IError)
+    begin
+      callback(src = '', err);
+    end);
   end;
 
   // is the spender a known phisher?
@@ -555,32 +547,24 @@ begin
     else if isEOA then
       next(prompted, nil)
     else
-      common.Etherscan(chain)
-        .ifErr(procedure(err: IError)
-        begin
+      common.Etherscan(chain).getContractSourceCode(tx.&To, procedure(src: string; err: IError)
+      begin
+        if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step4))
-        end)
-        .&else(procedure(etherscan: IEtherscan)
-        begin
-          etherscan.getContractSourceCode(tx.&To, procedure(src: string; err: IError)
+        else if src <> '' then
+          next(prompted, nil)
+        else
+          thread.synchronize(procedure
           begin
-            if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step4))
-            else if src <> '' then
-              next(prompted, nil)
-            else
-              thread.synchronize(procedure
-              begin
-                unverified.show(chain, tx, tx.&To, procedure(allow: Boolean)
-                begin
-                  if allow then
-                    next(prompted + [TWarning.Other], nil)
-                  else
-                    block(prompted);
-                end, log);
-              end);
+            unverified.show(chain, tx, tx.&To, procedure(allow: Boolean)
+            begin
+              if allow then
+                next(prompted + [TWarning.Other], nil)
+              else
+                block(prompted);
+            end, log);
           end);
-        end);
+      end);
   end);
 end;
 
@@ -777,37 +761,29 @@ begin
     end)
     .&else(procedure(from: TAddress)
     begin
-      common.Etherscan(chain)
-        .ifErr(procedure(err: IError)
-        begin
+      common.Etherscan(chain).getTransactions(from, procedure(txs: ITransactions; err: IError)
+      begin
+        if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step9))
-        end)
-        .&else(procedure(etherscan: IEtherscan)
-        begin
-          etherscan.getTransactions(from, procedure(txs: ITransactions; err: IError)
-          begin
-            if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step9))
-            else if not Assigned(txs) then
-              next(prompted, nil)
-            else begin
-              txs.FilterBy(tx.&To);
-              if txs.Count > 0 then
-                next(prompted, nil)
-              else
-                thread.synchronize(procedure
-                begin
-                  firsttime.show(chain, tx, tx.&To, procedure(allow: Boolean)
-                  begin
-                    if allow then
-                      next(prompted + [TWarning.Other], nil)
-                    else
-                      block(prompted);
-                  end, log);
-                end);
-            end;
-          end);
-        end);
+        else if not Assigned(txs) then
+          next(prompted, nil)
+        else begin
+          txs.FilterBy(tx.&To);
+          if txs.Count > 0 then
+            next(prompted, nil)
+          else
+            thread.synchronize(procedure
+            begin
+              firsttime.show(chain, tx, tx.&To, procedure(allow: Boolean)
+              begin
+                if allow then
+                  next(prompted + [TWarning.Other], nil)
+                else
+                  block(prompted);
+              end, log);
+            end);
+        end;
+      end);
     end);
 end;
 
@@ -1113,46 +1089,40 @@ begin
   getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
   begin
     if Assigned(err) then
-      next(prompted, error.wrap(err, Self.Step16))
-    else
-      common.Etherscan(chain)
-        .ifErr(procedure(err: IError)
+    begin
+      next(prompted, error.wrap(err, Self.Step16));
+      EXIT;
+    end;
+    var step: TSubStep;
+    step := procedure(const index: Integer; const prompted: TPrompted)
+    begin
+      if index >= Length(contracts) then
+        next(prompted, nil)
+      else
+        common.Etherscan(chain).getLatestTransaction(contracts[index].Address, procedure(latest: ITransaction; err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step16))
-        end)
-        .&else(procedure(etherscan: IEtherscan)
-        begin
-          var step: TSubStep;
-          step := procedure(const index: Integer; const prompted: TPrompted)
-          begin
-            if index >= Length(contracts) then
-              next(prompted, nil)
+          if Assigned(err) then
+            next(prompted, error.wrap(err, Self.Step16))
+          else
+            if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
+              step(index + 1, prompted)
             else
-              etherscan.getLatestTransaction(contracts[index].Address, procedure(latest: ITransaction; err: IError)
+              contracts[index].IsToken(procedure(isERC20: Boolean; err: IError)
               begin
-                if Assigned(err) then
-                  next(prompted, error.wrap(err, Self.Step16))
-                else
-                  if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
-                    step(index + 1, prompted)
-                  else
-                    contracts[index].IsToken(procedure(isERC20: Boolean; err: IError)
-                    begin
-                      thread.synchronize(procedure
-                      begin
-                        dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow: Boolean)
-                        begin
-                          if allow then
-                            step(index + 1, prompted + [TWarning.Other])
-                          else
-                            block(prompted);
-                        end, log);
-                      end)
-                    end)
-              end);
-          end;
-          step(0, prompted);
+                thread.synchronize(procedure
+                begin
+                  dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow: Boolean)
+                  begin
+                    if allow then
+                      step(index + 1, prompted + [TWarning.Other])
+                    else
+                      block(prompted);
+                  end, log);
+                end)
+              end)
         end);
+    end;
+    step(0, prompted);
   end);
 end;
 
