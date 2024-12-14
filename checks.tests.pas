@@ -46,7 +46,7 @@ type
     [Test]
     procedure Step17;
     [Test]
-    procedure Step18;
+    procedure Step19;
   end;
 
 implementation
@@ -466,7 +466,7 @@ begin
 end;
 
 // test the vaults.fyi API
-procedure TChecks.Step18;
+procedure TChecks.Step19;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const

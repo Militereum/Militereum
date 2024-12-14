@@ -107,10 +107,12 @@ type
     procedure Step16(const prompted: TPrompted; const next: TNext);
     [TComment('are we receiving (or otherwise transacting with) a token with an unlock event coming up?')]
     procedure Step17(const prompted: TPrompted; const next: TNext);
-    [TComment('are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?')]
+    [TComment('are we transacting with a contract (or receiving a token) that is on the revoke.cash exploit list?')]
     procedure Step18(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?')]
     procedure Step19(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step20(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -146,6 +148,7 @@ uses
   dextools,
   dormant,
   error,
+  exploit,
   firsttime,
   honeypot,
   limit,
@@ -154,6 +157,7 @@ uses
   noDexPair,
   pausable,
   phisher,
+  revoke.cash,
   sanctioned,
   setApprovalForAll,
   spam,
@@ -1176,6 +1180,44 @@ end;
 
 procedure TChecks.Step18(const prompted: TPrompted; const next: TNext);
 begin
+  getEachToken(server, port, chain, tx, procedure(const contracts: TArray<TContract>; const err: IError)
+  begin
+    if Assigned(err) then
+    begin
+      next(prompted, error.wrap(err, Self.Step18));
+      EXIT;
+    end;
+    var step: TSubStep;
+    step := procedure(const index: Integer; const prompted: TPrompted)
+    begin
+      if index >= Length(contracts) then
+        next(prompted, nil)
+      else
+        revoke.cash.exploit(chain, contracts[index].Address, procedure(exp: IExploit; err: IError)
+        begin
+          if Assigned(err) then
+            next(prompted, error.wrap(err, Self.Step18))
+          else if not Assigned(exp) then
+            step(index + 1, prompted)
+          else
+            thread.synchronize(procedure
+            begin
+              exploit.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+              begin
+                if allow then
+                  step(index + 1, prompted + [TWarning.Other])
+                else
+                  block(prompted);
+              end, log);
+            end);
+        end);
+    end;
+    step(0, prompted);
+  end);
+end;
+
+procedure TChecks.Step19(const prompted: TPrompted; const next: TNext);
+begin
   getTransactionFourBytes(tx.Data)
     .ifErr(procedure(_: IError)
     begin
@@ -1202,7 +1244,7 @@ begin
         vaults.fyi.better(chain, tx.&To, procedure(other: IVault; err: IError)
         begin
           if Assigned(err) then
-            next(prompted, error.wrap(err, Self.Step18))
+            next(prompted, error.wrap(err, Self.Step19))
           else if not Assigned(other) then
             next(prompted, nil)
           else
@@ -1223,26 +1265,26 @@ begin
     end);
 end;
 
-procedure TChecks.Step19(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step20(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError)
     begin
-      next(prompted, error.wrap(err, Self.Step19))
+      next(prompted, error.wrap(err, Self.Step20))
     end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step19))
+          next(prompted, error.wrap(err, Self.Step20))
         end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step19))
+              next(prompted, error.wrap(err, Self.Step20))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
@@ -1289,7 +1331,7 @@ begin
                         getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                         begin
                           if Assigned(err) then
-                            next(prompted, error.wrap(err, Self.Step18))
+                            next(prompted, error.wrap(err, Self.Step20))
                           else
                             thread.synchronize(procedure
                             begin
