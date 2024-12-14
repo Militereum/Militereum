@@ -1202,7 +1202,7 @@ begin
           else
             thread.synchronize(procedure
             begin
-              exploit.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+              exploit.show(contracts[index].Action, chain, tx, contracts[index].Address, exp, procedure(allow: Boolean)
               begin
                 if allow then
                   step(index + 1, prompted + [TWarning.Other])

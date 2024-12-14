@@ -13,6 +13,7 @@ type
     function Name: string;
     function Description: string;
     function Date: string;
+    function URL(const chain: TChain): string;
   end;
 
 // is this address a known crypto exploit that abuses token approvals in order to steal funds from users?
@@ -32,6 +33,7 @@ type
     function Name: string;
     function Description: string;
     function Date: string;
+    function URL(const chain: TChain): string;
   end;
 
   function TExploit.Name: string;
@@ -47,6 +49,11 @@ type
   function TExploit.Date: string;
   begin
     Result := getPropAsStr(FJsonValue, 'date');
+  end;
+
+  function TExploit.URL(const chain: TChain): string;
+  begin
+    Result := Format('https://revoke.cash/exploits/%s?chainId=%d', [Self.Name, chain.Id]);
   end;
 
 procedure exploit(const chain: TChain; const address: TAddress; const callback: TProc<IExploit, IError>);
