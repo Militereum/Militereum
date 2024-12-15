@@ -70,18 +70,20 @@ begin
       callback(nil, TError.Create('not a JSON array'));
       EXIT;
     end;
-    var step: TProc<Integer>;
-    step := procedure(index: Integer)
+    var step: TProc<TJsonArray, Integer, TProc<TJsonArray>>;
+    step := procedure(arr: TJsonArray; idx: Integer; done: TProc<TJsonArray>)
     begin
-      if index >= (resp1 as TJsonArray).Count then
+      if idx >= arr.Count then
       begin
         callback(nil, nil);
+        done(arr);
         EXIT;
       end;
-      const name = (resp1 as TJsonArray)[index];
+      const name = arr[idx];
       if not(name is TJsonString) then
       begin
         callback(nil, TError.Create('not a JSON string'));
+        done(arr);
         EXIT;
       end;
       get(Format('https://raw.githubusercontent.com/RevokeCash/approval-exploit-list/refs/heads/main/exploits/%s.json', [(name as TJsonString).Value]), [], procedure(resp2: TJsonValue; err2: IError)
@@ -89,24 +91,27 @@ begin
         if Assigned(err2) then
         begin
           callback(nil, err2);
+          done(arr);
           EXIT;
         end;
         const addresses = getPropAsArr(resp2, 'addresses');
         if not Assigned(addresses) then
         begin
           callback(nil, TError.Create('not a JSON array'));
+          done(arr);
           EXIT;
         end;
         for var I := 0 to Pred(addresses.Count) do
           if (getPropAsUInt64(addresses[I], 'chainId') = chain.Id) and SameText(getPropAsStr(addresses[I], 'address'), string(address)) then
           begin
             callback(TExploit.Create(addresses[I]), nil);
+            done(arr);
             EXIT;
           end;
-        step(index + 1);
+        step(arr, idx + 1, done);
       end);
     end;
-    step(0);
+    step((resp1 as TJsonArray).Clone as TJsonArray, 0, procedure(arr: TJsonArray) begin arr.Free end);
   end);
 end;
 
