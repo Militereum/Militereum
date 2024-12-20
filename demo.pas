@@ -132,7 +132,7 @@ end;
 
 procedure TdmDemo.actExploitExecute(Sender: TObject);
 begin
-  exploit.show(taTransact, common.Ethereum, nil, '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07', 'Radiant Capital Hack', 'https://revoke.cash/exploits/radiant?chainId=1', procedure(allow: Boolean) begin end, nil);
+  exploit.show(common.Ethereum, nil, '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07', 'Radiant Capital Hack', 'https://revoke.cash/exploits/radiant?chainId=1', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);
