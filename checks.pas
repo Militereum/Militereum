@@ -194,23 +194,15 @@ begin
               callback(spenders, err)
             end)
             .&else(procedure(from: TAddress)
-            begin
-              var step: TProc<Integer>;
-              step := procedure(index: Integer)
-              begin
-                if index >= changes.Count then
-                  callback(spenders, nil)
-                else try
-                  if (changes.Item(index).Change <> TChangeType.Approve) or (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
-                    // ignore incoming transactions, token transfers, and mints.
-                  else
-                    spenders := spenders + [changes.Item(index).&To];
-                finally
-                  step(index + 1);
-                end;
-              end;
-              step(0);
-            end);
+            begin try
+              for var I := 0 to Pred(changes.Count) do
+                if (changes.Item(I).Change <> TChangeType.Approve) or (changes.Item(I).Amount = 0) or not from.SameAs(changes.Item(I).From) then
+                  // ignore incoming transactions, token transfers, and approvals getting revoked.
+                else
+                  spenders := spenders + [changes.Item(I).&To];
+            finally
+              callback(spenders, nil);
+            end end);
       end);
     end);
 end;
@@ -303,9 +295,9 @@ begin
     end);
 end;
 
-{-------------------------------- getEachToken --------------------------------}
+{------------------------------- getEachContract ------------------------------}
 
-procedure getEachToken(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<TArray<TContract>, IError>);
+procedure getEachContract(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<TArray<TContract>, IError>);
 begin
   var contracts: TArray<TContract> := [];
   // step #1: tx.To
@@ -734,7 +726,7 @@ begin
     end)
     .&else(procedure(apiKey: string)
     begin
-      getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+      getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
       begin
         if Assigned(err) then
         begin
@@ -843,7 +835,7 @@ begin
       next(prompted, error.wrap(err, Self.Step10));
       EXIT;
     end;
-    getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+    getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
     begin
       if Assigned(err) then
       begin
@@ -899,7 +891,7 @@ end;
 
 procedure TChecks.Step12(const prompted: TPrompted; const next: TNext);
 begin
-  getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+  getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
   begin
     if Assigned(err) then
     begin
@@ -959,7 +951,7 @@ end;
 
 procedure TChecks.Step13(const prompted: TPrompted; const next: TNext);
 begin
-  getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+  getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
   begin
     if Assigned(err) then
     begin
@@ -1016,7 +1008,7 @@ end;
 
 procedure TChecks.Step14(const prompted: TPrompted; const next: TNext);
 begin
-  getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+  getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
   begin
     if Assigned(err) then
     begin
@@ -1133,7 +1125,7 @@ end;
 
 procedure TChecks.Step16(const prompted: TPrompted; const next: TNext);
 begin
-  getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+  getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
   begin
     if Assigned(err) then
     begin
@@ -1175,7 +1167,7 @@ end;
 
 procedure TChecks.Step17(const prompted: TPrompted; const next: TNext);
 begin
-  getEachToken(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
+  getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
   begin
     if Assigned(err) then
     begin
