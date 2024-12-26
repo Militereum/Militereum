@@ -86,6 +86,7 @@ type
     mnuUnlock: TMenuItem;
     mnuDarkMode: TMenuItem;
     mnuVault: TMenuItem;
+    mnuExploit: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);
@@ -600,7 +601,7 @@ begin
 
               const steps = (function: TSteps
               begin
-                Result := [checks.Step1, checks.Step2, checks.Step3, checks.Step4, checks.Step5, checks.Step6, checks.Step7, checks.Step8, checks.Step9, checks.Step10, checks.Step11, checks.Step12, checks.Step13, checks.Step14, checks.Step15, checks.Step16, checks.Step17, checks.Step18, checks.Step19];
+                Result := [checks.Step1, checks.Step2, checks.Step3, checks.Step4, checks.Step5, checks.Step6, checks.Step7, checks.Step8, checks.Step9, checks.Step10, checks.Step11, checks.Step12, checks.Step13, checks.Step14, checks.Step15, checks.Step16, checks.Step17, checks.Step18, checks.Step19, checks.Step20];
                 if common.Simulate then
                 begin
                   Result := Result + [checks.Fail];

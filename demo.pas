@@ -30,6 +30,7 @@ type
     actDormant: TAction;
     actUnlock: TAction;
     actVault: TAction;
+    actExploit: TAction;
     procedure actApproveExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actSanctionedExecute(Sender: TObject);
@@ -49,6 +50,7 @@ type
     procedure actDormantExecute(Sender: TObject);
     procedure actUnlockExecute(Sender: TObject);
     procedure actVaultExecute(Sender: TObject);
+    procedure actExploitExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -77,6 +79,7 @@ uses
   censorable,
   common,
   dormant,
+  exploit,
   firsttime,
   honeypot,
   limit,
@@ -125,6 +128,11 @@ end;
 procedure TdmDemo.actDormantExecute(Sender: TObject);
 begin
   dormant.show(taTransact, common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', False, procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actExploitExecute(Sender: TObject);
+begin
+  exploit.show(common.Ethereum, nil, '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07', 'Radiant Capital Hack', 'https://revoke.cash/exploits/radiant?chainId=1', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);

@@ -1444,6 +1444,11 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuExploit: TMenuItem
+        Action = dmDemo.actExploit
+        Locked = True
+        ImageIndex = -1
+      end
       object mnuVault: TMenuItem
         Action = dmDemo.actVault
         Locked = True

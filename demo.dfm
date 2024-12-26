@@ -112,5 +112,12 @@ object dmDemo: TdmDemo
       OnExecute = actVaultExecute
       OnUpdate = actUpdate
     end
+    object actExploit: TAction
+      Text = 
+        'You transacting with a smart contract that is on the Revoke.Cash' +
+        ' exploit list'
+      OnExecute = actExploitExecute
+      OnUpdate = actUpdate
+    end
   end
 end

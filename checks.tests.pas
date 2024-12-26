@@ -47,6 +47,8 @@ type
     procedure Step17;
     [Test]
     procedure Step18;
+    [Test]
+    procedure Step19;
   end;
 
 implementation
@@ -78,6 +80,7 @@ uses
   dextools,
   moralis,
   phisher,
+  revoke.cash,
   vaults.fyi;
 
 {$I keys/alchemy.api.key}
@@ -465,8 +468,27 @@ begin
   end);
 end;
 
-// test the vaults.fyi API
+// are we transacting with a contract (or receiving a token) that is on the revoke.cash exploit list?
 procedure TChecks.Step18;
+begin
+  Self.Execute(procedure(ok: TProc; err: TProc<IError>)
+  const
+    RADIANT_CAPITAL: TAddress = '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07';
+  begin
+    revoke.cash.exploit(web3.Ethereum, RADIANT_CAPITAL, procedure(exploit: IExploit; error: IError)
+    begin
+      if Assigned(error) then
+        err(error)
+      else if Assigned(exploit) then
+        ok
+      else
+        err(TError.Create('exploit is nil, expected Radiant Capital Hack'));
+    end);
+  end);
+end;
+
+// test the vaults.fyi API
+procedure TChecks.Step19;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
