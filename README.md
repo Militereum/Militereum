@@ -59,7 +59,7 @@ Besides token allowances, Militereum will block...
 14. you buying [a token with an unlock event coming up within 3 months](assets/unlock.png), inflating the supply and possibly decreasing the price
 15. you receiving [a token without a DEX pair](assets/noDexPair.png) that you won't have the option to sell
 16. you receiving [a low-DEX-score token](assets/lowDexScore.png) that has little or no liquidity
-17. you transacting with [a smart contract that is on the Revoke.Cash exploit list](assets/exploit.png)
+17. you approving [a smart contract that is on the Revoke.Cash exploit list](assets/exploit.png)
 18. you depositing tokens into a yield-bearing vault, but [another vault earns you higher yield](assets/vaults.png) while holding the same TVL (or more)
 19. you depositing money into a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
