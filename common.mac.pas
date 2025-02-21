@@ -43,6 +43,8 @@ uses
 function launchAgents: string;
 begin
   Result := System.IOUtils.TPath.GetLibraryPath;
+  const I = Result.IndexOf('Library');
+  if I > Low(Result) - 1 then Result := Result.Remove(I + 'Library'.Length);
   if (Result <> '') and (Result[Length(Result)] <> '/') then Result := Result + '/';
   Result := Result + 'LaunchAgents';
 end;
