@@ -33,6 +33,7 @@ uses
   log in 'log.pas' {FrmLog},
   lowDexScore in 'lowDexScore.pas' {FrmLowDexScore},
   main in 'main.pas' {FrmMain},
+  mobula in 'mobula.pas',
   moralis in 'moralis.pas',
   noDexPair in 'noDexPair.pas' {FrmNoDexPair},
   pausable in 'pausable.pas' {FrmPausable},
