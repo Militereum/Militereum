@@ -153,6 +153,7 @@ uses
   honeypot,
   limit,
   lowDexScore,
+  mobula,
   moralis,
   noDexPair,
   pausable,
@@ -1187,13 +1188,22 @@ begin
           else
             if not isToken then
               step(index + 1, prompted)
-            else
-              dextools.unlock({$I keys/dextools.api.key}, chain, contracts[index].Address, procedure(dt: TDateTime; err: IError)
+            else ( // call Mobula API or DEXTools API
+              procedure(const token: TAddress; const callback: TProc<TDateTime, IError>)
+              begin
+                mobula.unlock({$I keys/mobula.api.key}, chain, token, System.SysUtils.Now, procedure(next: TDateTime; err: IError)
+                begin
+                  if not Assigned(err) then
+                    callback(next, nil)
+                  else
+                    dextools.unlock({$I keys/dextools.api.key}, chain, token, callback);
+                end);
+              end)(contracts[index].Address, procedure(&then: TDateTime; err: IError)
               begin
                 if Assigned(err) then
                   next(prompted, error.wrap(err, Self.Step17))
                 else
-                  if (dt = 0) or (MonthsBetween(System.SysUtils.Now, dt) > 3) then
+                  if (&then = 0) or (MonthsBetween(System.SysUtils.Now, &then) > 3) then
                     step(index + 1, prompted)
                   else
                     thread.synchronize(procedure

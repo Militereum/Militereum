@@ -78,6 +78,7 @@ uses
   coingecko,
   common,
   dextools,
+  mobula,
   moralis,
   phisher,
   revoke.cash,
@@ -456,14 +457,20 @@ begin
   const
     UNI: TAddress = '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984';
   begin
-    dextools.unlock({$I keys/dextools.api.key}, web3.Ethereum, UNI, procedure(next: TDateTime; error: IError)
+    mobula.unlock({$I keys/mobula.api.key}, web3.Ethereum, UNI, 0, procedure(next: TDateTime; err1: IError)
     begin
-      if Assigned(error) then
-        err(error)
-      else if next > 0 then
+      if (next > 0) and not Assigned(err1) then
         ok
       else
-        err(TError.Create('UNI''s next unlock date is zero, expected some future date'));
+        dextools.unlock({$I keys/dextools.api.key}, web3.Ethereum, UNI, procedure(next: TDateTime; err2: IError)
+        begin
+          if Assigned(err2) then
+            err(err2)
+          else if next > 0 then
+            ok
+          else
+            err(TError.Create('UNI''s next unlock date is zero, expected some future date'));
+        end);
     end);
   end);
 end;
