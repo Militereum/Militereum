@@ -178,7 +178,7 @@ begin
 
   Self.Caption := (function: string
   begin
-    Result := Self.Caption + ' ' + {$I Militereum.version};
+    Result := Self.Caption + ' ' + common.AppVersion;
     if common.Demo then Result := Result + ' - Demo mode';
     if common.Debug then Result := Result + ' - Debug mode';
     if common.Simulate then Result := Result + ' - Simulate-only';

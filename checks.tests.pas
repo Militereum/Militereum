@@ -288,16 +288,16 @@ procedure TChecks.Step11;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    TORNADO_CASH: TAddress = '0x8589427373D6D84E98730D7795D8f6f8731FDA16';
+    DARKNET_MARKETPLACE_HYDRA: TAddress = '0x098B716B8Aaf21512996dC57EB0615e2383E2f96';
   begin
-    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, web3.Ethereum, TORNADO_CASH, procedure(value: Boolean; error: IError)
+    web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, web3.Ethereum, DARKNET_MARKETPLACE_HYDRA, procedure(value: Boolean; error: IError)
     begin
       if Assigned(error) then
         err(error)
       else if value then
         ok
       else
-        err(TError.Create('%s is not sanctioned, expected sanctioned', [TORNADO_CASH]));
+        err(TError.Create('%s is not sanctioned, expected sanctioned', [DARKNET_MARKETPLACE_HYDRA]));
     end);
   end);
 end;
@@ -499,16 +499,16 @@ procedure TChecks.Step19;
 begin
   Self.Execute(procedure(ok: TProc; err: TProc<IError>)
   const
-    EULER_PRIME_USDC: TAddress = '0x797DD80692c3b2dAdabCe8e30C07fDE5307D48a9';
+    STEAKHOUSE_USDC_RWA: TAddress = '0x6D4e530B8431a52FFDA4516BA4Aadc0951897F8C';
   begin
-    vaults.fyi.better(web3.Ethereum, EULER_PRIME_USDC, procedure(other: IVault; error: IError)
+    vaults.fyi.better(web3.Ethereum, STEAKHOUSE_USDC_RWA, procedure(other: IVault; error: IError)
     begin
       if Assigned(error) then
         err(error)
       else if Assigned(other) then
         ok
       else
-        err(TError.Create('vault is nil, expected better than Euler Prime USDC'))
+        err(TError.Create('vault is nil, expected better than Steakhouse USDC RWA'))
     end);
   end);
 end;

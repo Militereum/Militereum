@@ -10,6 +10,7 @@ function systemIsDarkMode: Boolean;
 procedure enableDarkMode;
 procedure disableDarkMode;
 
+function appVersion: string;
 procedure initialize;
 
 procedure beforeShowDialog;
@@ -123,6 +124,15 @@ end;
 procedure disableDarkMode;
 begin
   TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, 'osxstyle', PChar(10)));
+end;
+
+function appVersion: string;
+begin
+  var S: IFMXApplicationService;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXApplicationService, S) then
+    Result := S.AppVersion
+  else
+    Result := string.Empty;
 end;
 
 type

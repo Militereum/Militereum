@@ -14,7 +14,9 @@ function systemIsDarkMode: Boolean;
 procedure enableDarkMode;
 procedure disableDarkMode;
 
+function appVersion: string;
 function activateMainWindow: BOOL;
+
 procedure initialize;
 procedure finalize;
 
@@ -119,6 +121,16 @@ end;
 procedure disableDarkMode;
 begin
   TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, 'win10style', RT_RCDATA));
+end;
+
+function appVersion: string;
+var
+  major, minor, patch: Cardinal;
+begin
+  if GetProductVersion(ParamStr(0), major, minor, patch) then
+    Result := System.SysUtils.Format('%d.%d.%d', [major, minor, patch])
+  else
+    Result := string.Empty;
 end;
 
 const

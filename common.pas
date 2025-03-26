@@ -44,6 +44,7 @@ function Debug: Boolean;
 function Demo: Boolean;
 function Simulate: Boolean;
 
+function AppVersion: string;
 function Base: TChain;
 function Ethereum: TChain;
 function Etherscan(const chain: TChain): IEtherscan;
@@ -220,6 +221,16 @@ end;
 class operator TSemVer.GreaterThanOrEqual(const A, B: TSemVer): Boolean;
 begin
   Result := (A > B) or (A = B);
+end;
+
+function AppVersion: string;
+begin
+{$IFDEF MACOS}
+  Result := common.mac.appVersion;
+{$ENDIF MACOS}
+{$IFDEF MSWINDOWS}
+  Result := common.win.appVersion;
+{$ENDIF MSWINDOWS}
 end;
 
 function Base: TChain;
