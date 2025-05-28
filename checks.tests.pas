@@ -188,7 +188,7 @@ begin
       if Assigned(err1) then
         err(err1)
       else
-        web3.coincap.price(string(client.chain.Symbol), procedure(price2: Double; err2: IError)
+        web3.coincap.price({$I keys/coincap.api.key}, string(client.chain.Symbol), procedure(price2: Double; err2: IError)
         begin
           if Assigned(err2) then
             err(err2)
