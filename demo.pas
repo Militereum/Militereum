@@ -142,7 +142,7 @@ end;
 
 procedure TdmDemo.actHoneypotExecute(Sender: TObject);
 begin
-  honeypot.show(common.Ethereum, nil, '0xc43420dbaF53b1a6C607C6A561aC60aFb16b05fd', '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', procedure(allow: Boolean) begin end, nil);
+  honeypot.show(common.Ethereum, nil, 'takemymoney.com', TCannot.Sell, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actLimitExecute(Sender: TObject);

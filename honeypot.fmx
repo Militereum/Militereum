@@ -1,5 +1,5 @@
 inherited FrmHoneypot: TFrmHoneypot
-  ClientHeight = 271
+  ClientHeight = 246
   DesignerMasterStyle = 0
   object lblHeader: TLabel
     StyledSettings = [Family, Style, FontColor]
@@ -11,68 +11,29 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You cannot sell this token'
+    Text = 'You cannot %s this token'
     TabOrder = 0
   end
-  object lblTokenTitle: TLabel
-    Position.X = 24.000000000000000000
-    Position.Y = 134.000000000000000000
-    Size.Width = 113.000000000000000000
-    Size.Height = 17.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.HorzAlign = Trailing
-    TextSettings.WordWrap = False
-    Text = 'Token:'
-    TabOrder = 1
-  end
-  object lblRecipientTitle: TLabel
-    Position.X = 24.000000000000000000
-    Position.Y = 159.000000000000000000
-    Size.Width = 113.000000000000000000
-    Size.Height = 16.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.HorzAlign = Trailing
-    TextSettings.WordWrap = False
-    Text = 'Recipient:'
-    TabOrder = 3
-  end
-  object lblRecipientText: TLabel
-    Anchors = [akLeft, akTop, akRight]
+  object lblToken: TLabel
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
-    Position.X = 145.000000000000000000
-    Position.Y = 159.000000000000000000
-    Size.Width = 331.000000000000000000
+    Position.X = 24.000000000000000000
+    Position.Y = 134.000000000000000000
+    Size.Width = 452.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.StyleExt = {04040000000000000004000000}
     TextSettings.FontColor = claDodgerblue
+    TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
-    TabOrder = 4
-    OnClick = lblRecipientTextClick
-  end
-  object lblTokenText: TLabel
-    Anchors = [akLeft, akTop, akRight]
-    Cursor = crHandPoint
-    StyledSettings = [Family, Size]
-    HitTest = True
-    Position.X = 145.000000000000000000
-    Position.Y = 134.000000000000000000
-    Size.Width = 331.000000000000000000
-    Size.Height = 17.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.Font.StyleExt = {04040000000000000004000000}
-    TextSettings.FontColor = claDodgerblue
-    TextSettings.WordWrap = False
-    Text = '(unknown)'
-    TabOrder = 2
-    OnClick = lblTokenTextClick
+    TabOrder = 1
+    OnClick = lblTokenClick
   end
   object lblFooter: TLabel
     Position.X = 24.000000000000000000
-    Position.Y = 192.000000000000000000
+    Position.Y = 167.000000000000000000
     Size.Width = 452.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
@@ -82,6 +43,6 @@ inherited FrmHoneypot: TFrmHoneypot
     Text = 
       'This token is probably a honeypot. You will be unable to cash ou' +
       't.'
-    TabOrder = 5
+    TabOrder = 2
   end
 end

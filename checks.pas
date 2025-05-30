@@ -515,7 +515,7 @@ begin
                         else
                           thread.synchronize(procedure
                           begin
-                            honeypot.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                            honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow: Boolean)
                             begin
                               if allow then
                                 next(prompted + [TWarning.Other], nil)
@@ -1108,7 +1108,7 @@ begin
                 else
                   thread.synchronize(procedure
                   begin
-                    honeypot.show(chain, tx, honeypots.Item(index).Contract, from, procedure(allow: Boolean)
+                    honeypot.show(chain, tx, honeypots.Item(index).Contract, TCannot.Sell, procedure(allow: Boolean)
                     begin
                       if allow then
                         step(index + 1, prompted)
