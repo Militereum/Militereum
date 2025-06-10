@@ -61,7 +61,8 @@ Besides token allowances, Militereum will block...
 16. you receiving [a low-DEX-score token](assets/lowDexScore.png) that has little or no liquidity
 17. you approving [a smart contract that is on the Revoke.Cash exploit list](assets/exploit.png)
 18. you depositing tokens into a yield-bearing vault, but [another vault earns you higher yield](assets/vaults.png) while holding the same TVL (or more)
-19. you depositing money into a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
+19. you transacting with an [address that got funded by a bad actor](assets/fundedBy.png)
+20. you depositing money into a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
 
