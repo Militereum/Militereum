@@ -28,6 +28,7 @@ uses
   error in 'error.pas',
   exploit in 'exploit.pas' {FrmExploit},
   firsttime in 'firsttime.pas' {FrmFirstTime},
+  fundedBy in 'fundedBy.pas' {FrmFundedBy},
   honeypot in 'honeypot.pas' {FrmHoneypot},
   limit in 'limit.pas' {FrmLimit},
   log in 'log.pas' {FrmLog},

@@ -31,26 +31,28 @@ type
     actUnlock: TAction;
     actVault: TAction;
     actExploit: TAction;
+    actFundedBy: TAction;
+    procedure actAirdropExecute(Sender: TObject);
     procedure actApproveExecute(Sender: TObject);
-    procedure actLimitExecute(Sender: TObject);
-    procedure actSanctionedExecute(Sender: TObject);
-    procedure actUnverifiedExecute(Sender: TObject);
+    procedure actCensorableExecute(Sender: TObject);
+    procedure actDormantExecute(Sender: TObject);
+    procedure actExploitExecute(Sender: TObject);
     procedure actFirsttimeExecute(Sender: TObject);
+    procedure actFundedByExecute(Sender: TObject);
+    procedure actHoneypotExecute(Sender: TObject);
+    procedure actLimitExecute(Sender: TObject);
+    procedure actLowDexScoreExecute(Sender: TObject);
+    procedure actNoDexPairExecute(Sender: TObject);
+    procedure actPausableExecute(Sender: TObject);
     procedure actPhisherExecute(Sender: TObject);
+    procedure actSanctionedExecute(Sender: TObject);
     procedure actSetApprovalForAllExecute(Sender: TObject);
     procedure actSpamExecute(Sender: TObject);
-    procedure actHoneypotExecute(Sender: TObject);
-    procedure actUnsupportedExecute(Sender: TObject);
-    procedure actNoDexPairExecute(Sender: TObject);
-    procedure actUpdate(Sender: TObject);
-    procedure actLowDexScoreExecute(Sender: TObject);
-    procedure actAirdropExecute(Sender: TObject);
-    procedure actCensorableExecute(Sender: TObject);
-    procedure actPausableExecute(Sender: TObject);
-    procedure actDormantExecute(Sender: TObject);
     procedure actUnlockExecute(Sender: TObject);
+    procedure actUnsupportedExecute(Sender: TObject);
+    procedure actUnverifiedExecute(Sender: TObject);
+    procedure actUpdate(Sender: TObject);
     procedure actVaultExecute(Sender: TObject);
-    procedure actExploitExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -81,6 +83,7 @@ uses
   dormant,
   exploit,
   firsttime,
+  fundedBy,
   honeypot,
   limit,
   lowDexScore,
@@ -95,20 +98,6 @@ uses
   unsupported,
   unverified,
   vault;
-
-procedure TdmDemo.actUpdate(Sender: TObject);
-begin
-  if Sender is TCustomAction then
-  begin
-    (Sender as TCustomAction).Enabled := common.Demo;
-    (Sender as TCustomAction).Visible := common.Demo;
-  end;
-end;
-
-procedure TdmDemo.actVaultExecute(Sender: TObject);
-begin
-  vault.show(common.Ethereum, nil, 'DAI', procedure(allow: Boolean) begin end, nil);
-end;
 
 procedure TdmDemo.actAirdropExecute(Sender: TObject);
 begin
@@ -138,6 +127,11 @@ end;
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);
 begin
   firsttime.show(common.Ethereum, nil, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actFundedByExecute(Sender: TObject);
+begin
+  fundedBy.show(common.Ethereum, nil, '0x8589427373D6D84E98730D7795D8f6f8731FDA16', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actHoneypotExecute(Sender: TObject);
@@ -199,5 +193,55 @@ procedure TdmDemo.actUnverifiedExecute(Sender: TObject);
 begin
   unverified.show(common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', procedure(allow: Boolean) begin end, nil);
 end;
+
+procedure TdmDemo.actUpdate(Sender: TObject);
+begin
+  if Sender is TCustomAction then
+  begin
+    (Sender as TCustomAction).Enabled := common.Demo;
+    (Sender as TCustomAction).Visible := common.Demo;
+  end;
+end;
+
+procedure TdmDemo.actVaultExecute(Sender: TObject);
+begin
+  vault.show(common.Ethereum, nil, 'DAI', procedure(allow: Boolean) begin end, nil);
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end.

@@ -1454,6 +1454,11 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuFundedBy: TMenuItem
+        Action = dmDemo.actFundedBy
+        Locked = True
+        ImageIndex = -1
+      end
     end
   end
   object lblHelp: TLabel

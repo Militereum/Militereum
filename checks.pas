@@ -111,8 +111,10 @@ type
     procedure Step18(const prompted: TPrompted; const next: TNext);
     [TComment('are we depositing into a vault, but is there another vault with higher APY (while having the same TVL or more)?')]
     procedure Step19(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we transacting with an address that was initially funded by a bad actor?')]
     procedure Step20(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step21(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -150,6 +152,7 @@ uses
   error,
   exploit,
   firsttime,
+  fundedBy,
   honeypot,
   limit,
   lowDexScore,
@@ -206,6 +209,19 @@ begin
             end end);
       end);
     end);
+end;
+
+{------------ returns False if an address is good, otherwise True -------------}
+
+procedure isBad(const chain: TChain; const address: TAddress; const callback: TProc<Boolean, IError>);
+begin
+  phisher.isPhisher(address, procedure(bad: Boolean; err: IError)
+  begin
+    if bad or Assigned(err) then
+      callback(bad, err)
+    else
+      web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+  end);
 end;
 
 {------- spender status (EOA, unverified, phisher, sanctioned, or good --------}
@@ -1191,7 +1207,7 @@ begin
             else ( // call Mobula API or DEXTools API
               procedure(const token: TAddress; const callback: TProc<TDateTime, IError>)
               begin
-                mobula.unlock({$I keys/mobula.api.key}, chain, token, System.SysUtils.Now, procedure(next: TDateTime; err: IError)
+                mobula.unlock({$I keys/mobula.api.key}, token, System.SysUtils.Now, procedure(next: TDateTime; err: IError)
                 begin
                   if not Assigned(err) then
                     callback(next, nil)
@@ -1312,24 +1328,52 @@ end;
 
 procedure TChecks.Step20(const prompted: TPrompted; const next: TNext);
 begin
+  common.Etherscan(chain).getFundedBy(tx.&To, procedure(funder: TAddress; err: IError)
+  begin
+    if Assigned(err) then
+      next(prompted, error.wrap(err, Self.Step20))
+    else
+      isBad(chain, funder, procedure(bad: Boolean; err: IError)
+      begin
+        if Assigned(err) then
+          next(prompted, error.wrap(err, Self.Step20))
+        else if not bad then
+          next(prompted, nil)
+        else
+          thread.synchronize(procedure
+          begin
+            fundedBy.show(chain, tx, tx.&To, procedure(allow: Boolean)
+            begin
+              if allow then
+                next(prompted + [TWarning.Other], nil)
+              else
+                block(prompted);
+            end, log);
+          end);
+      end);
+  end);
+end;
+
+procedure TChecks.Step21(const prompted: TPrompted; const next: TNext);
+begin
   server.apiKey(port)
     .ifErr(procedure(err: IError)
     begin
-      next(prompted, error.wrap(err, Self.Step20))
+      next(prompted, error.wrap(err, Self.Step21))
     end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step20))
+          next(prompted, error.wrap(err, Self.Step21))
         end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step20))
+              next(prompted, error.wrap(err, Self.Step21))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
@@ -1376,7 +1420,7 @@ begin
                         getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                         begin
                           if Assigned(err) then
-                            next(prompted, error.wrap(err, Self.Step20))
+                            next(prompted, error.wrap(err, Self.Step21))
                           else
                             thread.synchronize(procedure
                             begin

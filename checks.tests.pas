@@ -49,6 +49,8 @@ type
     procedure Step18;
     [Test]
     procedure Step19;
+    [Test]
+    procedure Step20;
   end;
 
 implementation
@@ -457,7 +459,7 @@ begin
   const
     UNI: TAddress = '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984';
   begin
-    mobula.unlock({$I keys/mobula.api.key}, web3.Ethereum, UNI, 0, procedure(next: TDateTime; err1: IError)
+    mobula.unlock({$I keys/mobula.api.key}, UNI, 0, procedure(next: TDateTime; err1: IError)
     begin
       if (next > 0) and not Assigned(err1) then
         ok
@@ -509,6 +511,26 @@ begin
         ok
       else
         err(TError.Create('vault is nil, expected better than Steakhouse USDC RWA'))
+    end);
+  end);
+end;
+
+// test Etherscan's FundedBy endpoint
+procedure TChecks.Step20;
+begin
+  Self.Execute(procedure(ok: TProc; error: TProc<IError>)
+  const
+    RECEIVER = '0x142e4D4aAb8E722Ee6Bdd37c23dbbc5f47993369';
+    COINBASE = '0xeB2629a2734e272Bcc07BDA959863f316F4bD4Cf';
+  begin
+    common.Etherscan(web3.Ethereum).getFundedBy(RECEIVER, procedure(funder: TAddress; err: IError)
+    begin
+      if Assigned(err) then
+        error(err)
+      else if funder.SameAs(COINBASE) then
+        ok
+      else
+        error(TError.Create('%s is funded by %s, expected %s', [RECEIVER, funder, COINBASE]));
     end);
   end);
 end;

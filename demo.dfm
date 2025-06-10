@@ -119,5 +119,12 @@ object dmDemo: TdmDemo
       OnExecute = actExploitExecute
       OnUpdate = actUpdate
     end
+    object actFundedBy: TAction
+      Text = 
+        'You transacting with an address that was initially funded by a b' +
+        'ad actor'
+      OnExecute = actFundedByExecute
+      OnUpdate = actUpdate
+    end
   end
 end
