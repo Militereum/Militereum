@@ -32,9 +32,11 @@ type
     actVault: TAction;
     actExploit: TAction;
     actFundedBy: TAction;
+    actDelegator: TAction;
     procedure actAirdropExecute(Sender: TObject);
     procedure actApproveExecute(Sender: TObject);
     procedure actCensorableExecute(Sender: TObject);
+    procedure actDelegatorExecute(Sender: TObject);
     procedure actDormantExecute(Sender: TObject);
     procedure actExploitExecute(Sender: TObject);
     procedure actFirsttimeExecute(Sender: TObject);
@@ -80,6 +82,7 @@ uses
   base,
   censorable,
   common,
+  delegator,
   dormant,
   exploit,
   firsttime,
@@ -112,6 +115,11 @@ end;
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
 begin
   censorable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actDelegatorExecute(Sender: TObject);
+begin
+  delegator.show(common.Ethereum, nil, '0x930fcc37d6042c79211ee18a02857cb1fd7f0d0b', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actDormantExecute(Sender: TObject);

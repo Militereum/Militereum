@@ -21,6 +21,7 @@ uses
   checks in 'checks.pas',
   coingecko in 'coingecko.pas',
   common in 'common.pas',
+  delegator in 'delegator.pas' {FrmDelegator},
   demo in 'demo.pas' {dmDemo: TDataModule},
   dextools in 'dextools.pas',
   docker in 'docker.pas' {FrmDocker},

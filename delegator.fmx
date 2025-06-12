@@ -1,0 +1,49 @@
+inherited FrmDelegator: TFrmDelegator
+  ClientHeight = 246
+  DesignerMasterStyle = 0
+  object lblTitle: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 24.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 20.000000000000000000
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'You are about to delegate your wallet to an unknown smart contra' +
+      'ct.'
+    TabOrder = 0
+  end
+  object lblAddress: TLabel
+    Cursor = crHandPoint
+    StyledSettings = [Family, Size]
+    HitTest = True
+    Position.X = 24.000000000000000000
+    Position.Y = 135.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {04040000000000000004000000}
+    TextSettings.FontColor = claDodgerblue
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = '0x0000000000000000000000000000000000000000'
+    TabOrder = 1
+    OnClick = lblAddressClick
+  end
+  object lblFooter: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 167.000000000000000000
+    Size.Width = 452.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'You should only ever delegate your wallet to a known EIP-7702 de' +
+      'legator. If you are unsure what to do, click Block.'
+    TabOrder = 2
+  end
+end

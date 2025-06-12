@@ -13,12 +13,17 @@ uses
   web3.eth.types;
 
 type
+  TTransactionType = (Legacy, eip1559, eip7702);
+
+type
   ITransaction = interface
+    function &Type: TTransactionType;
     function Nonce: BigInteger;
     function From : IResult<TAddress>;
     function &To  : TAddress;
     function Value: TWei;
     function Data : TBytes;
+    function  GetAuth: IResult<TArray<TAddress>>; // get the EIP-7702 authorizations
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
@@ -55,35 +60,46 @@ type
       TIsEOA = (Unknown, Yes, No);
     var
       FRaw      : TBytes;
+      FType     : TTransactionType;
       FNonce    : BigInteger;
       FTo       : TAddress;
       FToIsEOA  : TIsEOA;
       FValue    : TWei;
       FData     : TBytes;
+      FAuth     : TBytes;
       FEstimated: BigInteger;
       FSimulated: IAssetChanges;
   public
-    constructor Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
+    constructor Create(const raw: TBytes; const &type: TTransactionType; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data, auth: TBytes);
+    function &Type: TTransactionType;
     function Nonce: BigInteger;
     function From : IResult<TAddress>;
     function &To  : TAddress;
     function Value: TWei;
     function Data : TBytes;
+    function  GetAuth: IResult<TArray<TAddress>>;
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
-constructor TTransaction.Create(const raw: TBytes; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data: TBytes);
+constructor TTransaction.Create(const raw: TBytes; const &type: TTransactionType; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data, auth: TBytes);
 begin
   Self.FRaw       := raw;
+  Self.FType      := &type;
   Self.FNonce     := nonce;
   Self.FTo        := &to;
   Self.FToIsEOA   := Unknown;
   Self.FValue     := value;
   Self.FData      := data;
+  Self.FAuth      := auth;
   Self.FEstimated := BigInteger.Zero;
   Self.FSimulated := nil;
+end;
+
+function TTransaction.&Type: TTransactionType;
+begin
+  Result := Self.FType;
 end;
 
 function TTransaction.Nonce: BigInteger;
@@ -109,6 +125,43 @@ end;
 function TTransaction.Data: TBytes;
 begin
   Result := FData;
+end;
+
+function TTransaction.GetAuth: IResult<TArray<TAddress>>;
+begin
+  if Length(FAuth) = 0 then
+  begin
+    Result := TResult<TArray<TAddress>>.Err('not an EIP-7702 transaction');
+    EXIT;
+  end;
+  const authorizations = web3.rlp.decode(FAuth);
+  if authorizations.isErr then
+  begin
+    Result := TResult<TArray<TAddress>>.Err(authorizations.Error);
+    EXIT;
+  end;
+  if Length(authorizations.Value) = 0 then
+  begin
+    Result := TResult<TArray<TAddress>>.Err('not an EIP-7702 transaction');
+    EXIT;
+  end;
+  var addresses: TArray<TAddress> := [];
+  for var I := 0 to Pred(Length(authorizations.Value)) do
+  begin
+    const authorization = web3.rlp.decode(authorizations.Value[I].Bytes);
+    if authorization.isErr then
+    begin
+      Result := TResult<TArray<TAddress>>.Err(authorization.Error);
+      EXIT;
+    end;
+    if Length(authorization.Value) <> 6 then
+    begin
+      Result := TResult<TArray<TAddress>>.Err('not an EIP-7702 transaction');
+      EXIT;
+    end;
+    addresses := addresses + [TAddress.Create(web3.utils.toHex(authorization.Value[1].Bytes))];
+  end;
+  Result := TResult<TArray<TAddress>>.Ok(addresses);
 end;
 
 procedure TTransaction.ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
@@ -185,12 +238,41 @@ begin
     EXIT;
   end;
 
+  // EIP-7702 ['4', [signature]]
+  if Length(decoded.Value) = 2 then
+  begin
+    const i0 = decoded.Value[0];
+    const i1 = decoded.Value[1];
+    if (Length(i0.Bytes) = 1) and (i0.Bytes[0] = 4) and (i1.DataType = dtList) then
+    begin
+      const signature = web3.rlp.decode(i1.Bytes);
+      if signature.isErr then
+      begin
+        Result := TResult<ITransaction>.Err(signature.Error);
+        EXIT;
+      end;
+      if Length(signature.Value) > 9 then
+      begin
+        Result := TResult<ITransaction>.Ok(TTransaction.Create(
+          encoded,                                                     // raw
+          eip7702,                                                     // type
+          toBigInt(signature.Value[1].Bytes),                          // nonce
+          TAddress.Create(web3.utils.toHex(signature.Value[5].Bytes)), // recipient
+          toBigInt(signature.Value[6].Bytes),                          // value
+          signature.Value[7].Bytes,                                    // data
+          signature.Value[9].Bytes                                     // auth
+        ));
+        EXIT;
+      end;
+    end;
+  end;
+
   // EIP-1559 ['2', [signature]]
   if Length(decoded.Value) = 2 then
   begin
     const i0 = decoded.Value[0];
     const i1 = decoded.Value[1];
-    if (Length(i0.Bytes) = 1) and (i0.Bytes[0] >= 2) and (i1.DataType = dtList) then
+    if (Length(i0.Bytes) = 1) and (i0.Bytes[0] = 2) and (i1.DataType = dtList) then
     begin
       const signature = web3.rlp.decode(i1.Bytes);
       if signature.isErr then
@@ -202,10 +284,12 @@ begin
       begin
         Result := TResult<ITransaction>.Ok(TTransaction.Create(
           encoded,                                                     // raw
+          eip1559,                                                     // type
           toBigInt(signature.Value[1].Bytes),                          // nonce
           TAddress.Create(web3.utils.toHex(signature.Value[5].Bytes)), // recipient
           toBigInt(signature.Value[6].Bytes),                          // value
-          signature.Value[7].Bytes                                     // data
+          signature.Value[7].Bytes,                                    // data
+          nil                                                          // auth
         ));
         EXIT;
       end;
@@ -225,10 +309,12 @@ begin
     begin
       Result := TResult<ITransaction>.Ok(TTransaction.Create(
         encoded,                                                     // raw
+        Legacy,                                                      // type
         toBigInt(signature.Value[0].Bytes),                          // nonce
         TAddress.Create(web3.utils.toHex(signature.Value[3].Bytes)), // recipient
         toBigInt(signature.Value[4].Bytes),                          // value
-        signature.Value[5].Bytes                                     // data
+        signature.Value[5].Bytes,                                    // data
+        nil                                                          // auth
       ));
       EXIT;
     end;

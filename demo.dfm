@@ -126,5 +126,10 @@ object dmDemo: TdmDemo
       OnExecute = actFundedByExecute
       OnUpdate = actUpdate
     end
+    object actDelegator: TAction
+      Text = 'You delegating your wallet to an unknown ERC-7702 delegator'
+      OnExecute = actDelegatorExecute
+      OnUpdate = actUpdate
+    end
   end
 end

@@ -113,8 +113,10 @@ type
     procedure Step19(const prompted: TPrompted; const next: TNext);
     [TComment('are we transacting with an address that was initially funded by a bad actor?')]
     procedure Step20(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we delegating our EOA to a known EIP-7702 delegator, or to an unknown contract?')]
     procedure Step21(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step22(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -147,6 +149,7 @@ uses
   censorable,
   coingecko,
   common,
+  delegator,
   dextools,
   dormant,
   error,
@@ -1355,25 +1358,79 @@ begin
 end;
 
 procedure TChecks.Step21(const prompted: TPrompted; const next: TNext);
+const // allow for the below EIP-7702 delegators, otherwise prompt and block
+  WHITELIST: array[0..6] of TAddress = (
+    '0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B', // MetaMask
+    '0xD2e28229F6f2c235e57De2EbC727025A1D0530FB', // Trust Wallet
+    '0x80296FF8D1ED46f8e3C7992664D13B833504c2Bb', // OKX
+    '0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00', // Uniswap
+    '0xcda3577ca7ef65f6B7201E9BD80375f5628D15F7', // WhiteBIT
+    '0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d', // Ambire
+    '0x0000000000000000000000000000000000000000'  // Revocation
+  );
+begin
+  if tx.&Type <> eip7702 then
+    next(prompted, nil) // not a type 4 transaction, carry on
+  else
+    tx.GetAuth
+      .ifErr(procedure(err: IError)
+      begin
+        next(prompted, error.wrap(err, Self.Step21))
+      end)
+      .&else(procedure(addresses: TArray<TAddress>)
+      begin
+        var step: TSubStep;
+        step := procedure(const index: Integer; const prompted: TPrompted)
+        begin
+          if index >= Length(addresses) then
+            next(prompted, nil)
+          else
+            if (function(const delegator: TAddress): Boolean // if whitelisted
+            begin
+              for var allowed in WHITELIST do if delegator.SameAs(allowed) then
+              begin
+                Result := True;
+                EXIT;
+              end;
+              Result := False;
+            end)(addresses[index]) then
+              step(index + 1, prompted)
+            else
+              thread.synchronize(procedure
+              begin
+                delegator.show(chain, tx, addresses[index], procedure(allow: Boolean)
+                begin
+                  if allow then
+                    next(prompted + [TWarning.Other], nil)
+                  else
+                    block(prompted);
+                end, log);
+              end);
+        end;
+        step(0, prompted);
+      end);
+end;
+
+procedure TChecks.Step22(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError)
     begin
-      next(prompted, error.wrap(err, Self.Step21))
+      next(prompted, error.wrap(err, Self.Step22))
     end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step21))
+          next(prompted, error.wrap(err, Self.Step22))
         end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step21))
+              next(prompted, error.wrap(err, Self.Step22))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
@@ -1420,7 +1477,7 @@ begin
                         getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                         begin
                           if Assigned(err) then
-                            next(prompted, error.wrap(err, Self.Step21))
+                            next(prompted, error.wrap(err, Self.Step22))
                           else
                             thread.synchronize(procedure
                             begin
