@@ -1314,7 +1314,7 @@ begin
           else
             thread.synchronize(procedure
             begin
-              vault.show(chain, tx, other.Token.Symbol, procedure(allow: Boolean)
+              vault.show(chain, tx, other.Asset.Symbol, procedure(allow: Boolean)
               begin
                 if allow then
                   next(prompted + [TWarning.Other], nil)
