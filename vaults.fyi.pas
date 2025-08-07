@@ -174,7 +174,7 @@ begin
   try
     next := procedure(const page: Integer)
     begin
-      web3.http.get(VAULTS_API_BASE + Format('detailed-vaults?allowedNetworks=%s&allowedAssets=%s&page=%d', [network, symbol, page]), [TNetHeader.Create('accept', 'application/json'), TNetHeader.Create('x-api-key', {$I keys/vaults.fyi.api.key})],
+      web3.http.get(VAULTS_API_BASE + Format('detailed-vaults?allowedNetworks=%s&allowedAssets=%s&page=%d&perPage=100', [network, symbol, page]), [TNetHeader.Create('accept', 'application/json'), TNetHeader.Create('x-api-key', {$I keys/vaults.fyi.api.key})],
         procedure(response: TJsonValue; err: IError)
         begin
           const data = getPropAsArr(response, 'data');
