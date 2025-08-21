@@ -11,7 +11,7 @@ inherited FrmBlacklisted: TFrmBlacklisted
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You are about to transact with a blacklisted address.'
+    Text = 'You are about to transact with a blacklisted address'
     TabOrder = 0
   end
   object lblAddress: TLabel

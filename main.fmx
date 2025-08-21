@@ -1464,6 +1464,11 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuBlacklisted: TMenuItem
+        Action = dmDemo.actBlacklisted
+        Locked = True
+        ImageIndex = -1
+      end
     end
   end
   object lblHelp: TLabel

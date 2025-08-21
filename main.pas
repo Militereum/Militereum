@@ -89,6 +89,7 @@ type
     mnuExploit: TMenuItem;
     mnuFundedBy: TMenuItem;
     mnuDelegator: TMenuItem;
+    mnuBlacklisted: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);

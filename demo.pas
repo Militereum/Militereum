@@ -12,29 +12,31 @@ uses
 type
   TdmDemo = class(TDataModule)
     AL: TActionList;
+    actAirdrop: TAction;
     actApprove: TAction;
-    actLimit: TAction;
-    actSanctioned: TAction;
-    actUnverified: TAction;
+    actBlacklisted: TAction;
+    actCensorable: TAction;
+    actDelegator: TAction;
+    actDormant: TAction;
+    actExploit: TAction;
     actFirsttime: TAction;
+    actFundedBy: TAction;
+    actHoneypot: TAction;
+    actLimit: TAction;
+    actLowDexScore: TAction;
+    actNoDexPair: TAction;
+    actPausable: TAction;
     actPhisher: TAction;
+    actSanctioned: TAction;
     actSetApprovalForAll: TAction;
     actSpam: TAction;
-    actHoneypot: TAction;
-    actUnsupported: TAction;
-    actNoDexPair: TAction;
-    actLowDexScore: TAction;
-    actAirdrop: TAction;
-    actCensorable: TAction;
-    actPausable: TAction;
-    actDormant: TAction;
     actUnlock: TAction;
+    actUnsupported: TAction;
+    actUnverified: TAction;
     actVault: TAction;
-    actExploit: TAction;
-    actFundedBy: TAction;
-    actDelegator: TAction;
     procedure actAirdropExecute(Sender: TObject);
     procedure actApproveExecute(Sender: TObject);
+    procedure actBlacklistedExecute(Sender: TObject);
     procedure actCensorableExecute(Sender: TObject);
     procedure actDelegatorExecute(Sender: TObject);
     procedure actDormantExecute(Sender: TObject);
@@ -80,6 +82,7 @@ uses
   airdrop,
   asset,
   base,
+  blacklisted,
   censorable,
   common,
   delegator,
@@ -110,6 +113,11 @@ end;
 procedure TdmDemo.actApproveExecute(Sender: TObject);
 begin
   asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', isGood, web3.Infinite, procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actBlacklistedExecute(Sender: TObject);
+begin
+  blacklisted.show(common.Ethereum, nil, '0xaa05f7c7eb9af63d6cc03c36c4f4ef6c37431ee0', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
