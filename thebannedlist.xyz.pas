@@ -4,12 +4,12 @@ interface
 
 uses
   // Delphi
-  System.SysUtils, System.Types,
+  System.SysUtils,
   // web3
   web3;
 
-function isBlacklistedByUSDC(const address: TAddress; const callback: TProc<Boolean, IError>): IAsyncResult;
-function isBlacklistedByUSDT(const address: TAddress; const callback: TProc<Boolean, IError>): IAsyncResult;
+procedure isBlacklistedByUSDC(const address: TAddress; const callback: TProc<Boolean, IError>);
+procedure isBlacklistedByUSDT(const address: TAddress; const callback: TProc<Boolean, IError>);
 
 implementation
 
@@ -17,52 +17,59 @@ uses
   // Delphi
   System.JSON,
   // web3
-  web3.graph, web3.json;
+  web3.graph, web3.json,
+  // project
+  endpoints;
 
-const
-  INDEXER = 'https://indexer.dev.hyperindex.xyz/fe6684b/v1/graphql';
-
-function isBlacklisted(const where: string; const address: TAddress; const callback: TProc<Boolean, IError>): IAsyncResult;
+procedure isBlacklisted(const where: string; const address: TAddress; const callback: TProc<Boolean, IError>);
 const
   QUERY = '{"query": "{User(where: {%s: {_eq: true}}){ id }}"}';
 begin
-  Result := web3.graph.execute(INDEXER, Format(QUERY, [where]), procedure(response: TJsonObject; err: IError)
+  getEndpoint(ID_THE_BANNED_LIST, procedure(indexer: string; err: IError)
   begin
     if Assigned(err) then
     begin
       callback(False, err);
       EXIT;
     end;
-    const data = web3.json.getPropAsObj(response, 'data');
-    if not Assigned(data) then
+    web3.graph.execute(indexer, Format(QUERY, [where]), procedure(response: TJsonObject; err: IError)
     begin
-      callback(False, TGraphError.Create('data does not exist'));
-      EXIT;
-    end;
-    const user = web3.json.getPropAsArr(data, 'User');
-    if not Assigned(user) then
-    begin
-      callback(False, TGraphError.Create('User does not exist'));
-      EXIT;
-    end;
-    for var obj in user do
-      if SameText(string(address), web3.json.getPropAsStr(obj, 'id')) then
+      if Assigned(err) then
       begin
-        callback(True, nil);
+        callback(False, err);
         EXIT;
       end;
-    callback(False, nil);
+      const data = web3.json.getPropAsObj(response, 'data');
+      if not Assigned(data) then
+      begin
+        callback(False, TGraphError.Create('data does not exist'));
+        EXIT;
+      end;
+      const user = web3.json.getPropAsArr(data, 'User');
+      if not Assigned(user) then
+      begin
+        callback(False, TGraphError.Create('User does not exist'));
+        EXIT;
+      end;
+      for var obj in user do
+        if SameText(string(address), web3.json.getPropAsStr(obj, 'id')) then
+        begin
+          callback(True, nil);
+          EXIT;
+        end;
+      callback(False, nil);
+    end);
   end);
 end;
 
-function isBlacklistedByUSDC(const address: TAddress; const callback: TProc<Boolean, IError>): IAsyncResult;
+procedure isBlacklistedByUSDC(const address: TAddress; const callback: TProc<Boolean, IError>);
 begin
-  Result := isBlacklisted('isBlacklistedByUSDC', address, callback);
+  isBlacklisted('isBlacklistedByUSDC', address, callback);
 end;
 
-function isBlacklistedByUSDT(const address: TAddress; const callback: TProc<Boolean, IError>): IAsyncResult;
+procedure isBlacklistedByUSDT(const address: TAddress; const callback: TProc<Boolean, IError>);
 begin
-  Result := isBlacklisted('isBlacklistedByUSDT', address, callback);
+  isBlacklisted('isBlacklistedByUSDT', address, callback);
 end;
 
 end.

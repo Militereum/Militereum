@@ -27,6 +27,7 @@ uses
   dextools in 'dextools.pas',
   docker in 'docker.pas' {FrmDocker},
   dormant in 'dormant.pas' {FrmDormant},
+  endpoints in 'endpoints.pas',
   error in 'error.pas',
   exploit in 'exploit.pas' {FrmExploit},
   firsttime in 'firsttime.pas' {FrmFirstTime},
