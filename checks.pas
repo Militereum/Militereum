@@ -113,10 +113,12 @@ type
     procedure Step19(const prompted: TPrompted; const next: TNext);
     [TComment('are we transacting with an address that was initially funded by a bad actor?')]
     procedure Step20(const prompted: TPrompted; const next: TNext);
-    [TComment('are we delegating our EOA to a known EIP-7702 delegator, or to an unknown contract?')]
+    [TComment('are we transacting with an address that got blacklisted by USDC or USDT?')]
     procedure Step21(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we delegating our EOA to a known EIP-7702 delegator, or to an unknown contract?')]
     procedure Step22(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step23(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -145,6 +147,7 @@ uses
   web3.utils,
   // project
   airdrop,
+  blacklisted,
   cache,
   censorable,
   coingecko,
@@ -168,6 +171,7 @@ uses
   sanctioned,
   setApprovalForAll,
   spam,
+  thebannedlist.xyz,
   thread,
   unlock,
   unsupported,
@@ -1358,6 +1362,40 @@ begin
 end;
 
 procedure TChecks.Step21(const prompted: TPrompted; const next: TNext);
+
+  procedure isBlacklisted(const callback: TProc<Boolean, IError>);
+  begin
+    thebannedlist.xyz.isBlacklistedByUSDC(tx.&To, procedure(frozen: Boolean; err: IError)
+    begin
+      if Assigned(err) or frozen then
+        callback(frozen, err)
+      else
+        thebannedlist.xyz.isBlacklistedByUSDT(tx.&To, callback);
+    end);
+  end;
+
+begin
+  isBlacklisted(procedure(frozen: Boolean; err: IError)
+  begin
+    if Assigned(err) then
+      next(prompted, error.wrap(err, Self.Step21))
+    else if not frozen then
+      next(prompted, nil)
+    else
+      thread.synchronize(procedure
+      begin
+        blacklisted.show(chain, tx, tx.&To, procedure(allow: Boolean)
+        begin
+          if allow then
+            next(prompted + [TWarning.Other], nil)
+          else
+            block(prompted);
+        end, log);
+      end);
+  end);
+end;
+
+procedure TChecks.Step22(const prompted: TPrompted; const next: TNext);
 const // allow for the below EIP-7702 delegators, otherwise prompt and block
   WHITELIST: array[0..6] of TAddress = (
     '0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B', // MetaMask
@@ -1375,7 +1413,7 @@ begin
     tx.GetAuth
       .ifErr(procedure(err: IError)
       begin
-        next(prompted, error.wrap(err, Self.Step21))
+        next(prompted, error.wrap(err, Self.Step22))
       end)
       .&else(procedure(addresses: TArray<TAddress>)
       begin
@@ -1411,26 +1449,26 @@ begin
       end);
 end;
 
-procedure TChecks.Step22(const prompted: TPrompted; const next: TNext);
+procedure TChecks.Step23(const prompted: TPrompted; const next: TNext);
 begin
   server.apiKey(port)
     .ifErr(procedure(err: IError)
     begin
-      next(prompted, error.wrap(err, Self.Step22))
+      next(prompted, error.wrap(err, Self.Step23))
     end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step22))
+          next(prompted, error.wrap(err, Self.Step23))
         end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step22))
+              next(prompted, error.wrap(err, Self.Step23))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
@@ -1477,7 +1515,7 @@ begin
                         getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                         begin
                           if Assigned(err) then
-                            next(prompted, error.wrap(err, Self.Step22))
+                            next(prompted, error.wrap(err, Self.Step23))
                           else
                             thread.synchronize(procedure
                             begin

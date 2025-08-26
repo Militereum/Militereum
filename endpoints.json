@@ -1,0 +1,39 @@
+{
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+    },
+    "endpoints": [
+        {
+            "id": 1,
+            "name": "Coingecko",
+            "url": "https://api.coingecko.com/api/v3/"
+        },
+        {
+            "id": 2,
+            "name": "DexTools",
+            "url": "https://public-api.dextools.io/free/"
+        },
+        {
+            "id": 3,
+            "name": "Mobula",
+            "url": "https://api.mobula.io/api/1/"
+        },
+        {
+            "id": 4,
+            "name": "Moralis",
+            "url": "https://deep-index.moralis.io/api/v2.2/"
+        },
+        {
+            "id": 5,
+            "name": "thebannedlist.xyz",
+            "url": "https://indexer.dev.hyperindex.xyz/fe6684b/v1/graphql"
+        },
+        {
+            "id": 6,
+            "name": "vaults.fyi",
+            "url": "https://api.vaults.fyi/v2/"
+        }
+    ]
+}

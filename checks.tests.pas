@@ -51,6 +51,8 @@ type
     procedure Step19;
     [Test]
     procedure Step20;
+    [Test]
+    procedure Step21;
   end;
 
 implementation
@@ -84,6 +86,7 @@ uses
   moralis,
   phisher,
   revoke.cash,
+  thebannedlist.xyz,
   vaults.fyi;
 
 {$I keys/alchemy.api.key}
@@ -531,6 +534,34 @@ begin
         ok
       else
         error(TError.Create('%s is funded by %s, expected %s', [RECEIVER, funder, COINBASE]));
+    end);
+  end);
+end;
+
+// are we transacting with an address that got blacklisted by USDC or USDT?
+procedure TChecks.Step21;
+begin
+  Self.Execute(procedure(ok: TProc; error: TProc<IError>)
+  const
+    FROZEN_BY_USDC = '0xaa05f7c7eb9af63d6cc03c36c4f4ef6c37431ee0';
+  begin (
+    procedure(const address: TAddress; const callback: TProc<Boolean, IError>)
+    begin
+      thebannedlist.xyz.isBlacklistedByUSDC(address, procedure(frozen: Boolean; err: IError)
+      begin
+        if Assigned(err) or frozen then
+          callback(frozen, err)
+        else
+          thebannedlist.xyz.isBlacklistedByUSDT(address, callback);
+      end);
+    end)(TAddress.Create(FROZEN_BY_USDC), procedure(frozen: Boolean; err: IError)
+    begin
+      if Assigned(err) then
+        error(err)
+      else if frozen then
+        ok
+      else
+        error(TError.Create('%s is not blacklisted, expected to be frozen.', [FROZEN_BY_USDC]));
     end);
   end);
 end;

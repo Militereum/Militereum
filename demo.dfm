@@ -131,5 +131,12 @@ object dmDemo: TdmDemo
       OnExecute = actDelegatorExecute
       OnUpdate = actUpdate
     end
+    object actBlacklisted: TAction
+      Text = 
+        'You transacting with an address that got blacklisted by USDC or ' +
+        'USDT'
+      OnExecute = actBlacklistedExecute
+      OnUpdate = actUpdate
+    end
   end
 end
