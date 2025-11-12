@@ -107,7 +107,7 @@ type
     FServer: TEthereumRPCServer;
     FAllowedTransactions: TStrings;
     FBlockedTransactions: TStrings;
-    FShowTestNetworks: Boolean;
+    FShowTestNetworks: TArray<TChain>;
     FApproved: TArray<TApproval>;
     procedure Dismiss;
     procedure Log(const err: IError); overload;
@@ -115,7 +115,8 @@ type
     procedure Notify; overload;
     function  Notify(const body: string): Boolean; overload;
     procedure ShowLogWindow;
-    procedure SetShowTestNetworks(Value: Boolean);
+    class function DefaultTestNetworks: TArray<TChain>;
+    procedure SetShowTestNetworks(const aValue: TArray<TChain>);
   strict protected
     procedure BeforeTransaction(const chain: TChain; const tx: ITransaction);
     procedure AfterTransaction(const chain: TChain; const tx: ITransaction; const allowed: Boolean; const checked: TCustomChecks; const prompted: TPrompted);
@@ -130,7 +131,7 @@ type
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
     function GetChain: PChain;
-    property ShowTestNetworks: Boolean read FShowTestNetworks write SetShowTestNetworks;
+    property ShowTestNetworks: TArray<TChain> read FShowTestNetworks write SetShowTestNetworks;
   end;
 
 var
@@ -143,7 +144,9 @@ implementation
 uses
   // Delphi
   System.Generics.Collections,
+  System.Generics.Defaults,
   System.JSON,
+  System.Math,
   System.Types,
   System.UITypes,
   // FireMonkey
@@ -162,6 +165,11 @@ uses
 
 { TFrmMain }
 
+class function TFrmMain.DefaultTestNetworks: TArray<TChain>;
+begin
+  Result := [Sepolia];
+end;
+
 constructor TFrmMain.Create(aOwner: TComponent);
 
   procedure terminate;
@@ -175,9 +183,9 @@ constructor TFrmMain.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
 
-  FApproved         := [];
-  FFirstTime        := True;
-  FShowTestNetworks := True;
+  FApproved        := [];
+  FFirstTime       := True;
+  ShowTestNetworks := DefaultTestNetworks;
 
   Self.Caption := (function: string
   begin
@@ -323,18 +331,36 @@ begin
   FFrmLog.Show;
 end;
 
-procedure TFrmMain.SetShowTestNetworks(Value: Boolean);
-begin
-  if Value <> FShowTestNetworks then
+procedure TFrmMain.SetShowTestNetworks(const aValue: TArray<TChain>);
+
+  function Comparer: IComparer<TChain>;
   begin
-    with Grid do if Value then ColumnCollection[1].Value := ColumnCollection[0].Value else ColumnCollection[1].Value := 0;
-    with Grid do if Value then ColumnCollection[2].Value := ColumnCollection[0].Value else ColumnCollection[2].Value := 0;
+    Result := TDelegatedComparer<TChain>.Create(function(const Left, Right: TChain): Integer
+    begin
+      Result := CompareValue(Left.Id, Right.Id);
+    end);
+  end;
+
+begin
+  if aValue <> FShowTestNetworks then
+  begin
+    if TArray.Contains<TChain>(aValue, Holesky, Comparer) then
+      Grid.ColumnCollection[1].Value := Grid.ColumnCollection[0].Value
+    else
+      Grid.ColumnCollection[1].Value := 0;
+
+    if TArray.Contains<TChain>(aValue, Sepolia, Comparer) then
+      Grid.ColumnCollection[2].Value := Grid.ColumnCollection[0].Value
+    else
+      Grid.ColumnCollection[2].Value := 0;
+
     Self.ClientWidth := Round((function: Single
     begin
       Result := 2 * Grid.Position.X;
       for var I := 0 to Pred(Grid.ColumnCollection.Count) do Result := Result + Grid.ColumnCollection[I].Value;
     end)());
-    FShowTestNetworks := Value;
+
+    FShowTestNetworks := aValue;
   end;
 end;
 
@@ -675,7 +701,7 @@ end;
 
 procedure TFrmMain.btnSettingsClick(Sender: TObject);
 begin
-  mnuShowTestNetworks.IsChecked := Self.ShowTestNetworks;
+  mnuShowTestNetworks.IsChecked := Length(Self.ShowTestNetworks) > 0;
   mnuAutoRun.IsChecked := common.AutoRunEnabled;
   mnuDemo.Visible := common.Demo;
   const P = btnSettings.LocalToScreen(PointF(0, btnSettings.Height));
@@ -685,7 +711,10 @@ end;
 procedure TFrmMain.mnuShowTestNetworksClick(Sender: TObject);
 begin
   mnuShowTestNetworks.IsChecked := not mnuShowTestNetworks.IsChecked;
-  Self.ShowTestNetworks := mnuShowTestNetworks.IsChecked;
+  if mnuShowTestNetworks.IsChecked then
+    Self.ShowTestNetworks := Self.DefaultTestNetworks
+  else
+    Self.ShowTestNetworks := [];
 end;
 
 procedure TFrmMain.mnuAutoRunClick(Sender: TObject);
