@@ -117,8 +117,10 @@ type
     procedure Step21(const prompted: TPrompted; const next: TNext);
     [TComment('are we delegating our EOA to a known EIP-7702 delegator, or to an unknown contract?')]
     procedure Step22(const prompted: TPrompted; const next: TNext);
-    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    [TComment('are we depositing into a metamorphic smart contract?')]
     procedure Step23(const prompted: TPrompted; const next: TNext);
+    [TComment('simulate transaction, prompt for each and every token (a) getting approved, or (b) leaving your wallet')]
+    procedure Step24(const prompted: TPrompted; const next: TNext);
     [TComment('include this step if you want the transaction to fail')]
     procedure Fail(const prompted: TPrompted; const next: TNext);
   end;
@@ -162,6 +164,7 @@ uses
   honeypot,
   limit,
   lowDexScore,
+  metamorphic,
   mobula,
   moralis,
   noDexPair,
@@ -294,7 +297,7 @@ type
     Chain  : TChain;
   public
     constructor Create(const aAction: TTokenAction; const aAddress: TAddress; const aChain: TChain);
-    procedure IsToken(const callback: TProc<Boolean, IError>);
+    procedure IsERC20(const callback: TProc<Boolean, IError>);
   end;
 
 constructor TContract.Create(const aAction: TTokenAction; const aAddress: TAddress; const aChain: TChain);
@@ -304,7 +307,7 @@ begin
   Self.Chain   := aChain;
 end;
 
-procedure TContract.IsToken(const callback: TProc<Boolean, IError>);
+procedure TContract.IsERC20(const callback: TProc<Boolean, IError>);
 begin
   const address = Self.Address;
   if Self.Action = taReceive then
@@ -317,6 +320,17 @@ begin
       else
         callback(abi.IsERC20, nil);
     end);
+end;
+
+procedure IsERC4626(const chain: TChain; const address: TAddress; const callback: TProc<Boolean, IError>);
+begin
+  cache.getContractABI(chain, address, procedure(abi: IContractABI; err: IError)
+  begin
+    if Assigned(err) then
+      callback(False, err)
+    else
+      callback(abi.IsERC4626, nil);
+  end);
 end;
 
 {------------------------------- getEachContract ------------------------------}
@@ -988,12 +1002,12 @@ begin
       if index >= Length(contracts) then
         next(prompted, nil)
       else
-        contracts[index].IsToken(procedure(isToken: Boolean; err: IError)
+        contracts[index].IsERC20(procedure(isERC20: Boolean; err: IError)
         begin
           if Assigned(err) then
             next(prompted, error.wrap(err, Self.Step13))
           else
-            if not isToken then
+            if not isERC20 then
               step(index + 1, prompted)
             else ( // call DEXTools API or Moralis API
               procedure(const token: TAddress; const callback: TProc<TJsonArray, IError>)
@@ -1170,7 +1184,7 @@ begin
             if Assigned(latest) and (DaysBetween(System.SysUtils.Now, UnixToDateTime(latest.timeStamp, False)) < 30) then
               step(index + 1, prompted)
             else
-              contracts[index].IsToken(procedure(isERC20: Boolean; err: IError)
+              contracts[index].IsERC20(procedure(isERC20: Boolean; err: IError)
               begin
                 thread.synchronize(procedure
                 begin
@@ -1204,12 +1218,12 @@ begin
       if index >= Length(contracts) then
         next(prompted, nil)
       else
-        contracts[index].IsToken(procedure(isToken: Boolean; err: IError)
+        contracts[index].IsERC20(procedure(isERC20: Boolean; err: IError)
         begin
           if Assigned(err) then
             next(prompted, error.wrap(err, Self.Step17))
           else
-            if not isToken then
+            if not isERC20 then
               step(index + 1, prompted)
             else ( // call Mobula API or DEXTools API
               procedure(const token: TAddress; const callback: TProc<TDateTime, IError>)
@@ -1451,24 +1465,62 @@ end;
 
 procedure TChecks.Step23(const prompted: TPrompted; const next: TNext);
 begin
+  tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
+  begin
+    if Assigned(err) then
+      next(prompted, error.wrap(err, Self.Step23))
+    else if isEOA then
+      next(prompted, nil)
+    else
+      IsERC4626(chain, tx.&To, procedure(isERC4626: Boolean; err: IError)
+      begin
+        if Assigned(err) then
+          next(prompted, error.wrap(err, Self.Step23))
+        else if not isERC4626 then
+          next(prompted, nil)
+        else
+          common.Etherscan(chain).contractIsProxy(tx.&To, procedure(proxy: Boolean; err: IError)
+          begin
+            if Assigned(err) then
+              next(prompted, error.wrap(err, Self.Step23))
+            else if not proxy then
+              next(prompted, nil)
+            else
+              thread.synchronize(procedure
+              begin
+                metamorphic.show(chain, tx, tx.&To, procedure(allow: Boolean)
+                begin
+                  if allow then
+                    next(prompted + [TWarning.Other], nil)
+                  else
+                    block(prompted);
+                end, log);
+              end);
+          end);
+      end);
+  end);
+end;
+
+procedure TChecks.Step24(const prompted: TPrompted; const next: TNext);
+begin
   server.apiKey(port)
     .ifErr(procedure(err: IError)
     begin
-      next(prompted, error.wrap(err, Self.Step23))
+      next(prompted, error.wrap(err, Self.Step24))
     end)
     .&else(procedure(apiKey: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
         begin
-          next(prompted, error.wrap(err, Self.Step23))
+          next(prompted, error.wrap(err, Self.Step24))
         end)
         .&else(procedure(from: TAddress)
         begin
           tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step23))
+              next(prompted, error.wrap(err, Self.Step24))
             else if not Assigned(changes) then
               next(prompted, nil)
             else begin
@@ -1515,7 +1567,7 @@ begin
                         getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                         begin
                           if Assigned(err) then
-                            next(prompted, error.wrap(err, Self.Step23))
+                            next(prompted, error.wrap(err, Self.Step24))
                           else
                             thread.synchronize(procedure
                             begin

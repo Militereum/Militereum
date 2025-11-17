@@ -138,5 +138,10 @@ object dmDemo: TdmDemo
       OnExecute = actBlacklistedExecute
       OnUpdate = actUpdate
     end
+    object actMetamorphic: TAction
+      Text = 'You depositing your money into a metamorphic smart contract'
+      OnExecute = actMetamorphicExecute
+      OnUpdate = actUpdate
+    end
   end
 end

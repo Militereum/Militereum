@@ -37,6 +37,7 @@ uses
   log in 'log.pas' {FrmLog},
   lowDexScore in 'lowDexScore.pas' {FrmLowDexScore},
   main in 'main.pas' {FrmMain},
+  metamorphic in 'metamorphic.pas' {FrmMetamorphic},
   mobula in 'mobula.pas',
   moralis in 'moralis.pas',
   noDexPair in 'noDexPair.pas' {FrmNoDexPair},

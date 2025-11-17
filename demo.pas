@@ -24,6 +24,7 @@ type
     actHoneypot: TAction;
     actLimit: TAction;
     actLowDexScore: TAction;
+    actMetamorphic: TAction;
     actNoDexPair: TAction;
     actPausable: TAction;
     actPhisher: TAction;
@@ -46,6 +47,7 @@ type
     procedure actHoneypotExecute(Sender: TObject);
     procedure actLimitExecute(Sender: TObject);
     procedure actLowDexScoreExecute(Sender: TObject);
+    procedure actMetamorphicExecute(Sender: TObject);	
     procedure actNoDexPairExecute(Sender: TObject);
     procedure actPausableExecute(Sender: TObject);
     procedure actPhisherExecute(Sender: TObject);
@@ -93,6 +95,7 @@ uses
   honeypot,
   limit,
   lowDexScore,
+  metamorphic,
   noDexPair,
   pausable,
   phisher,
@@ -163,6 +166,11 @@ end;
 procedure TdmDemo.actLowDexScoreExecute(Sender: TObject);
 begin
   lowDexScore.show(taReceive, common.Ethereum, nil, '0x4DB5C8875ef00ce8040A9685581fF75C3c61aDC8', procedure(allow: Boolean) begin end, nil);
+end;
+
+procedure TdmDemo.actMetamorphicExecute(Sender: TObject);
+begin
+  metamorphic.show(common.Ethereum, nil, '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2', procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actNoDexPairExecute(Sender: TObject);
