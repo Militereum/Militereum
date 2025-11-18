@@ -155,7 +155,7 @@ end;
 
 procedure TdmDemo.actHoneypotExecute(Sender: TObject);
 begin
-  honeypot.show(common.Ethereum, nil, 'takemymoney.com', TCannot.Sell, procedure(allow: Boolean) begin end, nil);
+  honeypot.show(common.Ethereum, nil, '0x11d1A3cB34E7be24181A37DaE83bfFAE21Af524A', TCannot.Sell, procedure(allow: Boolean) begin end, nil);
 end;
 
 procedure TdmDemo.actLimitExecute(Sender: TObject);
@@ -229,43 +229,7 @@ end;
 
 procedure TdmDemo.actVaultExecute(Sender: TObject);
 begin
-  vault.show(common.Ethereum, nil, 'DAI', procedure(allow: Boolean) begin end, nil);
+  vault.show(common.Ethereum, nil, 'USDC', procedure(allow: Boolean) begin end, nil);
 end;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 end.

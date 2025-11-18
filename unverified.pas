@@ -55,13 +55,14 @@ end;
 procedure TFrmUnverified.SetContract(value: TAddress);
 begin
   lblContractText.Text := string(value);
-  cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
     begin
-      lblContractText.Text := friendly;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblContractText.Text := friendly;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmUnverified.lblContractTextClick(Sender: TObject);

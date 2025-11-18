@@ -65,13 +65,14 @@ end;
 procedure TFrmPausable.SetContract(value: TAddress);
 begin
   lblToken.Text := string(value);
-  cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
     begin
-      lblToken.Text := friendly;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblToken.Text := friendly;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmPausable.SetIsERC20(value: Boolean);

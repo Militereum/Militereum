@@ -63,13 +63,14 @@ end;
 procedure TFrmAirdrop.SetToken(value: TAddress);
 begin
   lblTokenText.Text := string(value);
-  cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if not common.Demo then
+    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
     begin
-      lblTokenText.Text := friendly;
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+      begin
+        lblTokenText.Text := friendly;
+      end);
     end);
-  end);
 end;
 
 procedure TFrmAirdrop.lblTokenTextClick(Sender: TObject);

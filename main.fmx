@@ -1469,6 +1469,11 @@ object FrmMain: TFrmMain
         Locked = True
         ImageIndex = -1
       end
+      object mnuMetamorphic: TMenuItem
+        Action = dmDemo.actMetamorphic
+        Locked = True
+        ImageIndex = -1
+      end
     end
   end
   object lblHelp: TLabel
