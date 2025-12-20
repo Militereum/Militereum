@@ -23,8 +23,8 @@ inherited FrmVault: TFrmVault
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 
-      'Our system has detected another vault that earns you higher yiel' +
-      'd.'
+      'vaults.fyi has detected another vault with the same TVL that off' +
+      'ers a higher yield.'
     TabOrder = 1
   end
   object Label2: TLabel
@@ -36,8 +36,8 @@ inherited FrmVault: TFrmVault
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 
-      'Click Allow to continue, or click Block and find out about the o' +
-      'ther vault.'
+      'Click Allow to continue your transaction, or click Block to lear' +
+      'n about the other vault.'
     TabOrder = 2
   end
 end
