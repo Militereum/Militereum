@@ -31,7 +31,7 @@ inherited FrmFirstTime: TFrmFirstTime
     TabOrder = 1
     OnClick = lblAddressTextClick
   end
-  object Label1: TLabel
+  object lblMessage: TLabel
     Position.X = 24.000000000000000000
     Position.Y = 167.000000000000000000
     Size.Width = 452.000000000000000000
@@ -40,8 +40,8 @@ inherited FrmFirstTime: TFrmFirstTime
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
     Text = 
-      'Your transaction might be perfectly legit, or you are being phis' +
-      'hed. Double check what you are doing.'
+      'Your transaction may be legitimate, or you could be the victim o' +
+      'f an address-poisoning attack. Double-check before proceeding.'
     TabOrder = 2
   end
 end

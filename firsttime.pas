@@ -22,7 +22,7 @@ type
   TFrmFirstTime = class(TFrmBase)
     lblTitle: TLabel;
     lblAddressText: TLabel;
-    Label1: TLabel;
+    lblMessage: TLabel;
     procedure lblAddressTextClick(Sender: TObject);
   strict private
     procedure SetAddress(value: TAddress);
