@@ -322,17 +322,6 @@ begin
     end);
 end;
 
-procedure IsERC4626(const chain: TChain; const address: TAddress; const callback: TProc<Boolean, IError>);
-begin
-  cache.getContractABI(chain, address, procedure(abi: IContractABI; err: IError)
-  begin
-    if Assigned(err) then
-      callback(False, err)
-    else
-      callback(abi.IsERC4626, nil);
-  end);
-end;
-
 {------------------------------- getEachContract ------------------------------}
 
 procedure getEachContract(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<TArray<TContract>, IError>);
@@ -1300,51 +1289,36 @@ end;
 
 procedure TChecks.Step19(const prompted: TPrompted; const next: TNext);
 begin
-  getTransactionFourBytes(tx.Data)
-    .ifErr(procedure(_: IError)
-    begin
+  tx.ToIsVault(chain, procedure(isVault: Boolean; err: IError)
+  begin
+    if Assigned(err) then
+      next(prompted, error.wrap(err, Self.Step19))
+    else if not isVault then
       next(prompted, nil)
-    end)
-    .&else(procedure(func: TFourBytes)
-    begin
-      // returns the first 4 (hex-encoded) bytes of a function signature after hashing
-      const getSelector = function(const signature: string): string
+    else
+      // if another vault provides for a higher APY while holding the same TVL (or more), display a warning
+      vaults.fyi.better(chain, tx.&To, procedure(other: IVault; err: IError)
       begin
-        Result := web3.utils.toHex(Copy(web3.utils.sha3(web3.utils.toHex(signature)), 0, 4));
-      end;
-      // returns True if any of the function signatures match the function selector, otherwise False
-      const isSelector = function(const selector: TFourBytes; const signatures: TArray<string>): Boolean
-      begin
-        Result := False; for var sig in signatures do if SameText(fourBytestoHex(selector), getSelector(sig)) then EXIT(True);
-      end;
-      if not isSelector(func, [
-      'deposit(address)', 'deposit(address,address)', 'deposit(address,uint256)', 'deposit(address,address,uint256)', 'deposit(address,uint256,address)',
-      'deposit(uint256)', 'deposit(uint256,uint256)', 'deposit(uint256,address)', 'deposit(uint256,uint256,address)', 'deposit(uint256,address,uint256)']) then
-        next(prompted, nil)
-      else
-        // if another vault provides for a higher APY while holding the same TVL (or more), display a warning
-        vaults.fyi.better(chain, tx.&To, procedure(other: IVault; err: IError)
-        begin
-          if Assigned(err) then
-            next(prompted, error.wrap(err, Self.Step19))
-          else if not Assigned(other) then
-            next(prompted, nil)
-          else
-            thread.synchronize(procedure
+        if Assigned(err) then
+          next(prompted, error.wrap(err, Self.Step19))
+        else if not Assigned(other) then
+          next(prompted, nil)
+        else
+          thread.synchronize(procedure
+          begin
+            vault.show(chain, tx, other.Asset.Symbol, procedure(allow: Boolean)
             begin
-              vault.show(chain, tx, other.Asset.Symbol, procedure(allow: Boolean)
-              begin
-                if allow then
-                  next(prompted + [TWarning.Other], nil)
-                else try
-                  common.Open(other.URL);
-                finally
-                  block(prompted);
-                end;
-              end, log);
-            end);
-        end);
-    end);
+              if allow then
+                next(prompted + [TWarning.Other], nil)
+              else try
+                common.Open(other.URL);
+              finally
+                block(prompted);
+              end;
+            end, log);
+          end);
+      end);
+  end);
 end;
 
 procedure TChecks.Step20(const prompted: TPrompted; const next: TNext);
@@ -1465,37 +1439,29 @@ end;
 
 procedure TChecks.Step23(const prompted: TPrompted; const next: TNext);
 begin
-  tx.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
+  tx.ToIsVault(chain, procedure(isVault: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step23))
-    else if isEOA then
+    else if not isVault then
       next(prompted, nil)
     else
-      IsERC4626(chain, tx.&To, procedure(isERC4626: Boolean; err: IError)
+      common.Etherscan(chain).contractIsProxy(tx.&To, procedure(proxy: Boolean; err: IError)
       begin
         if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step23))
-        else if not isERC4626 then
+        else if not proxy then
           next(prompted, nil)
         else
-          common.Etherscan(chain).contractIsProxy(tx.&To, procedure(proxy: Boolean; err: IError)
+          thread.synchronize(procedure
           begin
-            if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step23))
-            else if not proxy then
-              next(prompted, nil)
-            else
-              thread.synchronize(procedure
-              begin
-                metamorphic.show(chain, tx, tx.&To, procedure(allow: Boolean)
-                begin
-                  if allow then
-                    next(prompted + [TWarning.Other], nil)
-                  else
-                    block(prompted);
-                end, log);
-              end);
+            metamorphic.show(chain, tx, tx.&To, procedure(allow: Boolean)
+            begin
+              if allow then
+                next(prompted + [TWarning.Other], nil)
+              else
+                block(prompted);
+            end, log);
           end);
       end);
   end);
