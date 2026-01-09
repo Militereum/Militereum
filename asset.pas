@@ -81,6 +81,7 @@ uses
   // Delphi
   System.Math,
   System.Net.HttpClient,
+  System.UITypes,
   // web3
   web3.defillama,
   web3.http,
@@ -105,6 +106,7 @@ begin
   frmAsset.Spender := spender;
   frmAsset.Status  := status;
   frmAsset.Amount(token.Symbol, quantity, token.Decimals);
+  frmAsset.Blocked := (status <> isGood) or (quantity = web3.Infinite);
   frmAsset.Show;
 end;
 
@@ -129,8 +131,9 @@ procedure approve(
   const callback: TProc<Boolean>; const log: TLog);
 begin
   const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
-  frmAsset.Change := change;
-  frmAsset.Status := status;
+  frmAsset.Change  := change;
+  frmAsset.Status  := status;
+  frmAsset.Blocked := (status <> isGood) or (change.Amount = web3.Infinite);
   frmAsset.Show;
 end;
 
@@ -212,24 +215,26 @@ const
   );
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [SpenderTitle[value]]);
-  Self.Blocked  := value <> TSpenderStatus.isGood;
 end;
 
 procedure TFrmAsset.Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
 begin
   if quantity = web3.Infinite then
-    lblAmountText.Text := 'Unlimited'
-  else
-    web3.defillama.price(Self.Chain, FToken, procedure(price: Double; err: IError)
+  begin
+    lblAmountText.Text      := 'all of them, now and in the future';
+    lblAmountText.FontColor := TColors.Crimson;
+    EXIT;
+  end;
+  web3.defillama.price(Self.Chain, FToken, procedure(price: Double; err: IError)
+  begin
+    thread.synchronize(procedure
     begin
-      thread.synchronize(procedure
-      begin
-        if Assigned(err) or (price = 0) then
-          lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.Format(quantity.AsDouble / Round(Power(10, decimals)))])
-        else
-          lblAmountText.Text := System.SysUtils.Format('$ %.2f', [(quantity.AsDouble / Round(Power(10, decimals))) * price]);
-      end);
+      if Assigned(err) or (price = 0) then
+        lblAmountText.Text := System.SysUtils.Format('%s %s', [symbol, common.Format(quantity.AsDouble / Round(Power(10, decimals)))])
+      else
+        lblAmountText.Text := System.SysUtils.Format('$ %.2f', [(quantity.AsDouble / Round(Power(10, decimals))) * price]);
     end);
+  end);
 end;
 
 procedure TFrmAsset.lblTokenTextClick(Sender: TObject);

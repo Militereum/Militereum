@@ -185,7 +185,10 @@ end;
 
 procedure TFrmBase.SetBlocked(value: Boolean);
 begin
-  btnAllow.Enabled   := not Value;
+  if value then
+    btnAllow.FontColor := TColors.Crimson
+  else
+    btnAllow.FontColor := btnBlock.FontColor;
   imgError.Visible   := value;
   imgWarning.Visible := not value;
 end;
