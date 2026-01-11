@@ -131,7 +131,7 @@ type
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
-    function GetChain: PChain;
+    function GetChain: IResult<TChain>;
     property ShowTestNetworks: TArray<TChain> read FShowTestNetworks write SetShowTestNetworks;
   end;
 
@@ -306,24 +306,24 @@ begin
   end);
 end;
 
-function TfrmMain.GetChain: PChain;
+function TfrmMain.GetChain: IResult<TChain>;
 begin
   if btnEthereum.IsPressed then
-    Result := @web3.Ethereum
+    Result := TResult<TChain>.Ok(web3.Ethereum)
   else if btnHolesky.IsPressed then
-    Result := @web3.Holesky
+    Result := TResult<TChain>.Err('Holesky testnet has been retired. Please switch to another testnet.')
   else if btnSepolia.IsPressed then
-    Result := @web3.Sepolia
+    Result := TResult<TChain>.Ok(web3.Sepolia)
   else if btnPolygon.IsPressed then
-    Result := @web3.Polygon
+    Result := TResult<TChain>.Ok(web3.Polygon)
   else if btnArbitrum.IsPressed then
-    Result := @web3.Arbitrum
+    Result := TResult<TChain>.Ok(web3.Arbitrum)
   else if btnOptimism.IsPressed then
-    Result := @web3.Optimism
+    Result := TResult<TChain>.Ok(web3.Optimism)
   else if btnBase.IsPressed then
-    Result := @web3.Base
+    Result := TResult<TChain>.Ok(web3.Base)
   else
-    Result := nil;
+    Result := TResult<TChain>.Err('No chain has been selected');
 end;
 
 procedure TFrmMain.ShowLogWindow;
@@ -345,9 +345,9 @@ procedure TFrmMain.SetShowTestNetworks(const aValue: TArray<TChain>);
 begin
   if aValue <> FShowTestNetworks then
   begin
-    if TArray.Contains<TChain>(aValue, Holesky, Comparer) then
-      Grid.ColumnCollection[1].Value := Grid.ColumnCollection[0].Value
-    else
+//    if TArray.Contains<TChain>(aValue, Holesky, Comparer) then
+//      Grid.ColumnCollection[1].Value := Grid.ColumnCollection[0].Value
+//    else
       Grid.ColumnCollection[1].Value := 0;
 
     if TArray.Contains<TChain>(aValue, Sepolia, Comparer) then
@@ -390,14 +390,15 @@ begin
   TSpeedButton(Sender).StaysPressed := not TSpeedButton(Sender).StaysPressed;
   updateImage(TSpeedButton(Sender));
 
-  lblHelp.Visible := False;
   const chain = Self.GetChain;
-  edtCopy.Visible := Assigned(chain);
-  btnCopy.Text := 'Copy';
-  btnCopy.Visible := Assigned(chain);
-  btnDismiss.Visible := not Assigned(chain);
 
-  if Assigned(chain) then edtCopy.Text := FServer.URI(FServer.port(chain^).Value);
+  lblHelp.Visible    := False;
+  edtCopy.Visible    := chain.isOk;
+  btnCopy.Text       := 'Copy';
+  btnCopy.Visible    := chain.isOk;
+  btnDismiss.Visible := not chain.isOk;
+
+  if chain.isOk then edtCopy.Text := FServer.URI(FServer.port(chain.Value).Value);
 end;
 
 procedure TFrmMain.DoShow;
@@ -579,9 +580,9 @@ begin
           .&else(procedure(tx: transaction.ITransaction)
           begin
             const chain = FServer.chain(aContext.Binding.Port);
-            if Assigned(chain) then
+            if chain.isOk then
             begin
-              Self.BeforeTransaction(chain^, tx);
+              Self.BeforeTransaction(chain.Value, tx);
 
               var next: TNext;
               next := procedure(const steps: TSteps; const index: Integer; const input: TPrompted; const done: TDone)
@@ -617,13 +618,13 @@ begin
                 try
                   callback(allow);
                 finally
-                  Self.AfterTransaction(chain^, tx, allow, checks, prompted);
+                  Self.AfterTransaction(chain.Value, tx, allow, checks, prompted);
                   if Assigned(checks) then checks.Free;
                 end;
                 if (prompted <> []) and ((Self.AllowedTransactions.Count > 1) or (Self.BlockedTransactions.Count > 1)) then {show nag screen};
               end;
 
-              checks := TChecks.Create(FServer, aContext.Binding.Port, chain^, tx,
+              checks := TChecks.Create(FServer, aContext.Binding.Port, chain.Value, tx,
                 procedure(const prompted: TPrompted) // block
                 begin
                   done(False, prompted);
@@ -635,21 +636,18 @@ begin
                 if common.Simulate then
                 begin
                   Result := Result + [checks.Fail];
-                  FServer.apiKey(aContext.Binding.Port).ifOk(procedure(apiKey: string)
+                  tx.Simulate(chain.Value, procedure(changes: IAssetChanges; _: IError)
                   begin
-                    tx.Simulate(apiKey, chain^, procedure(changes: IAssetChanges; _: IError)
+                    if Assigned(changes) then
                     begin
-                      if Assigned(changes) then
+                      var S: IFMXClipboardService;
+                      if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, S) then
                       begin
-                        var S: IFMXClipboardService;
-                        if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, S) then
-                        begin
-                          S.SetClipboard(changes.ToString);
-                          Self.Notify('Copied your simulated transaction to the clipboard');
-                        end;
+                        S.SetClipboard(changes.ToString);
+                        Self.Notify('Copied your simulated transaction to the clipboard');
                       end;
-                    end);
-                  end)
+                    end;
+                  end);
                 end;
               end)();
 
@@ -747,9 +745,9 @@ begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, S) then
   begin
     const chain = Self.GetChain;
-    if Assigned(chain) then
+    if chain.isOk then
     begin
-      S.SetClipboard(FServer.URI(FServer.port(chain^).Value));
+      S.SetClipboard(FServer.URI(FServer.port(chain.Value).Value));
       TButton(Sender).Text := 'Copied';
       lblHelp.Visible := True;
     end;

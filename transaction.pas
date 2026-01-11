@@ -27,7 +27,7 @@ type
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
-    procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
+    procedure Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
 // input the JSON-RPC "params", returns the transaction
@@ -53,7 +53,8 @@ uses
   web3.rlp,
   web3.utils,
   // project
-  cache;
+  cache,
+  common;
 
 { TTransaction }
 
@@ -87,7 +88,7 @@ type
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
-    procedure Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
+    procedure Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
 constructor TTransaction.Create(const raw: TBytes; const &type: TTransactionType; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data, auth: TBytes);
@@ -275,24 +276,32 @@ begin
       end)
 end;
 
-procedure TTransaction.Simulate(const apiKey: string; const chain: TChain; const callback: TProc<IAssetChanges, IError>);
+procedure TTransaction.Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
 {$I keys/tenderly.api.key}
 begin
   if Assigned(FSimulated) then
     callback(FSimulated, nil)
   else
-    Self.From
+    common.AlchemyApiKey(chain)
       .ifErr(procedure(err: IError)
       begin
-        callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
+        callback(nil, TError.Create('cannot get Alchemy API key: %s', [err.Message]))
       end)
-      .&else(procedure(from: TAddress)
+      .&else(procedure(ALCHEMY_API_KEY: string)
       begin
-        web3.eth.simulate.simulate(apiKey, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
-        begin
-          if (err = nil) then Self.FSimulated := changes;
-          callback(changes, err);
-        end);
+        Self.From
+          .ifErr(procedure(err: IError)
+          begin
+            callback(nil, TError.Create('cannot recover signer from signature: %s', [err.Message]))
+          end)
+          .&else(procedure(from: TAddress)
+          begin
+            web3.eth.simulate.simulate(ALCHEMY_API_KEY, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, Self.&To, Self.Value, web3.utils.toHex(Self.Data), procedure(changes: IAssetChanges; err: IError)
+            begin
+              if (err = nil) then Self.FSimulated := changes;
+              callback(changes, err);
+            end);
+          end);
       end);
 end;
 

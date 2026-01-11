@@ -190,35 +190,27 @@ type
 procedure getEachSpender(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<TArray<TAddress>, IError>);
 begin
   var spenders: TArray<TAddress> := [];
-  server.apiKey(port)
-    .ifErr(procedure(err: IError)
-    begin
+  tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
+  begin
+    if Assigned(err) or not Assigned(changes) then
       callback(spenders, err)
-    end)
-    .&else(procedure(apiKey: string)
-    begin
-      tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
-      begin
-        if Assigned(err) or not Assigned(changes) then
+    else
+      tx.From
+        .ifErr(procedure(err: IError)
+        begin
           callback(spenders, err)
-        else
-          tx.From
-            .ifErr(procedure(err: IError)
-            begin
-              callback(spenders, err)
-            end)
-            .&else(procedure(from: TAddress)
-            begin try
-              for var I := 0 to Pred(changes.Count) do
-                if (changes.Item(I).Change <> TChangeType.Approve) or (changes.Item(I).Amount = 0) or not from.SameAs(changes.Item(I).From) then
-                  // ignore incoming transactions, token transfers, and approvals getting revoked.
-                else
-                  spenders := spenders + [changes.Item(I).&To];
-            finally
-              callback(spenders, nil);
-            end end);
-      end);
-    end);
+        end)
+        .&else(procedure(from: TAddress)
+        begin try
+          for var I := 0 to Pred(changes.Count) do
+            if (changes.Item(I).Change <> TChangeType.Approve) or (changes.Item(I).Amount = 0) or not from.SameAs(changes.Item(I).From) then
+              // ignore incoming transactions, token transfers, and approvals getting revoked.
+            else
+              spenders := spenders + [changes.Item(I).&To];
+        finally
+          callback(spenders, nil);
+        end end);
+  end);
 end;
 
 {------------ returns False if an address is good, otherwise True -------------}
@@ -338,40 +330,32 @@ begin
     if not isEOA then
       contracts := contracts + [TContract.Create(taTransact, tx.&To, chain)];
     // step #2: incoming tokens
-    server.apiKey(port)
-      .ifErr(procedure(err: IError)
-      begin
+    tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
+    begin
+      if Assigned(err) or not Assigned(changes) then
         callback(contracts, err)
-      end)
-      .&else(procedure(apiKey: string)
-      begin
-        tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
-        begin
-          if Assigned(err) or not Assigned(changes) then
+      else
+        tx.From
+          .ifErr(procedure(err: IError)
+          begin
             callback(contracts, err)
-          else
-            tx.From
-              .ifErr(procedure(err: IError)
-              begin
-                callback(contracts, err)
-              end)
-              .&else(procedure(from: TAddress)
-              begin
-                const incoming: IAssetChanges = changes.IncomingTokens(from);
-                try
-                  if Assigned(incoming) then for var I := 0 to Pred(incoming.Count) do
-                    if incoming.Item(I).Asset = native then
-                      // ignore native asset (probably ETH)
-                    else if incoming.Item(I).Contract.SameAs(tx.&To) then
-                      // ignore tx.To
-                    else
-                      contracts := contracts + [TContract.Create(taReceive, incoming.Item(I).Contract, chain)];
-                finally
-                  callback(contracts, nil);
-                end;
-              end);
-        end);
-      end);
+          end)
+          .&else(procedure(from: TAddress)
+          begin
+            const incoming: IAssetChanges = changes.IncomingTokens(from);
+            try
+              if Assigned(incoming) then for var I := 0 to Pred(incoming.Count) do
+                if incoming.Item(I).Asset = native then
+                  // ignore native asset (probably ETH)
+                else if incoming.Item(I).Contract.SameAs(tx.&To) then
+                  // ignore tx.To
+                else
+                  contracts := contracts + [TContract.Create(taReceive, incoming.Item(I).Contract, chain)];
+            finally
+              callback(contracts, nil);
+            end;
+          end);
+    end);
   end);
 end;
 
@@ -512,46 +496,38 @@ begin
               if quantity = 0 then
                 next(prompted, nil)
               else
-                server.apiKey(port)
-                  .ifErr(procedure(err: IError)
-                  begin
+                tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
+                begin
+                  if Assigned(err) then
                     next(prompted, error.wrap(err, Self.Step2))
-                  end)
-                  .&else(procedure(apiKey: string)
-                  begin
-                    tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
-                    begin
-                      if Assigned(err) then
-                        next(prompted, error.wrap(err, Self.Step2))
-                      else if not Assigned(changes) then
-                        next(prompted, nil)
-                      else begin
-                        const index = changes.IndexOf(tx.&To);
-                        if (index > -1) and (changes.Item(index).Amount > 0) then
-                          thread.synchronize(procedure
-                          begin
-                            asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
-                            begin
-                              if allow then
-                                next(prompted + [TWarning.TransferOut], nil)
-                              else
-                                block(prompted);
-                            end, log);
-                          end)
-                        else
-                          thread.synchronize(procedure
-                          begin
-                            honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow: Boolean)
-                            begin
-                              if allow then
-                                next(prompted + [TWarning.Other], nil)
-                              else
-                                block(prompted);
-                            end, log);
-                          end);
-                      end;
-                    end);
-                  end);
+                  else if not Assigned(changes) then
+                    next(prompted, nil)
+                  else begin
+                    const index = changes.IndexOf(tx.&To);
+                    if (index > -1) and (changes.Item(index).Amount > 0) then
+                      thread.synchronize(procedure
+                      begin
+                        asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                        begin
+                          if allow then
+                            next(prompted + [TWarning.TransferOut], nil)
+                          else
+                            block(prompted);
+                        end, log);
+                      end)
+                    else
+                      thread.synchronize(procedure
+                      begin
+                        honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow: Boolean)
+                        begin
+                          if allow then
+                            next(prompted + [TWarning.Other], nil)
+                          else
+                            block(prompted);
+                        end, log);
+                      end);
+                  end;
+                end);
             end;
           end);
     end);
@@ -746,12 +722,12 @@ end;
 
 procedure TChecks.Step8(const prompted: TPrompted; const next: TNext);
 begin
-  server.apiKey(port)
+  common.AlchemyApiKey(chain)
     .ifErr(procedure(err: IError)
     begin
       next(prompted, error.wrap(err, Self.Step8))
     end)
-    .&else(procedure(apiKey: string)
+    .&else(procedure(alchemyApiKey: string)
     begin
       getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
       begin
@@ -768,7 +744,7 @@ begin
           else ( // call Alchemy's API or Moralis API
             procedure(const token: TAddress; const callback: TProc<TContractType, IError>)
             begin
-              web3.eth.alchemy.api.detect(apiKey, chain, token, [TContractType.Airdrop, TContractType.Spam], procedure(contractType: TContractType; err: IError)
+              web3.eth.alchemy.api.detect(alchemyApiKey, chain, token, [TContractType.Airdrop, TContractType.Spam], procedure(contractType: TContractType; err: IError)
               begin
                 if not Assigned(err) then
                   callback(contractType, nil)
@@ -1105,12 +1081,12 @@ end;
 procedure TChecks.Step15(const prompted: TPrompted; const next: TNext);
 {$I keys/tenderly.api.key}
 begin
-  server.apiKey(port)
+  common.AlchemyApiKey(chain)
     .ifErr(procedure(err: IError)
     begin
       next(prompted, error.wrap(err, Self.Step15))
     end)
-    .&else(procedure(apiKey: string)
+    .&else(procedure(ALCHEMY_API_KEY: string)
     begin
       tx.From
         .ifErr(procedure(err: IError)
@@ -1119,7 +1095,7 @@ begin
         end)
         .&else(procedure(from: TAddress)
         begin
-          web3.eth.simulate.honeypots(apiKey, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
+          web3.eth.simulate.honeypots(ALCHEMY_API_KEY, TENDERLY_ACCOUNT_ID, TENDERLY_PROJECT_ID, TENDERLY_ACCESS_KEY, chain, from, tx.&To, tx.Value, web3.utils.toHex(tx.Data), procedure(honeypots: IAssetChanges; err: IError)
           begin
             if Assigned(err) then
               next(prompted, error.wrap(err, Self.Step15))
@@ -1469,91 +1445,83 @@ end;
 
 procedure TChecks.Step24(const prompted: TPrompted; const next: TNext);
 begin
-  server.apiKey(port)
+  tx.From
     .ifErr(procedure(err: IError)
     begin
       next(prompted, error.wrap(err, Self.Step24))
     end)
-    .&else(procedure(apiKey: string)
+    .&else(procedure(from: TAddress)
     begin
-      tx.From
-        .ifErr(procedure(err: IError)
-        begin
+      tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
+      begin
+        if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step24))
-        end)
-        .&else(procedure(from: TAddress)
-        begin
-          tx.Simulate(apiKey, chain, procedure(changes: IAssetChanges; err: IError)
+        else if not Assigned(changes) then
+          next(prompted, nil)
+        else begin
+          const approvals = (function(const changes: IAssetChanges): Integer
           begin
-            if Assigned(err) then
-              next(prompted, error.wrap(err, Self.Step24))
-            else if not Assigned(changes) then
+            Result := 0;
+            for var I := 0 to Pred(changes.Count) do
+              if changes.Item(I).Change = TChangeType.Approve then Inc(Result);
+          end)(changes);
+          const transfers = (function(const changes: IAssetChanges): Integer
+          begin
+            Result := 0;
+            for var I := 0 to Pred(changes.Count) do
+              if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
+          end)(changes);
+          var step: TSubStep;
+          step := procedure(const index: Integer; const prompted: TPrompted)
+          begin
+            if index >= changes.Count then
               next(prompted, nil)
-            else begin
-              const approvals = (function(const changes: IAssetChanges): Integer
-              begin
-                Result := 0;
-                for var I := 0 to Pred(changes.Count) do
-                  if changes.Item(I).Change = TChangeType.Approve then Inc(Result);
-              end)(changes);
-              const transfers = (function(const changes: IAssetChanges): Integer
-              begin
-                Result := 0;
-                for var I := 0 to Pred(changes.Count) do
-                  if changes.Item(I).Change = TChangeType.Transfer then Inc(Result);
-              end)(changes);
-              var step: TSubStep;
-              step := procedure(const index: Integer; const prompted: TPrompted)
-              begin
-                if index >= changes.Count then
-                  next(prompted, nil)
+            else
+              // ignore incoming transactions
+              if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
+                step(index + 1, prompted)
+              else
+                // if we have prompted for this approval before in step 1
+                if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TWarning.Approve in prompted))
+                // or we have prompted for this transfer before in step 2
+                or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TWarning.TransferOut in prompted)) then
+                  step(index + 1, prompted)
                 else
-                  // ignore incoming transactions
-                  if (changes.Item(index).Amount = 0) or not from.SameAs(changes.Item(index).From) then
-                    step(index + 1, prompted)
+                  if changes.Item(index).Change <> TChangeType.Approve then
+                    thread.synchronize(procedure
+                    begin
+                      asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                      begin
+                        if allow then
+                          step(index + 1, prompted + [TWarning.TransferOut])
+                        else
+                          block(prompted);
+                      end, log);
+                    end)
                   else
-                    // if we have prompted for this approval before in step 1
-                    if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TWarning.Approve in prompted))
-                    // or we have prompted for this transfer before in step 2
-                    or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TWarning.TransferOut in prompted)) then
-                      step(index + 1, prompted)
-                    else
-                      if changes.Item(index).Change <> TChangeType.Approve then
+                    getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
+                    begin
+                      if Assigned(err) then
+                        next(prompted, error.wrap(err, Self.Step24))
+                      else
                         thread.synchronize(procedure
                         begin
-                          asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                          asset.approve(chain, tx, changes.Item(index), status, procedure(allow: Boolean)
                           begin
                             if allow then
-                              step(index + 1, prompted + [TWarning.TransferOut])
-                            else
+                            try
+                              FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
+                            finally
+                              step(index + 1, prompted + [TWarning.Approve])
+                            end else
                               block(prompted);
                           end, log);
                         end)
-                      else
-                        getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
-                        begin
-                          if Assigned(err) then
-                            next(prompted, error.wrap(err, Self.Step24))
-                          else
-                            thread.synchronize(procedure
-                            begin
-                              asset.approve(chain, tx, changes.Item(index), status, procedure(allow: Boolean)
-                              begin
-                                if allow then
-                                try
-                                  FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
-                                finally
-                                  step(index + 1, prompted + [TWarning.Approve])
-                                end else
-                                  block(prompted);
-                              end, log);
-                            end)
-                        end);
-              end;
-              step(0, prompted);
-            end;
-          end);
-        end);
+                    end);
+          end;
+          step(0, prompted);
+        end;
+      end);
     end);
 end;
 

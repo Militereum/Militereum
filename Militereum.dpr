@@ -55,7 +55,7 @@ uses
   unlock in 'unlock.pas' {FrmUnlock},
   unsupported in 'unsupported.pas' {FrmUnsupported},
   unverified in 'unverified.pas' {FrmUnverified},
-  update in 'update.pas' {FrmUpdate},
+//  update in 'update.pas' {FrmUpdate},
   vault in 'vault.pas' {FrmVault},
   vaults.fyi in 'vaults.fyi.pas';
 
