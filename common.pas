@@ -47,7 +47,7 @@ function AlchemyApiKey(const chain: TChain): IResult<string>;
 function AppVersion: string;
 function Base: TChain;
 function Ethereum: TChain;
-function Etherscan(const chain: TChain): IEtherscan;
+function Etherscan(const chain: TChain): TEtherscan;
 function Format(const value: Double): string;
 function GetTempFileName: string;
 function Headers: TNetHeaders;
@@ -238,9 +238,9 @@ begin
   Result := web3.Ethereum.SetRPC('https://1rpc.io/eth');
 end;
 
-function Etherscan(const chain: TChain): IEtherscan;
+function Etherscan(const chain: TChain): TEtherscan;
 begin
-  Result := web3.eth.etherscan.create(chain, {$I keys/etherscan.api.key});
+  Result := TEtherscan.Create(chain, {$I keys/etherscan.api.key}, {$I keys/routescan.api.key});
 end;
 
 function Format(const value: Double): string;

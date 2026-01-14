@@ -244,7 +244,7 @@ begin
   // is the contract not verified with etherscan?
   const step2: TStep = procedure(const callback: TProc<Boolean, IError>)
   begin
-    common.Etherscan(chain).getContractSourceCode(spender, procedure(src: string; err: IError)
+    web3.eth.etherscan.getContractSourceCode(common.Etherscan(chain), spender, procedure(src: string; err: IError)
     begin
       callback(src = '', err);
     end);
@@ -589,7 +589,7 @@ begin
     else if isEOA then
       next(prompted, nil)
     else
-      common.Etherscan(chain).getContractSourceCode(tx.&To, procedure(src: string; err: IError)
+      web3.eth.etherscan.getContractSourceCode(common.Etherscan(chain), tx.&To, procedure(src: string; err: IError)
       begin
         if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step4))
@@ -803,7 +803,7 @@ begin
     end)
     .&else(procedure(from: TAddress)
     begin
-      common.Etherscan(chain).getTransactions(from, procedure(txs: ITransactions; err: IError)
+      web3.eth.etherscan.getTransactions(common.Etherscan(chain), from, procedure(txs: ITransactions; err: IError)
       begin
         if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step9))
@@ -1141,7 +1141,7 @@ begin
       if index >= Length(contracts) then
         next(prompted, nil)
       else
-        common.Etherscan(chain).getLatestTransaction(contracts[index].Address, procedure(latest: ITransaction; err: IError)
+        web3.eth.etherscan.getLatestTransaction(common.Etherscan(chain), contracts[index].Address, procedure(latest: ITransaction; err: IError)
         begin
           if Assigned(err) then
             next(prompted, error.wrap(err, Self.Step16))
@@ -1299,7 +1299,7 @@ end;
 
 procedure TChecks.Step20(const prompted: TPrompted; const next: TNext);
 begin
-  common.Etherscan(chain).getFundedBy(tx.&To, procedure(funder: TAddress; err: IError)
+  web3.eth.etherscan.getFundedBy(common.Etherscan(chain), tx.&To, procedure(funder: TAddress; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step20))
@@ -1422,7 +1422,7 @@ begin
     else if not isVault then
       next(prompted, nil)
     else
-      common.Etherscan(chain).contractIsProxy(tx.&To, procedure(proxy: Boolean; err: IError)
+      web3.eth.etherscan.contractIsProxy(common.Etherscan(chain), tx.&To, procedure(proxy: Boolean; err: IError)
       begin
         if Assigned(err) then
           next(prompted, error.wrap(err, Self.Step23))

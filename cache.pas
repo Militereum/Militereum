@@ -55,7 +55,7 @@ begin
       callback(contractABIs[I].ContractABI, nil);
       EXIT;
     end;
-  common.Etherscan(chain).getContractABI(contract, procedure(abi: IContractABI; err: IError)
+  web3.eth.etherscan.getContractABI(common.Etherscan(chain), contract, procedure(abi: IContractABI; err: IError)
   begin
     if Assigned(err) then
     begin

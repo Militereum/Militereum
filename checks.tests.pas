@@ -150,7 +150,7 @@ begin
       else if isEOA then
         err(TError.Create('%s is an EOA, expected a smart contract', [UNISWAP_V2_ROUTER]))
       else
-        common.Etherscan(common.Ethereum).getContractSourceCode(UNISWAP_V2_ROUTER, procedure(src: string; err2: IError)
+        web3.eth.etherscan.getContractSourceCode(common.Etherscan(web3.Ethereum), UNISWAP_V2_ROUTER, procedure(src: string; err2: IError)
         begin
           if Assigned(err2) then
             err(err2)
@@ -257,7 +257,7 @@ begin
   const
     VITALIK_DOT_ETH = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
   begin
-    common.Etherscan(web3.Ethereum).getTransactions(VITALIK_DOT_ETH, procedure(txs: ITransactions; error: IError)
+    web3.eth.etherscan.getTransactions(common.Etherscan(web3.Ethereum), VITALIK_DOT_ETH, procedure(txs: ITransactions; error: IError)
     begin
       if Assigned(error) then
         err(error)
@@ -443,7 +443,7 @@ begin
   const
     POS_DUMMY_STATE_SENDER: TAddress = '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39';
   begin
-    common.Etherscan(web3.Ethereum).getLatestTransaction(POS_DUMMY_STATE_SENDER, procedure(latest: ITransaction; error: IError)
+    web3.eth.etherscan.getLatestTransaction(common.Etherscan(web3.Ethereum), POS_DUMMY_STATE_SENDER, procedure(latest: ITransaction; error: IError)
     begin
       if Assigned(error) then
         err(error)
@@ -526,7 +526,7 @@ begin
     RECEIVER = '0x142e4D4aAb8E722Ee6Bdd37c23dbbc5f47993369';
     COINBASE = '0xeB2629a2734e272Bcc07BDA959863f316F4bD4Cf';
   begin
-    common.Etherscan(web3.Ethereum).getFundedBy(RECEIVER, procedure(funder: TAddress; err: IError)
+    web3.eth.etherscan.getFundedBy(common.Etherscan(web3.Ethereum), RECEIVER, procedure(funder: TAddress; err: IError)
     begin
       if Assigned(err) then
         error(err)
