@@ -5,13 +5,6 @@
 | Currency symbol    | ETH                    |
 | Block explorer URL | https://etherscan.io   |
 
-|                    | Holesky                      |
-|--------------------|------------------------------|
-| New RPC URL        | http://localhost:64510       |
-| Chain ID           | 17000                        |
-| Currency symbol    | ETH                          |
-| Block explorer URL | https://holesky.etherscan.io |
-
 |                    | Sepolia                      |
 |--------------------|------------------------------|
 | New RPC URL        | http://localhost:64509       |
