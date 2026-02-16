@@ -11,7 +11,13 @@
 
 ## Reason to be
 
-Almost everybody in crypto — especially those who are in DeFi — has been phished, drained, hacked, or rugged. Wallets are keepers of keys, but they don’t necessarily keep you safe. Militereum is a firewall that once installed secures your crypto wallets. Militereum is chain-agnostic and works with every crypto wallet, including browser-based and native desktop wallets. Each and everyone of your transactions is simulated and potentially blocked if Militereum thinks it is unsafe. Because Militereum is rooted into your operating system, the firewall can start automatically when you log into your device, and wallets cannot bypass it.
+Almost everybody in crypto — especially those who are in DeFi — has been phished, drained, hacked, or rugged. Wallets are keepers of keys, but they don’t necessarily keep you safe.
+
+Militereum is a firewall that once installed secures your crypto wallets. Militereum is chain-agnostic and works with every crypto wallet, including browser-based and native desktop wallets. 
+
+Each and everyone of your transactions is simulated, compared to 20+ known attack vectors, and potentially blocked if Militereum thinks it is unsafe.
+
+Because Militereum is rooted into your operating system, the firewall can start automatically when you log into your device, the software sends you system-wide notifications that do not depend on the availability of a web browser, and wallets cannot bypass it.
 
 ## Setup
 
@@ -75,8 +81,6 @@ Distributed under the [GNU AGP v3.0](https://github.com/svanas/Militereum/blob/m
 ## Sponsors
 
 This project received a [WAGBI grant](https://www.alchemy.com/developer-grant-program) from alchemy.com and is featured in [Alchemy’s Dapp Store](https://www.alchemy.com/dapps/militereum).
-
-<img style="width:240px;height:53px" src="https://static.alchemyapi.io/images/marketing/badgeLight.png"/>
 
 ## Disclaimer
 
