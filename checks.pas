@@ -1361,13 +1361,14 @@ end;
 
 procedure TChecks.Step22(const prompted: TPrompted; const next: TNext);
 const // allow for the below EIP-7702 delegators, otherwise prompt and block
-  WHITELIST: array[0..6] of TAddress = (
+  WHITELIST: array[0..7] of TAddress = (
     '0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B', // MetaMask
     '0xD2e28229F6f2c235e57De2EbC727025A1D0530FB', // Trust Wallet
     '0x80296FF8D1ED46f8e3C7992664D13B833504c2Bb', // OKX
     '0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00', // Uniswap
     '0xcda3577ca7ef65f6B7201E9BD80375f5628D15F7', // WhiteBIT
     '0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d', // Ambire
+    '0x612373D7003d694220f7800EeaF8E3924c0951D3', // Rainbow
     '0x0000000000000000000000000000000000000000'  // Revocation
   );
 begin
