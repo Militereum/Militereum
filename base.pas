@@ -4,9 +4,7 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
-  System.UITypes,
+  System.Classes, System.SysUtils, System.UITypes,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
@@ -36,10 +34,18 @@ type
     procedure Loaded; override;
   end;
 
-type
   TLog = reference to procedure(const err: IError);
 
-type
+  TDelay<T: TCustomForm> = class(TComponent)
+  private
+    FForm: T;
+  protected
+    procedure Notification(AComponent: TComponent; AOperation: TOperation); override;
+  public
+    constructor Create(const AForm: T); reintroduce;
+    procedure Start(const milliseconds: Cardinal; const callback: TProc<T>);
+  end;
+
   TFrmBase = class(TForm)
     imgMilitereum: TImage;
     imgWarning: TImage;
@@ -75,16 +81,13 @@ implementation
 
 uses
   // Delphi
-  System.Math,
-  System.Types,
+  System.Math, System.Types,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
-  web3.eth.gas,
-  web3.eth.utils,
+  web3.eth.gas, web3.eth.utils,
   // project
-  common,
-  thread;
+  common, thread;
 
 procedure centerOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
 
@@ -108,7 +111,7 @@ begin
   F.SetBoundsF(FitInRect(N, Screen.DesktopRect));
 end;
 
-{ TLabel }
+{----------------------------------- TLabel -----------------------------------}
 
 procedure TLabel.ApplyStyle;
 
@@ -152,7 +155,42 @@ begin
   end;
 end;
 
-{ TFrmBase }
+{----------------------------------- TDelay -----------------------------------}
+
+constructor TDelay<T>.Create(const AForm: T);
+begin
+  inherited Create(nil); // not owned by the form
+  FForm := AForm;
+  if Assigned(FForm) then FForm.FreeNotification(Self);
+end;
+
+procedure TDelay<T>.Notification(AComponent: TComponent; AOperation: TOperation);
+begin
+  inherited Notification(AComponent, AOperation);
+  if (AOperation = opRemove) and (AComponent = TComponent(FForm)) then FForm := nil;
+end;
+
+procedure TDelay<T>.Start(const milliseconds: Cardinal; const callback: TProc<T>);
+begin
+  TThread.CreateAnonymousThread(procedure
+  begin
+    TThread.Sleep(milliseconds);
+    TThread.Queue(nil, procedure
+    begin
+      try
+        if Assigned(Self.FForm) then
+        begin
+          Self.FForm.RemoveFreeNotification(Self);
+          callback(Self.FForm);
+        end;
+      finally
+        Self.Free;
+      end;
+    end);
+  end).Start;
+end;
+
+{---------------------------------- TFrmBase ----------------------------------}
 
 constructor TFrmBase.Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog);
 begin
@@ -185,12 +223,14 @@ end;
 
 procedure TFrmBase.SetBlocked(value: Boolean);
 begin
-  if value then
-    btnAllow.FontColor := TColors.Crimson
-  else
-    btnAllow.FontColor := btnBlock.FontColor;
   imgError.Visible   := value;
   imgWarning.Visible := not value;
+  // Allow button is disabled at first, but the user can click it after a 5 sec wait
+  btnAllow.Enabled := not value;
+  if value then TDelay<TFrmBase>.Create(Self).Start(5000, procedure(AForm: TFrmBase)
+  begin
+    AForm.btnAllow.Enabled := True;
+  end);
 end;
 
 procedure TFrmBase.DoShow;
