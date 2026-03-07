@@ -11,7 +11,7 @@ inherited FrmHoneypot: TFrmHoneypot
     TextSettings.Font.Size = 20.000000000000000000
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 'You cannot %s this token'
+    Text = 'You are about to receive a token you cannot sell'
     TabOrder = 0
   end
   object lblToken: TLabel

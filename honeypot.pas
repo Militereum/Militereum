@@ -40,11 +40,14 @@ uses
 
 procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLog);
 const
-  CannotString: array[TCannot] of string = ('transfer', 'sell');
+  CannotString: array[TCannot] of string = (
+    'You cannot transfer this token',
+    'You are about to receive a token you cannot sell'
+  );
 begin
   const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, log);
   frmHoneypot.Token := token;
-  frmHoneypot.lblHeader.Text := System.SysUtils.Format(frmHoneypot.lblHeader.Text, [CannotString[cannot]]);
+  frmHoneypot.lblHeader.Text := CannotString[cannot];
   frmHoneypot.Show;
 end;
 

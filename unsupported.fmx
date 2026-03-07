@@ -50,9 +50,7 @@ inherited FrmUnsupported: TFrmUnsupported
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
     TextSettings.WordWrap = False
-    Text = 
-      'You won'#8217't be able to sell this token on Uniswap'#8217's official front' +
-      'end.'
+    Text = 'You won'#8217't be able to sell this token on Uniswap.'
     TabOrder = 3
   end
 end
