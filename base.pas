@@ -36,14 +36,17 @@ type
 
   TLog = reference to procedure(const err: IError);
 
-  TDelay<T: TCustomForm> = class(TComponent)
+  TFormTimer<T: TCustomForm> = class(TComponent)
   private
-    FForm: T;
+    type
+      TTimerProc = reference to procedure(const AForm: T; var AContinue: Boolean);
+    var
+      FForm: T;
   protected
     procedure Notification(AComponent: TComponent; AOperation: TOperation); override;
   public
     constructor Create(const AForm: T); reintroduce;
-    procedure Start(const milliseconds: Cardinal; const callback: TProc<T>);
+    procedure Start(const interval: Cardinal; const callback: TTimerProc);
   end;
 
   TFrmBase = class(TForm)
@@ -155,38 +158,35 @@ begin
   end;
 end;
 
-{----------------------------------- TDelay -----------------------------------}
+{--------------------------------- TFormTimer ---------------------------------}
 
-constructor TDelay<T>.Create(const AForm: T);
+constructor TFormTimer<T>.Create(const AForm: T);
 begin
   inherited Create(nil); // not owned by the form
   FForm := AForm;
   if Assigned(FForm) then FForm.FreeNotification(Self);
 end;
 
-procedure TDelay<T>.Notification(AComponent: TComponent; AOperation: TOperation);
+procedure TFormTimer<T>.Notification(AComponent: TComponent; AOperation: TOperation);
 begin
   inherited Notification(AComponent, AOperation);
   if (AOperation = opRemove) and (AComponent = TComponent(FForm)) then FForm := nil;
 end;
 
-procedure TDelay<T>.Start(const milliseconds: Cardinal; const callback: TProc<T>);
+procedure TFormTimer<T>.Start(const interval: Cardinal; const callback: TTimerProc);
 begin
   TThread.CreateAnonymousThread(procedure
   begin
-    TThread.Sleep(milliseconds);
-    TThread.Queue(nil, procedure
-    begin
-      try
-        if Assigned(Self.FForm) then
-        begin
-          Self.FForm.RemoveFreeNotification(Self);
-          callback(Self.FForm);
-        end;
-      finally
-        Self.Free;
-      end;
-    end);
+    var LContinue: Boolean;
+    repeat
+      TThread.Sleep(interval);
+      TThread.Synchronize(nil, procedure
+      begin
+        if Assigned(Self.FForm) then callback(Self.FForm, LContinue);
+      end);
+    until (Self.FForm = nil) or not LContinue;
+    if Assigned(Self.FForm) then Self.FForm.RemoveFreeNotification(Self);
+    Self.Free;
   end).Start;
 end;
 
@@ -227,10 +227,23 @@ begin
   imgWarning.Visible := not value;
   // Allow button is disabled at first, but the user can click it after a 5 sec wait
   btnAllow.Enabled := not value;
-  if value then TDelay<TFrmBase>.Create(Self).Start(5000, procedure(AForm: TFrmBase)
+  if value then
   begin
-    AForm.btnAllow.Enabled := True;
-  end);
+    var counter := 5;
+    btnAllow.Text := IntToStr(counter);
+    TFormTimer<TFrmBase>.Create(Self).Start(1000, procedure(const AForm: TFrmBase; var AContinue: Boolean)
+    begin
+      Dec(counter);
+      AContinue := counter > 0;
+      if AContinue then
+        AForm.btnAllow.Text := IntToStr(counter)
+      else
+      begin
+        AForm.btnAllow.Text := 'Allow';
+        AForm.btnAllow.Enabled := True;
+      end;
+    end);
+  end;
 end;
 
 procedure TFrmBase.DoShow;
