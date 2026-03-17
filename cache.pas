@@ -6,8 +6,7 @@ uses
   // Delphi
   SysUtils,
   // web3
-  web3,
-  web3.eth.etherscan;
+  web3, web3.eth.etherscan;
 
 procedure getContractABI(const chain: TChain; const contract: TAddress; const callback: TProc<IContractABI, IError>);
 procedure getSymbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
@@ -20,10 +19,9 @@ uses
   // Delphi
   System.Generics.Collections,
   // project
-  common,
+  common, thread,
   // web3
-  web3.eth.erc20,
-  web3.eth.types;
+  web3.eth.erc20, web3.eth.types;
 
 type
   TContractABI = record
@@ -114,11 +112,16 @@ var friendly: TDictionary<TAddress, string> = nil;
 procedure getFriendlyName(const chain: TChain; const address: TAddress; const callback: TProc<string, IError>);
 begin
   var value: string;
-  if friendly.TryGetValue(address, value) then
+
+  if thread.TLock.get<Boolean>(friendly, function: Boolean
+  begin
+    Result := friendly.TryGetValue(address, value)
+  end) then
   begin
     callback(value, nil);
     EXIT;
   end;
+
   getContractABI(chain, address, procedure(abi: IContractABI; err: IError)
   begin
     if Assigned(abi) and abi.IsERC20 and not Assigned(err) then
@@ -130,7 +133,7 @@ begin
           if (name <> '') and (symbol <> '') then
           begin
             value := System.SysUtils.Format('%s (%s)', [name, symbol]);
-            friendly.Add(address, value);
+            thread.lock(friendly, procedure begin friendly.Add(address, value) end);
             callback(value, err);
             EXIT;
           end;
@@ -143,7 +146,7 @@ begin
     begin
       if (ens <> '') and not Assigned(err) then
       begin
-        friendly.Add(address, ens);
+        thread.lock(friendly, procedure begin friendly.Add(address, ens) end);
         callback(ens, err);
         EXIT;
       end;
@@ -154,9 +157,18 @@ end;
 
 procedure fromName(const name: string; const callback: TProc<TAddress, IError>);
 begin
-  for var pair in friendly do if pair.Value = name then
+  const key = thread.TLock.get<TAddress>(friendly, function: TAddress
   begin
-    callback(pair.Key, nil);
+    for var pair in friendly do if pair.Value = name then
+    begin
+      Result := pair.Key;
+      EXIT;
+    end;
+    Result := TAddress.Zero;
+  end);
+  if not key.IsZero then
+  begin
+    callback(key, nil);
     EXIT;
   end;
   TAddress.FromName(TWeb3.Create(common.Ethereum), name, callback);
