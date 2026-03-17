@@ -4,7 +4,7 @@ interface
 
 uses
   // Delphi
-  SysUtils,
+  System.SysUtils,
   // web3
   web3, web3.eth.etherscan;
 
@@ -22,6 +22,36 @@ uses
   common, thread,
   // web3
   web3.eth.erc20, web3.eth.types;
+
+{----------------------------- TLockableArray<T> ------------------------------}
+
+type
+  TLockableArray<T> = class
+  strict private
+    FArray: TArray<T>;
+    function GetItem(Index: Integer): T; inline;
+  public
+    procedure Add(const Value: T); inline;
+    function Length: Integer; inline;
+    property Items[Index: Integer]: T read GetItem; default;
+  end;
+
+procedure TLockableArray<T>.Add(const Value: T);
+begin
+  FArray := FArray + [Value];
+end;
+
+function TLockableArray<T>.GetItem(Index: Integer): T;
+begin
+  Result := FArray[Index];
+end;
+
+function TLockableArray<T>.Length: Integer;
+begin
+  Result := System.Length(FArray);
+end;
+
+{------------------------ getContractABI: TContractABI ------------------------}
 
 type
   TContractABI = record
@@ -43,16 +73,25 @@ begin
   Self.FContractABI := aContractABI;
 end;
 
-var contractABIs: TArray<TContractABI> = [];
+var contractABIs: TLockableArray<TContractABI> = nil;
 
 procedure getContractABI(const chain: TChain; const contract: TAddress; const callback: TProc<IContractABI, IError>);
 begin
-  for var I := 0 to High(contractABIs) do
-    if (contractABIs[I].Chain = chain) and contractABIs[I].Contract.SameAs(contract) then
-    begin
-      callback(contractABIs[I].ContractABI, nil);
-      EXIT;
-    end;
+  const abi = thread.TLock.get<IContractABI>(contractABIs, function: IContractABI
+  begin
+    for var I := 0 to contractABIs.Length - 1 do
+      if (contractABIs[I].Chain = chain) and contractABIs[I].Contract.SameAs(contract) then
+      begin
+        Result := contractABIs[I].ContractABI;
+        EXIT;
+      end;
+    Result := nil;
+  end);
+  if Assigned(abi) then
+  begin
+    callback(abi, nil);
+    EXIT;
+  end;
   web3.eth.etherscan.getContractABI(common.Etherscan(chain), contract, procedure(abi: IContractABI; err: IError)
   begin
     if Assigned(err) then
@@ -60,10 +99,15 @@ begin
       callback(nil, err);
       EXIT;
     end;
-    contractABIs := contractABIs + [TContractABI.Create(chain, contract, abi)];
+    thread.Lock(contractABIs, procedure
+    begin
+      contractABIs.Add(TContractABI.Create(chain, contract, abi));
+    end);
     callback(abi, err);
   end);
 end;
+
+{----------------------------- getSymbol: TSymbol -----------------------------}
 
 type
   TSymbol = record
@@ -85,16 +129,25 @@ begin
   Self.FSymbol := aSymbol;
 end;
 
-var symbols: TArray<TSymbol> = [];
+var symbols: TLockableArray<TSymbol> = nil;
 
 procedure getSymbol(const chain: TChain; const token: TAddress; const callback: TProc<string, IError>);
 begin
-  for var I := 0 to High(symbols) do
-    if (symbols[I].Chain = chain) and symbols[I].Token.SameAs(token) then
-    begin
-      callback(symbols[I].Symbol, nil);
-      EXIT;
-    end;
+  const symbol = thread.TLock.get<string>(symbols, function: string
+  begin
+    for var I := 0 to symbols.Length - 1 do
+      if (symbols[I].Chain = chain) and symbols[I].Token.SameAs(token) then
+      begin
+        Result := symbols[I].Symbol;
+        EXIT;
+      end;
+    Result := '';
+  end);
+  if symbol <> '' then
+  begin
+    callback(symbol, nil);
+    EXIT;
+  end;
   web3.eth.erc20.create(TWeb3.Create(chain), token).Symbol(procedure(symbol: string; err: IError)
   begin
     if Assigned(err) then
@@ -102,10 +155,15 @@ begin
       callback('', err);
       EXIT;
     end;
-    symbols := symbols + [TSymbol.Create(chain, token, symbol)];
+    thread.Lock(symbols, procedure
+    begin
+      symbols.Add(TSymbol.Create(chain, token, symbol));
+    end);
     callback(symbol, err);
   end);
 end;
+
+{------------------------- getFriendlyName & fromName -------------------------}
 
 var friendly: TDictionary<TAddress, string> = nil;
 
@@ -175,10 +233,13 @@ begin
 end;
 
 initialization
-  friendly := TDictionary<TAddress, string>.Create;
+  contractABIs := TLockableArray<TContractABI>.Create;
+  symbols      := TLockableArray<TSymbol>.Create;
+  friendly     := TDictionary<TAddress, string>.Create;
 
 finalization
-  if Assigned(friendly) then friendly.Free;
-
+  if Assigned(friendly)     then friendly.Free;
+  if Assigned(symbols)      then symbols.Free;
+  if Assigned(contractABIs) then contractABIs.Free;
 
 end.
