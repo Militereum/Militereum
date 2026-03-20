@@ -234,7 +234,7 @@ end;
 
 procedure TdmDemo.actVaultExecute(Sender: TObject);
 begin
-  vault.show(common.Ethereum, nil, 'USDC', procedure(allow: Boolean) begin end, nil);
+  vault.show(common.Ethereum, nil, '0x39AA39c021dfbaE8faC545936693aC917d5E7563', 'USDC', allowed, callback, nil);
 end;
 
 initialization

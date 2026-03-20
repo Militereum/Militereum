@@ -1282,9 +1282,12 @@ begin
         else if not Assigned(other) then
           next(prompted, nil)
         else
-          thread.synchronize(procedure
-          begin
-            vault.show(chain, tx, other.Asset.Symbol, procedure(allow: Boolean)
+          vault.show(chain, tx, tx.&To, other.Asset.Symbol,
+            procedure
+            begin
+              next(prompted, nil);
+            end,
+            procedure(allow: Boolean)
             begin
               if allow then
                 next(prompted + [TWarning.Other], nil)
@@ -1294,7 +1297,6 @@ begin
                 block(prompted);
               end;
             end, log);
-          end);
       end);
   end);
 end;
