@@ -33,7 +33,7 @@ type
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -45,7 +45,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmSpam = TFrmSpam.Create(chain, tx, callback, log);
   frmSpam.Action   := action;

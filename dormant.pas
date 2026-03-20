@@ -34,7 +34,7 @@ type
     property IsERC20: Boolean write SetIsERC20;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -46,7 +46,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmDormant = TFrmDormant.Create(chain, tx, callback, log);
   frmDormant.Action   := action;

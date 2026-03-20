@@ -30,7 +30,7 @@ type
     property Address: TAddress write SetAddress;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -42,7 +42,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmFirstTime = TFrmFirstTime.Create(chain, tx, callback, log);
   frmFirstTime.Address := address;

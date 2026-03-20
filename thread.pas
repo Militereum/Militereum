@@ -15,6 +15,16 @@ type
     class function get<T>(const O: TObject; const P: TSafeProcWithCallback<T>): T; overload; static;
   end;
 
+  TLockableArray<T> = class
+  strict private
+    FArray: TArray<T>;
+    function GetItem(Index: Integer): T; inline;
+  public
+    procedure Add(const Value: T); inline;
+    function Length: Integer; inline;
+    property Items[Index: Integer]: T read GetItem; default;
+  end;
+
 procedure lock(const O: TObject; const P: TSafeProc); overload;
 procedure lock(const O: TObject; const P: TSafeProcWithCallback); overload;
 
@@ -91,6 +101,23 @@ begin
     begin
       P
     end);
+end;
+
+{----------------------------- TLockableArray<T> ------------------------------}
+
+procedure TLockableArray<T>.Add(const Value: T);
+begin
+  FArray := FArray + [Value];
+end;
+
+function TLockableArray<T>.GetItem(Index: Integer): T;
+begin
+  Result := FArray[Index];
+end;
+
+function TLockableArray<T>.Length: Integer;
+begin
+  Result := System.Length(FArray);
 end;
 
 end.

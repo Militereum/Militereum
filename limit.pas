@@ -33,13 +33,13 @@ type
     procedure SetRecipient(value: TAddress);
     procedure SetAmount(value: Double);
   public
-    constructor Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLog); override;
+    constructor Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLogProc); override;
     property Symbol: string write SetSymbol;
     property Recipient: TAddress write SetRecipient;
     property Amount: Double write SetAmount;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -51,7 +51,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmLimit = TFrmLimit.Create(chain, tx, callback, log);
   frmLimit.Symbol    := symbol;
@@ -62,7 +62,7 @@ end;
 
 { TFrmLimit }
 
-constructor TFrmLimit.Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLog);
+constructor TFrmLimit.Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   inherited Create(chain, tx, callback, log);
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);

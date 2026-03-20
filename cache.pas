@@ -23,34 +23,6 @@ uses
   // web3
   web3.eth.erc20, web3.eth.types;
 
-{----------------------------- TLockableArray<T> ------------------------------}
-
-type
-  TLockableArray<T> = class
-  strict private
-    FArray: TArray<T>;
-    function GetItem(Index: Integer): T; inline;
-  public
-    procedure Add(const Value: T); inline;
-    function Length: Integer; inline;
-    property Items[Index: Integer]: T read GetItem; default;
-  end;
-
-procedure TLockableArray<T>.Add(const Value: T);
-begin
-  FArray := FArray + [Value];
-end;
-
-function TLockableArray<T>.GetItem(Index: Integer): T;
-begin
-  Result := FArray[Index];
-end;
-
-function TLockableArray<T>.Length: Integer;
-begin
-  Result := System.Length(FArray);
-end;
-
 {------------------------ getContractABI: TContractABI ------------------------}
 
 type

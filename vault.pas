@@ -29,13 +29,13 @@ type
     property Symbol: string write SetSymbol;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmVault = TFrmVault.Create(chain, tx, callback, log);
   frmVault.Symbol := symbol;

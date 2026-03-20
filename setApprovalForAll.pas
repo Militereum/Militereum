@@ -40,7 +40,7 @@ type
     property Spender: TAddress write SetSpender;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, spender: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, spender: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -54,7 +54,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, spender: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, spender: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmSetApprovalForAll = TFrmSetApprovalForAll.Create(chain, tx, callback, log);
   frmSetApprovalForAll.Token   := token;

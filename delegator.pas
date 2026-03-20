@@ -24,7 +24,7 @@ type
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -34,7 +34,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmDelegator = TFrmDelegator.Create(chain, tx, callback, log);
   frmDelegator.Contract := contract;

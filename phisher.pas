@@ -39,7 +39,7 @@ type
   end;
 
 procedure isPhisher(const address: TAddress; const callback: TProc<Boolean, IError>);
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -64,7 +64,7 @@ begin
   end;
 end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmPhisher = TFrmPhisher.Create(chain, tx, callback, log);
   frmPhisher.Address := address;

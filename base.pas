@@ -8,7 +8,9 @@ uses
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
   FMX.Forms,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
@@ -34,7 +36,7 @@ type
     procedure Loaded; override;
   end;
 
-  TLog = reference to procedure(const err: IError);
+  TLogProc = reference to procedure(const err: IError);
 
   TFormTimer<T: TCustomForm> = class(TComponent)
   private
@@ -49,34 +51,64 @@ type
     procedure Start(const interval: Cardinal; const callback: TTimerProc);
   end;
 
+  TBypass = record
+  strict private
+    FName: string;
+    FProc: TProc;
+  public
+    constructor Create(const AName: string; const AProc: TProc);
+    function Visible: Boolean;
+    property Name: string read FName;
+    property Proc: TProc read FProc;
+  end;
+
   TFrmBase = class(TForm)
     imgMilitereum: TImage;
     imgWarning: TImage;
     btnBlock: TButton;
     btnAllow: TButton;
-    lblGasFee: TLabel;
-    imgGasFee: TImage;
     imgError: TImage;
+    rctShowThisWarning: TRectangle;
+    edtShowThisWarning: TEdit;
+    btnShowThisWarning: TEditButton;
+    pmShowThisWarning: TPopupMenu;
+    mnuNeverAgain: TMenuItem;
+    mnuNeverForThis: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure btnShowThisWarningClick(Sender: TObject);
+    procedure mnuNeverAgainClick(Sender: TObject);
+    procedure mnuNeverForThisClick(Sender: TObject);
     procedure btnBlockClick(Sender: TObject);
     procedure btnAllowClick(Sender: TObject);
   strict private
     FChain   : TChain;
     FCallback: TProc<Boolean>;
-    FOnLog   : TLog;
+    FLogProc : TLogProc;
     procedure SetBlocked(value: Boolean);
   protected
     procedure DoShow; override;
     procedure Resize; override;
-    procedure LoadGasFeeImage(const img: TImage);
     procedure Log(const err: IError);
+    function Bypass: TBypass; virtual;
     property Chain: TChain read FChain;
     property Blocked: Boolean write SetBlocked;
   public
-    constructor Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog); reintroduce; virtual;
+    constructor Create(
+      const chain   : TChain;
+      const tx      : transaction.ITransaction;
+      const callback: TProc<Boolean>;
+      const log     : TLogProc); reintroduce; virtual;
   end;
 
+  TBaseClass = class of TFrmBase;
+
 procedure centerOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
+
+procedure whitelist(const warning: TBaseClass); overload;
+procedure whitelist(const warning: TBaseClass; const address: TAddress); overload;
+
+function whitelisted(const warning: TBaseClass): Boolean; overload;
+function whitelisted(const warning: TBaseClass; const address: TAddress): Boolean; overload;
 
 implementation
 
@@ -84,11 +116,11 @@ implementation
 
 uses
   // Delphi
-  System.Math, System.Types,
+  System.Generics.Collections, System.Math, System.Types,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
-  web3.eth.gas, web3.eth.utils,
+  web3.eth.gas, web3.eth.types, web3.eth.utils,
   // project
   common, thread;
 
@@ -112,6 +144,81 @@ begin
   const R = TRectF.Create(display.WorkAreaRect.TopLeft, display.WorkAreaRect.Width, display.WorkAreaRect.Height);
   const N = TRectF.Create(TPointF.Create(R.Left + (R.Width - F.Width) / 2, R.Top + (R.Height - F.Height) / 2), F.Bounds.Width, F.Bounds.Height);
   F.SetBoundsF(FitInRect(N, Screen.DesktopRect));
+end;
+
+{---------------------------------- TBypass -----------------------------------}
+
+constructor TBypass.Create(const AName: string; const AProc: TProc);
+begin
+  FName := AName;
+  FProc := AProc;
+end;
+
+function TBypass.Visible: Boolean;
+begin
+  Result := (FName <> '') and Assigned(FProc);
+end;
+
+{--------------------------- whitelist & whitelisted --------------------------}
+
+var
+  allow1: TLockableArray<TBaseClass> = nil;
+  allow2: TDictionary<TBaseClass, TArray<TAddress>> = nil;
+
+procedure whitelist(const warning: TBaseClass);
+begin
+  if whitelisted(warning) then
+    EXIT;
+  thread.lock(allow1, procedure
+  begin
+    allow1.Add(warning);
+  end);
+end;
+
+procedure whitelist(const warning: TBaseClass; const address: TAddress);
+var
+  values: TArray<TAddress>;
+begin
+  if whitelisted(warning, address) then
+    EXIT;
+  thread.lock(allow2, procedure
+  begin
+    if not allow2.ContainsKey(warning) then
+      allow2.Add(warning, []);
+    if not allow2.TryGetValue(warning, values) then
+      EXIT;
+    allow2.AddOrSetValue(warning, values + [address]);
+  end);
+end;
+
+function whitelisted(const warning: TBaseClass): Boolean;
+begin
+  Result := thread.TLock.get<Boolean>(allow1, function: Boolean
+  begin
+    for var I := 0 to allow1.Length - 1 do
+      if allow1[I] = warning then
+      begin
+        Result := True;
+        EXIT;
+      end;
+    Result := False;
+  end);
+end;
+
+function whitelisted(const warning: TBaseClass; const address: TAddress): Boolean;
+var
+  values: TArray<TAddress>;
+begin
+  if thread.TLock.get<Boolean>(allow2, function: Boolean
+  begin
+    Result := allow2.TryGetValue(warning, values);
+  end) then
+    for var I := 0 to High(values) do if values[I].SameAs(address) then
+    begin
+      Result := True;
+      EXIT;
+    end;
+  Result := False;
 end;
 
 {----------------------------------- TLabel -----------------------------------}
@@ -192,33 +299,28 @@ end;
 
 {---------------------------------- TFrmBase ----------------------------------}
 
-constructor TFrmBase.Create(const chain: TChain; const tx: ITransaction; const callback: TProc<Boolean>; const log: TLog);
+constructor TFrmBase.Create(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
+
+  procedure InitShowThisWarning(const rect: TRectangle; edit: TEdit); inline;
+  begin
+    edit.ApplyStyleLookup;
+    const bg = edit.FindStyleResource('background');
+    if Assigned(bg) and (bg is TControl) then TControl(bg).Visible := False;
+    rect.Stroke.Color := TAlphaColors.LightGray;
+  end;
+
 begin
   inherited Create(Application);
 
   FChain    := chain;
   FCallback := callback;
-  FOnLog    := log;
+  FLogProc  := log;
 
-  lblGasFee.Visible := False;
-  imgGasFee.Visible := False;
-
-  if Assigned(tx) then tx.EstimateGas(chain, procedure(qty: BigInteger; err: IError)
-  begin
-    if Assigned(err) then Self.Log(err) else web3.eth.gas.getGasPrice(TWeb3.Create(chain), procedure(price: TWei; err: IError)
-    begin
-      if Assigned(err) then Self.Log(err) else TWeb3.Create(chain).LatestPrice(procedure(ticker: Double; err: IError)
-      begin
-        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
-        begin
-          lblGasFee.Text := System.SysUtils.Format('$ %.2f', [dotToFloat(fromWei(qty * price, ether)) * ticker]);
-          LoadGasFeeImage(imgGasFee);
-          lblGasFee.Visible := True;
-          imgGasFee.Visible := True;
-        end);
-      end);
-    end);
-  end);
+  InitShowThisWarning(rctShowThisWarning, edtShowThisWarning);
 end;
 
 procedure TFrmBase.SetBlocked(value: Boolean);
@@ -246,6 +348,11 @@ begin
   end;
 end;
 
+function TFrmBase.Bypass: TBypass;
+begin
+  Result := Default(TBypass);
+end;
+
 procedure TFrmBase.DoShow;
 begin
   centerOnDisplayUnderMouseCursor(Self);
@@ -262,32 +369,43 @@ begin
   btnAllow.Position.Y := Self.ClientHeight - btnAllow.Height - 16;
 end;
 
-{$R 'assets\gas_pump.res'}
-
-procedure TFrmBase.LoadGasFeeImage(const img: TImage);
-begin
-  const RS = TResourceStream.Create(hInstance, (function: string
-  begin
-    if common.DarkModeEnabled then
-      Result := 'GAS_PUMP_DARK'
-    else
-      Result := 'GAS_PUMP_LIGHT';
-  end)(), RT_RCDATA);
-  try
-    img.Bitmap.LoadFromStream(RS);
-  finally
-    RS.Free;
-  end;
-end;
-
 procedure TFrmBase.Log(const err: IError);
 begin
-  if Assigned(FOnLog) then FOnLog(err);
+  if Assigned(FLogProc) then FLogProc(err);
 end;
 
 procedure TFrmBase.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := TCloseAction.caFree;
+end;
+
+procedure TFrmBase.btnShowThisWarningClick(Sender: TObject);
+begin
+  const bypass = Self.Bypass;
+
+  mnuNeverForThis.Visible := bypass.Visible;
+  if mnuNeverForThis.Visible then
+    mnuNeverForThis.Text := System.SysUtils.Format(mnuNeverForThis.Text, [bypass.Name]);
+
+  var P := edtShowThisWarning.LocalToAbsolute(PointF(0, edtShowThisWarning.Height));
+  P := Self.ClientToScreen(P);
+  pmShowThisWarning.Popup(P.X, P.Y);
+end;
+
+procedure TFrmBase.mnuNeverAgainClick(Sender: TObject);
+begin
+  whitelist(TBaseClass(Self.ClassType));
+  btnAllowClick(Sender);
+end;
+
+procedure TFrmBase.mnuNeverForThisClick(Sender: TObject);
+begin
+  const bypass = Self.Bypass;
+  if Assigned(bypass.Proc) then
+  begin
+    bypass.Proc();
+    btnAllowClick(Sender);
+  end;
 end;
 
 procedure TFrmBase.btnBlockClick(Sender: TObject);
@@ -301,5 +419,14 @@ begin
   if Assigned(Self.FCallback) then Self.FCallback(True);
   Self.Close;
 end;
+
+initialization
+  allow1 := TLockableArray<TBaseClass>.Create;
+  allow2 := TDictionary<TBaseClass, TArray<TAddress>>.Create;
+
+finalization
+  if Assigned(allow2) then allow2.Free;
+  if Assigned(allow1) then allow1.Free;
+
 
 end.

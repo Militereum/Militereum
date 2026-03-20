@@ -4,8 +4,7 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.Actions,
+  System.Classes, System.Actions,
   // FireMonkey
   FMX.ActnList;
 
@@ -75,6 +74,8 @@ implementation
 {$R *.dfm}
 
 uses
+  // Delphi
+  System.SysUtils,
   // web3
   web3,
   web3.eth.tokenlists,
@@ -108,9 +109,13 @@ uses
   unverified,
   vault;
 
+var
+  allowed : TProc;
+  callback: TProc<Boolean>;
+
 procedure TdmDemo.actAirdropExecute(Sender: TObject);
 begin
-  airdrop.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', procedure(allow: Boolean) begin end, nil);
+  airdrop.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', allowed, callback, nil);
 end;
 
 procedure TdmDemo.actApproveExecute(Sender: TObject);
@@ -120,7 +125,7 @@ end;
 
 procedure TdmDemo.actBlacklistedExecute(Sender: TObject);
 begin
-  blacklisted.show(common.Ethereum, nil, '0xaa05f7c7eb9af63d6cc03c36c4f4ef6c37431ee0', procedure(allow: Boolean) begin end, nil);
+  blacklisted.show(common.Ethereum, nil, '0xaa05f7c7eb9af63d6cc03c36c4f4ef6c37431ee0', allowed, callback, nil);
 end;
 
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
@@ -231,5 +236,9 @@ procedure TdmDemo.actVaultExecute(Sender: TObject);
 begin
   vault.show(common.Ethereum, nil, 'USDC', procedure(allow: Boolean) begin end, nil);
 end;
+
+initialization
+  allowed  := procedure begin end;
+  callback := procedure(allow: Boolean) begin end;
 
 end.

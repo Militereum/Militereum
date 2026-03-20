@@ -33,7 +33,7 @@ type
     property Token: TAddress write SetToken;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -45,7 +45,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
 begin
   const frmUnlock = TFrmUnlock.Create(chain, tx, callback, log);
   frmUnlock.Action := action;

@@ -70,9 +70,9 @@ type
     chain : TChain;
     tx    : transaction.ITransaction;
     block : TDone;
-    log   : TLog;
+    log   : TLogProc;
   public
-    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLog);
+    constructor Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLogProc);
     [TComment('approve(address,uint256)')]
     procedure Step1(const prompted: TPrompted; const next: TNext);
     [TComment('transfer(address,uint256)')]
@@ -387,7 +387,7 @@ end;
 
 {---------------------------------- TChecks -----------------------------------}
 
-constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLog);
+constructor TChecks.Create(const server: TEthereumRPCServer; const port: TIdPort; const chain: TChain; const tx: transaction.ITransaction; const block: TDone; const log: TLogProc);
 begin
   inherited Create;
   Self.server := server;
@@ -763,16 +763,18 @@ begin
                 next(prompted, error.wrap(err, Self.Step8))
               else case contractType of
                 TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
-                  thread.synchronize(procedure
-                  begin
-                    airdrop.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                  airdrop.show(contracts[index].Action, chain, tx, contracts[index].Address,
+                    procedure
+                    begin
+                      step(index + 1, prompted);
+                    end,
+                    procedure(allow: Boolean)
                     begin
                       if allow then
                         step(index + 1, prompted + [TWarning.Other])
                       else
                         block(prompted);
                     end, log);
-                  end);
                 TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
                   thread.synchronize(procedure
                   begin
@@ -1346,16 +1348,18 @@ begin
     else if not frozen then
       next(prompted, nil)
     else
-      thread.synchronize(procedure
-      begin
-        blacklisted.show(chain, tx, tx.&To, procedure(allow: Boolean)
+      blacklisted.show(chain, tx, tx.&To,
+        procedure
+        begin
+          next(prompted, nil);
+        end,
+        procedure(allow: Boolean)
         begin
           if allow then
             next(prompted + [TWarning.Other], nil)
           else
             block(prompted);
         end, log);
-      end);
   end);
 end;
 

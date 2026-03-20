@@ -60,20 +60,23 @@ procedure approve(
   const spender : TAddress;
   const status  : TSpenderStatus;
   const quantity: BigInteger;
-  const callback: TProc<Boolean>; const log: TLog); overload;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc); overload;
 
 procedure transfer(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
-  const callback: TProc<Boolean>; const log: TLog);
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 
 procedure approve(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
   const status  : TSpenderStatus;
-  const callback: TProc<Boolean>; const log: TLog); overload;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc); overload;
 
 implementation
 
@@ -99,7 +102,8 @@ procedure approve(
   const spender : TAddress;
   const status  : TSpenderStatus;
   const quantity: BigInteger;
-  const callback: TProc<Boolean>; const log: TLog);
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 begin
   const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Token   := token;
@@ -114,7 +118,8 @@ procedure transfer(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
-  const callback: TProc<Boolean>; const log: TLog);
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 begin
   const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Change := change;
@@ -128,7 +133,8 @@ procedure approve(
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
   const status  : TSpenderStatus;
-  const callback: TProc<Boolean>; const log: TLog);
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 begin
   const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
   frmAsset.Change  := change;

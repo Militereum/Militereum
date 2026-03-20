@@ -28,7 +28,7 @@ type
 type
   TCannot = (Transfer, Sell);
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLogProc);
 
 implementation
 
@@ -38,7 +38,7 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLog);
+procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLogProc);
 const
   CannotString: array[TCannot] of string = (
     'You cannot transfer this token',

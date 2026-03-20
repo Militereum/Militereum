@@ -6,7 +6,13 @@ uses
   // Delphi
   System.Classes, System.SysUtils,
   // FireMonkey
-  FMX.Controls, FMX.Controls.Presentation, FMX.Objects, FMX.StdCtrls, FMX.Types,
+  FMX.Controls,
+  FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types,
   // web3
   web3,
   // project
@@ -19,12 +25,21 @@ type
     lblFooter: TLabel;
     procedure lblAddressClick(Sender: TObject);
   strict private
+    FAddress: TAddress;
     procedure SetAddress(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Address: TAddress write SetAddress;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const address : TAddress;
+  const allowed : TProc;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 
 implementation
 
@@ -34,37 +49,57 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLog);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const address : TAddress;
+  const allowed : TProc;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 begin
-  const frmBlacklisted = TFrmBlacklisted.Create(chain, tx, callback, log);
-  frmBlacklisted.Address := address;
-  frmBlacklisted.Show;
+  if whitelisted(TFrmBlacklisted) or whitelisted(TFrmBlacklisted, address) then
+  begin
+    allowed;
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmBlacklisted = TFrmBlacklisted.Create(chain, tx, callback, log);
+    frmBlacklisted.Address := address;
+    frmBlacklisted.Show;
+  end);
 end;
 
-{ TFrmBlacklisted }
+{------------------------------ TFrmBlacklisted -------------------------------}
 
 procedure TFrmBlacklisted.SetAddress(const value: TAddress);
 begin
-  lblAddress.Text := string(value);
-  if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
-    begin
-      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if value <> FAddress then
+  begin
+    FAddress := value;
+    lblAddress.Text := string(FAddress);
+    if not common.Demo then
+      cache.getFriendlyName(Self.Chain, FAddress, procedure(friendly: string; err: IError)
       begin
-        lblAddress.Text := friendly;
+        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+        begin
+          lblAddress.Text := friendly;
+        end);
       end);
-    end);
+  end;
+end;
+
+function TFrmBlacklisted.Bypass: TBypass;
+begin
+  Result := TBypass.Create('address', procedure
+  begin
+    whitelist(TFrmBlacklisted, FAddress);
+  end);
 end;
 
 procedure TFrmBlacklisted.lblAddressClick(Sender: TObject);
 begin
-  cache.fromName(lblAddress.Text, procedure(address: TAddress; err: IError)
-  begin
-    if Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + lblAddress.Text)
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + string(address));
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FAddress));
 end;
 
 end.
