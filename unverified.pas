@@ -4,19 +4,19 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
   web3,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type
   TFrmUnverified = class(TFrmBase)
@@ -26,54 +26,81 @@ type
     Label2: TLabel;
     procedure lblContractTextClick(Sender: TObject);
   strict private
+    FContract: TAddress;
     procedure SetContract(value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Contract: TAddress write SetContract;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const contract: TAddress;
+  const allowed : TProc;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 
 implementation
 
 uses
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const contract: TAddress;
+  const allowed : TProc;
+  const callback: TProc<Boolean>;
+  const log     : TLogProc);
 begin
-  const frmUnverified = TFrmUnverified.Create(chain, tx, callback, log);
-  frmUnverified.Contract := contract;
-  frmUnverified.Show;
+  if whitelisted(TFrmUnverified) or whitelisted(TFrmUnverified, contract) then
+  begin
+    allowed;
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmUnverified = TFrmUnverified.Create(chain, tx, callback, log);
+    frmUnverified.Contract := contract;
+    frmUnverified.Show;
+  end);
 end;
 
-{ TFrmUnverified }
+{------------------------------- TFrmUnverified -------------------------------}
 
 procedure TFrmUnverified.SetContract(value: TAddress);
 begin
-  lblContractText.Text := string(value);
-  if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
-    begin
-      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if value <> FContract then
+  begin
+    FContract := value;
+    lblContractText.Text := string(FContract);
+    if not common.Demo then
+      cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
       begin
-        lblContractText.Text := friendly;
+        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+        begin
+          lblContractText.Text := friendly;
+        end);
       end);
-    end);
+  end;
+end;
+
+function TFrmUnverified.Bypass: TBypass;
+begin
+  Result := TBypass.Create('contract', procedure
+  begin
+    whitelist(TFrmUnverified, FContract);
+  end);
 end;
 
 procedure TFrmUnverified.lblContractTextClick(Sender: TObject);
 begin
-  cache.fromName(lblContractText.Text, procedure(address: TAddress; err: IError)
-  begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + string(address) + '#code')
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + lblContractText.Text + '#code');
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FContract) + '#code')
 end;
 
 end.

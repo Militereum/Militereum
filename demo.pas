@@ -220,7 +220,7 @@ end;
 
 procedure TdmDemo.actUnverifiedExecute(Sender: TObject);
 begin
-  unverified.show(common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', procedure(allow: Boolean) begin end, nil);
+  unverified.show(common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', allowed, callback, nil);
 end;
 
 procedure TdmDemo.actUpdate(Sender: TObject);

@@ -596,16 +596,18 @@ begin
         else if src <> '' then
           next(prompted, nil)
         else
-          thread.synchronize(procedure
-          begin
-            unverified.show(chain, tx, tx.&To, procedure(allow: Boolean)
+          unverified.show(chain, tx, tx.&To,
+            procedure
+            begin
+              next(prompted, nil);
+            end,
+            procedure(allow: Boolean)
             begin
               if allow then
                 next(prompted + [TWarning.Other], nil)
               else
                 block(prompted);
             end, log);
-          end);
       end);
   end);
 end;
