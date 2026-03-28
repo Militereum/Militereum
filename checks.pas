@@ -449,19 +449,21 @@ begin
                           end)
                           .&else(procedure(from: TAddress)
                           begin
-                            thread.synchronize(procedure
-                            begin
-                              asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow: Boolean)
+                            asset.approve(chain, tx, token, args[0].ToAddress, status, value,
+                              procedure
+                              begin
+                                FApproved := FApproved + [TApproval.Create(chain, token.Address, from, args[0].ToAddress)];
+                                next(prompted, nil);
+                              end,
+                              procedure(allow: Boolean)
                               begin
                                 if allow then
-                                try
+                                begin
                                   FApproved := FApproved + [TApproval.Create(chain, token.Address, from, args[0].ToAddress)];
-                                finally
-                                  next(prompted + [TWarning.Approve], nil)
+                                  next(prompted + [TWarning.Approve], nil);
                                 end else
                                   block(prompted);
                               end, log);
-                            end);
                           end);
                     end);
                 end);
@@ -505,16 +507,18 @@ begin
                   else begin
                     const index = changes.IndexOf(tx.&To);
                     if (index > -1) and (changes.Item(index).Amount > 0) then
-                      thread.synchronize(procedure
-                      begin
-                        asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                      asset.transfer(chain, tx, changes.Item(index),
+                        procedure
+                        begin
+                          next(prompted, nil);
+                        end,
+                        procedure(allow: Boolean)
                         begin
                           if allow then
                             next(prompted + [TWarning.TransferOut], nil)
                           else
                             block(prompted);
-                        end, log);
-                      end)
+                        end, log)
                     else
                       thread.synchronize(procedure
                       begin
@@ -1497,35 +1501,39 @@ begin
                   step(index + 1, prompted)
                 else
                   if changes.Item(index).Change <> TChangeType.Approve then
-                    thread.synchronize(procedure
-                    begin
-                      asset.transfer(chain, tx, changes.Item(index), procedure(allow: Boolean)
+                    asset.transfer(chain, tx, changes.Item(index),
+                      procedure
+                      begin
+                        step(index + 1, prompted);
+                      end,
+                      procedure(allow: Boolean)
                       begin
                         if allow then
                           step(index + 1, prompted + [TWarning.TransferOut])
                         else
                           block(prompted);
-                      end, log);
-                    end)
+                      end, log)
                   else
                     getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                     begin
                       if Assigned(err) then
                         next(prompted, error.wrap(err, Self.Step24))
                       else
-                        thread.synchronize(procedure
-                        begin
-                          asset.approve(chain, tx, changes.Item(index), status, procedure(allow: Boolean)
+                        asset.approve(chain, tx, changes.Item(index), status,
+                          procedure
+                          begin
+                            FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
+                            step(index + 1, prompted);
+                          end,
+                          procedure(allow: Boolean)
                           begin
                             if allow then
-                            try
+                            begin
                               FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
-                            finally
-                              step(index + 1, prompted + [TWarning.Approve])
+                              step(index + 1, prompted + [TWarning.Approve]);
                             end else
                               block(prompted);
                           end, log);
-                        end)
                     end);
           end;
           step(0, prompted);

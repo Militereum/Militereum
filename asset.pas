@@ -4,23 +4,21 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
-  web3,
-  web3.eth.simulate,
-  web3.eth.tokenlists,
+  web3, web3.eth.simulate, web3.eth.tokenlists,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type // MUST have the same order as the steps in checks.getSpenderStatus()
   TSpenderStatus = (isEOA, isUnverified, isPhisher, isSanctioned, isGood);
@@ -38,19 +36,25 @@ type
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblSpenderTextClick(Sender: TObject);
   strict private
-    FToken: TAddress;
-    procedure SetToken(value: IToken);
-    procedure SetChange(value: IAssetChange);
-    procedure SetLogo(value: TURL);
-    procedure SetSpender(value: TAddress);
+    FType   : TChangeType;
+    FToken  : TAddress;
+    FSpender: TAddress;
+    procedure SetType(const value: TChangeType);
+    procedure SetToken(const value: IToken);
+    procedure SetChange(const value: IAssetChange);
+    procedure SetLogo(const value: TURL);
+    procedure SetSpender(const value: TAddress);
     procedure SetStatus(const value: TSpenderStatus);
+  strict protected
+    function Bypass: TBypass; override;
   public
     procedure Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
-    property Token: IToken write SetToken;
-    property Change: IAssetChange write SetChange;
-    property Logo: TURL write SetLogo;
-    property Spender: TAddress write SetSpender;
-    property Status: TSpenderStatus write SetStatus;
+    property &Type  : TChangeType    write SetType;
+    property Token  : IToken         write SetToken;
+    property Change : IAssetChange   write SetChange;
+    property Logo   : TURL           write SetLogo;
+    property Spender: TAddress       write SetSpender;
+    property Status : TSpenderStatus write SetStatus;
   end;
 
 procedure approve(
@@ -60,6 +64,7 @@ procedure approve(
   const spender : TAddress;
   const status  : TSpenderStatus;
   const quantity: BigInteger;
+  const allowed : TProc;
   const callback: TProc<Boolean>;
   const log     : TLogProc); overload;
 
@@ -67,6 +72,7 @@ procedure transfer(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
+  const allowed : TProc;
   const callback: TProc<Boolean>;
   const log     : TLogProc);
 
@@ -75,6 +81,7 @@ procedure approve(
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
   const status  : TSpenderStatus;
+  const allowed : TProc;
   const callback: TProc<Boolean>;
   const log     : TLogProc); overload;
 
@@ -82,16 +89,11 @@ implementation
 
 uses
   // Delphi
-  System.Math,
-  System.Net.HttpClient,
-  System.UITypes,
+  System.Math, System.Net.HttpClient, System.UITypes,
   // web3
-  web3.defillama,
-  web3.http,
+  web3.defillama, web3.http,
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
@@ -102,30 +104,47 @@ procedure approve(
   const spender : TAddress;
   const status  : TSpenderStatus;
   const quantity: BigInteger;
+  const allowed : TProc;
   const callback: TProc<Boolean>;
   const log     : TLogProc);
 begin
-  const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
-  frmAsset.Token   := token;
-  frmAsset.Spender := spender;
-  frmAsset.Status  := status;
-  frmAsset.Amount(token.Symbol, quantity, token.Decimals);
-  frmAsset.Blocked := (status <> isGood) or (quantity = web3.Infinite);
-  frmAsset.Show;
+  if whitelisted(TFrmAsset) or whitelisted(TFrmAsset, spender) then
+  begin
+    allowed;
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
+    frmAsset.&Type   := TChangeType.Approve;
+    frmAsset.Token   := token;
+    frmAsset.Spender := spender;
+    frmAsset.Status  := status;
+    frmAsset.Amount(token.Symbol, quantity, token.Decimals);
+    frmAsset.Blocked := (status <> isGood) or (quantity = web3.Infinite);
+    frmAsset.Show;
+  end);
 end;
 
 procedure transfer(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
+  const allowed : TProc;
   const callback: TProc<Boolean>;
   const log     : TLogProc);
 begin
-  const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
-  frmAsset.Change := change;
-  frmAsset.lblTitle.Text        := 'The following token is about to leave your wallet';
-  frmAsset.lblSpenderTitle.Text := 'Recipient';
-  frmAsset.Show;
+  if whitelisted(TFrmAsset) or whitelisted(TFrmAsset, change.&To) then
+  begin
+    allowed;
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
+    frmAsset.Change := change;
+    frmAsset.Show;
+  end);
 end;
 
 procedure approve(
@@ -133,19 +152,55 @@ procedure approve(
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
   const status  : TSpenderStatus;
+  const allowed : TProc;
   const callback: TProc<Boolean>;
   const log     : TLogProc);
 begin
-  const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
-  frmAsset.Change  := change;
-  frmAsset.Status  := status;
-  frmAsset.Blocked := (status <> isGood) or (change.Amount = web3.Infinite);
-  frmAsset.Show;
+  if whitelisted(TFrmAsset) or whitelisted(TFrmAsset, change.&To) then
+  begin
+    allowed;
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
+    frmAsset.Change  := change;
+    frmAsset.Status  := status;
+    frmAsset.Blocked := (status <> isGood) or (change.Amount = web3.Infinite);
+    frmAsset.Show;
+  end);
 end;
 
-{ TFrmAsset }
+{--------------------------------- TFrmAsset ----------------------------------}
 
-procedure TFrmAsset.SetToken(value: IToken);
+function TFrmAsset.Bypass: TBypass;
+
+  function BypassCaption(const aChangeType: TChangeType): string; inline;
+  begin
+    if aChangeType <> TChangeType.Approve then
+      Result := 'recipient'
+    else
+      Result := 'spender';
+  end;
+
+begin
+  Result := TBypass.Create(BypassCaption(FType), procedure
+  begin
+    whitelist(TFrmAsset, FSpender);
+  end);
+end;
+
+procedure TFrmAsset.SetType(const value: TChangeType);
+begin
+  FType := value;
+  if FType <> TChangeType.Approve then
+  begin
+    lblTitle.Text        := 'The following token is about to leave your wallet';
+    lblSpenderTitle.Text := 'Recipient';
+  end;
+end;
+
+procedure TFrmAsset.SetToken(const value: IToken);
 begin
   FToken := value.Address;
 
@@ -160,9 +215,10 @@ begin
   Self.Logo := value.Logo;
 end;
 
-procedure TFrmAsset.SetChange(value: IAssetChange);
+procedure TFrmAsset.SetChange(const value: IAssetChange);
 begin
-  FToken := value.Contract;
+  Self.&Type  := value.Change;
+  Self.FToken := value.Contract;
 
   lblTokenText.Text := (function(const value: IAssetChange): string
   begin
@@ -177,7 +233,7 @@ begin
   Self.Amount(value.Symbol.Value, value.Amount, value.Decimals.Value);
 end;
 
-procedure TFrmAsset.SetLogo(value: TURL);
+procedure TFrmAsset.SetLogo(const value: TURL);
 begin
   if value <> '' then
     web3.http.get(value, [], procedure(img: IHttpResponse; err: IError)
@@ -191,17 +247,21 @@ begin
     end);
 end;
 
-procedure TFrmAsset.SetSpender(value: TAddress);
+procedure TFrmAsset.SetSpender(const value: TAddress);
 begin
-  lblSpenderText.Text := string(value);
-  if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
-    begin
-      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+  if value <> FSpender then
+  begin
+    FSpender := value;
+    lblSpenderText.Text := string(FSpender);
+    if not common.Demo then
+      cache.getFriendlyName(Self.Chain, FSpender, procedure(friendly: string; err: IError)
       begin
-        lblSpenderText.Text := friendly;
+        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+        begin
+          lblSpenderText.Text := friendly;
+        end);
       end);
-    end);
+  end;
 end;
 
 procedure TFrmAsset.SetStatus(const value: TSpenderStatus);
@@ -250,13 +310,7 @@ end;
 
 procedure TFrmAsset.lblSpenderTextClick(Sender: TObject);
 begin
-  cache.fromName(lblSpenderText.Text, procedure(address: TAddress; err: IError)
-  begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + string(address))
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + lblSpenderText.Text);
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FSpender));
 end;
 
 end.
