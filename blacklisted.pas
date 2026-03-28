@@ -37,8 +37,7 @@ procedure show(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const address : TAddress;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 
 implementation
@@ -53,13 +52,12 @@ procedure show(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const address : TAddress;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 begin
   if whitelisted(TFrmBlacklisted) or whitelisted(TFrmBlacklisted, address) then
   begin
-    allowed;
+    callback(True, False);
     EXIT;
   end;
   thread.synchronize(procedure

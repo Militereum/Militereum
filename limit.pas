@@ -4,19 +4,19 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
   web3,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type
   TFrmLimit = class(TFrmBase)
@@ -33,27 +33,43 @@ type
     procedure SetRecipient(value: TAddress);
     procedure SetAmount(value: Double);
   public
-    constructor Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLogProc); override;
+    constructor Create(
+      const chain   : TChain;
+      const tx      : transaction.ITransaction;
+      const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+      const logProc : TLogProc); override;
     property Symbol: string write SetSymbol;
     property Recipient: TAddress write SetRecipient;
     property Amount: Double write SetAmount;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain    : TChain;
+  const tx       : transaction.ITransaction;
+  const symbol   : string;
+  const recipient: TAddress;
+  const amount   : Double;
+  const callback : TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc  : TLogProc);
 
 implementation
 
 uses
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const symbol: string; const recipient: TAddress; const amount: Double; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain    : TChain;
+  const tx       : transaction.ITransaction;
+  const symbol   : string;
+  const recipient: TAddress;
+  const amount   : Double;
+  const callback : TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc  : TLogProc);
 begin
-  const frmLimit = TFrmLimit.Create(chain, tx, callback, log);
+  const frmLimit = TFrmLimit.Create(chain, tx, callback, logProc);
   frmLimit.Symbol    := symbol;
   frmLimit.Recipient := recipient;
   frmLimit.Amount    := amount;
@@ -62,9 +78,13 @@ end;
 
 { TFrmLimit }
 
-constructor TFrmLimit.Create(const chain: TChain; const tx: transaction.ITransaction; const callback: TProc<Boolean>; const log: TLogProc);
+constructor TFrmLimit.Create(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 begin
-  inherited Create(chain, tx, callback, log);
+  inherited Create(chain, tx, callback, logProc);
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);
 end;
 

@@ -4,20 +4,19 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
-  web3,
-  web3.eth.contract,
+  web3, web3.eth.contract,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type
   TMobyMask = class(TCustomContract)
@@ -39,7 +38,13 @@ type
   end;
 
 procedure isPhisher(const address: TAddress; const callback: TProc<Boolean, IError>);
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const address : TAddress;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 
 implementation
 
@@ -47,9 +52,7 @@ uses
   // web3
   web3.eth,
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
@@ -64,9 +67,14 @@ begin
   end;
 end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const address : TAddress;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 begin
-  const frmPhisher = TFrmPhisher.Create(chain, tx, callback, log);
+  const frmPhisher = TFrmPhisher.Create(chain, tx, callback, logProc);
   frmPhisher.Address := address;
   frmPhisher.Show;
 end;

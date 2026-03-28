@@ -38,9 +38,8 @@ procedure show(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const contract: TAddress;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
-  const log     : TLogProc);
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 
 implementation
 
@@ -54,18 +53,17 @@ procedure show(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const contract: TAddress;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
-  const log     : TLogProc);
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 begin
   if whitelisted(TFrmUnverified) or whitelisted(TFrmUnverified, contract) then
   begin
-    allowed;
+    callback(True, False);
     EXIT;
   end;
   thread.synchronize(procedure
   begin
-    const frmUnverified = TFrmUnverified.Create(chain, tx, callback, log);
+    const frmUnverified = TFrmUnverified.Create(chain, tx, callback, logProc);
     frmUnverified.Contract := contract;
     frmUnverified.Show;
   end);

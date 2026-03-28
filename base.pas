@@ -82,7 +82,7 @@ type
     procedure btnAllowClick(Sender: TObject);
   strict private
     FChain   : TChain;
-    FCallback: TProc<Boolean>;
+    FCallback: TProc<Boolean, Boolean>; // -> (allow, shown)
     FLogProc : TLogProc;
     procedure SetBlocked(value: Boolean);
   protected
@@ -96,7 +96,7 @@ type
     constructor Create(
       const chain   : TChain;
       const tx      : transaction.ITransaction;
-      const callback: TProc<Boolean>;
+      const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
       const log     : TLogProc); reintroduce; virtual;
   end;
 
@@ -302,7 +302,7 @@ end;
 constructor TFrmBase.Create(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 
   procedure InitShowThisWarning(const rect: TRectangle; edit: TEdit); inline;
@@ -410,13 +410,13 @@ end;
 
 procedure TFrmBase.btnBlockClick(Sender: TObject);
 begin
-  if Assigned(Self.FCallback) then Self.FCallback(False);
+  if Assigned(Self.FCallback) then Self.FCallback(False, True);
   Self.Close;
 end;
 
 procedure TFrmBase.btnAllowClick(Sender: TObject);
 begin
-  if Assigned(Self.FCallback) then Self.FCallback(True);
+  if Assigned(Self.FCallback) then Self.FCallback(True, True);
   Self.Close;
 end;
 

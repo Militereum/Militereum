@@ -4,19 +4,19 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
   web3,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type
   TFrmLowDexScore = class(TFrmBase)
@@ -33,21 +33,31 @@ type
     property Token: TAddress write SetToken;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const action  : TTokenAction;
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const token   : TAddress;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 
 implementation
 
 uses
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const action  : TTokenAction;
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const token   : TAddress;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 begin
-  const frmLowDexScore = TFrmLowDexScore.Create(chain, tx, callback, log);
+  const frmLowDexScore = TFrmLowDexScore.Create(chain, tx, callback, logProc);
   frmLowDexScore.Action := action;
   frmLowDexScore.Token  := token;
   frmLowDexScore.Show;

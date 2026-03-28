@@ -4,19 +4,19 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
   web3,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type
   TFrmSetApprovalForAll = class(TFrmBase)
@@ -40,7 +40,12 @@ type
     property Spender: TAddress write SetSpender;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, spender: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain         : TChain;
+  const tx            : transaction.ITransaction;
+  const token, spender: TAddress;
+  const callback      : TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc       : TLogProc);
 
 implementation
 
@@ -48,15 +53,18 @@ uses
   // web3
   web3.eth.erc721,
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token, spender: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain         : TChain;
+  const tx            : transaction.ITransaction;
+  const token, spender: TAddress;
+  const callback      : TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc       : TLogProc);
 begin
-  const frmSetApprovalForAll = TFrmSetApprovalForAll.Create(chain, tx, callback, log);
+  const frmSetApprovalForAll = TFrmSetApprovalForAll.Create(chain, tx, callback, logProc);
   frmSetApprovalForAll.Token   := token;
   frmSetApprovalForAll.Spender := spender;
   frmSetApprovalForAll.Show;

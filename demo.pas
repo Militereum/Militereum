@@ -110,117 +110,116 @@ uses
   vault;
 
 var
-  allowed : TProc;
-  callback: TProc<Boolean>;
+  callback: TProc<Boolean, Boolean>;
 
 procedure TdmDemo.actAirdropExecute(Sender: TObject);
 begin
-  airdrop.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', allowed, callback, nil);
+  airdrop.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', callback, nil);
 end;
 
 procedure TdmDemo.actApproveExecute(Sender: TObject);
 begin
-  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', isGood, web3.Infinite, allowed, callback, nil);
+  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', isGood, web3.Infinite, callback, nil);
 end;
 
 procedure TdmDemo.actBlacklistedExecute(Sender: TObject);
 begin
-  blacklisted.show(common.Ethereum, nil, '0xaa05f7c7eb9af63d6cc03c36c4f4ef6c37431ee0', allowed, callback, nil);
+  blacklisted.show(common.Ethereum, nil, '0xaa05f7c7eb9af63d6cc03c36c4f4ef6c37431ee0', callback, nil);
 end;
 
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
 begin
-  censorable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, procedure(allow: Boolean) begin end, nil);
+  censorable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, callback, nil);
 end;
 
 procedure TdmDemo.actDelegatorExecute(Sender: TObject);
 begin
-  delegator.show(common.Ethereum, nil, '0x930fcc37d6042c79211ee18a02857cb1fd7f0d0b', procedure(allow: Boolean) begin end, nil);
+  delegator.show(common.Ethereum, nil, '0x930fcc37d6042c79211ee18a02857cb1fd7f0d0b', callback, nil);
 end;
 
 procedure TdmDemo.actDormantExecute(Sender: TObject);
 begin
-  dormant.show(taTransact, common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', False, procedure(allow: Boolean) begin end, nil);
+  dormant.show(taTransact, common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', False, callback, nil);
 end;
 
 procedure TdmDemo.actExploitExecute(Sender: TObject);
 begin
-  exploit.show(common.Ethereum, nil, '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07', 'Radiant Capital Hack', 'https://revoke.cash/exploits/radiant?chainId=1', procedure(allow: Boolean) begin end, nil);
+  exploit.show(common.Ethereum, nil, '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07', 'Radiant Capital Hack', 'https://revoke.cash/exploits/radiant?chainId=1', callback, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);
 begin
-  firsttime.show(common.Ethereum, nil, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', procedure(allow: Boolean) begin end, nil);
+  firsttime.show(common.Ethereum, nil, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', callback, nil);
 end;
 
 procedure TdmDemo.actFundedByExecute(Sender: TObject);
 begin
-  fundedBy.show(common.Ethereum, nil, '0x8589427373D6D84E98730D7795D8f6f8731FDA16', procedure(allow: Boolean) begin end, nil);
+  fundedBy.show(common.Ethereum, nil, '0x8589427373D6D84E98730D7795D8f6f8731FDA16', callback, nil);
 end;
 
 procedure TdmDemo.actHoneypotExecute(Sender: TObject);
 begin
-  honeypot.show(common.Ethereum, nil, '0x11d1A3cB34E7be24181A37DaE83bfFAE21Af524A', TCannot.Sell, procedure(allow: Boolean) begin end, nil);
+  honeypot.show(common.Ethereum, nil, '0x11d1A3cB34E7be24181A37DaE83bfFAE21Af524A', TCannot.Sell, callback, nil);
 end;
 
 procedure TdmDemo.actLimitExecute(Sender: TObject);
 begin
-  limit.show(common.Ethereum, nil, 'ETH', '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', 6080.45, procedure(allow: Boolean) begin end, nil);
+  limit.show(common.Ethereum, nil, 'ETH', '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', 6080.45, callback, nil);
 end;
 
 procedure TdmDemo.actLowDexScoreExecute(Sender: TObject);
 begin
-  lowDexScore.show(taReceive, common.Ethereum, nil, '0x4DB5C8875ef00ce8040A9685581fF75C3c61aDC8', procedure(allow: Boolean) begin end, nil);
+  lowDexScore.show(taReceive, common.Ethereum, nil, '0x4DB5C8875ef00ce8040A9685581fF75C3c61aDC8', callback, nil);
 end;
 
 procedure TdmDemo.actMetamorphicExecute(Sender: TObject);
 begin
-  metamorphic.show(common.Ethereum, nil, '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2', procedure(allow: Boolean) begin end, nil);
+  metamorphic.show(common.Ethereum, nil, '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2', callback, nil);
 end;
 
 procedure TdmDemo.actNoDexPairExecute(Sender: TObject);
 begin
-  noDexPair.show(taReceive, common.Ethereum, nil, '0x14C926F2290044B647e1Bf2072e67B495eff1905', procedure(allow: Boolean) begin end, nil);
+  noDexPair.show(taReceive, common.Ethereum, nil, '0x14C926F2290044B647e1Bf2072e67B495eff1905', callback, nil);
 end;
 
 procedure TdmDemo.actPausableExecute(Sender: TObject);
 begin
-  pausable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, procedure(allow: Boolean) begin end, nil);
+  pausable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, callback, nil);
 end;
 
 procedure TdmDemo.actPhisherExecute(Sender: TObject);
 begin
-  phisher.show(common.Ethereum, nil, '0x408cfD714C3bca3859650f6D85bAc1500620961e', procedure(allow: Boolean) begin end, nil);
+  phisher.show(common.Ethereum, nil, '0x408cfD714C3bca3859650f6D85bAc1500620961e', callback, nil);
 end;
 
 procedure TdmDemo.actSanctionedExecute(Sender: TObject);
 begin
-  sanctioned.show(common.Ethereum, nil, '0x8589427373D6D84E98730D7795D8f6f8731FDA16', procedure(allow: Boolean) begin end, nil);
+  sanctioned.show(common.Ethereum, nil, '0x8589427373D6D84E98730D7795D8f6f8731FDA16', callback, nil);
 end;
 
 procedure TdmDemo.actSetApprovalForAllExecute(Sender: TObject);
 begin
-  setApprovalForAll.show(common.Ethereum, nil, '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D', '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', procedure(allow: Boolean) begin end, nil);
+  setApprovalForAll.show(common.Ethereum, nil, '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D', '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', callback, nil);
 end;
 
 procedure TdmDemo.actSpamExecute(Sender: TObject);
 begin
-  spam.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', procedure(allow: Boolean) begin end, nil);
+  spam.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', callback, nil);
 end;
 
 procedure TdmDemo.actUnlockExecute(Sender: TObject);
 begin
-  unlock.show(taReceive, common.Ethereum, nil, '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', procedure(allow: Boolean) begin end, nil);
+  unlock.show(taReceive, common.Ethereum, nil, '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', callback, nil);
 end;
 
 procedure TdmDemo.actUnsupportedExecute(Sender: TObject);
 begin
-  unsupported.show(taReceive, common.Ethereum, nil, '0x249A198d59b57FDa5DDa90630FeBC86fd8c7594c', procedure(allow: Boolean) begin end, nil);
+  unsupported.show(taReceive, common.Ethereum, nil, '0x249A198d59b57FDa5DDa90630FeBC86fd8c7594c', callback, nil);
 end;
 
 procedure TdmDemo.actUnverifiedExecute(Sender: TObject);
 begin
-  unverified.show(common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', allowed, callback, nil);
+  unverified.show(common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', callback, nil);
 end;
 
 procedure TdmDemo.actUpdate(Sender: TObject);
@@ -234,11 +233,10 @@ end;
 
 procedure TdmDemo.actVaultExecute(Sender: TObject);
 begin
-  vault.show(common.Ethereum, nil, '0x39AA39c021dfbaE8faC545936693aC917d5E7563', 'USDC', allowed, callback, nil);
+  vault.show(common.Ethereum, nil, '0x39AA39c021dfbaE8faC545936693aC917d5E7563', 'USDC', callback, nil);
 end;
 
 initialization
-  allowed  := procedure begin end;
-  callback := procedure(allow: Boolean) begin end;
+  callback := procedure(allow, shown: Boolean) begin end;
 
 end.

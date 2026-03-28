@@ -449,21 +449,15 @@ begin
                           end)
                           .&else(procedure(from: TAddress)
                           begin
-                            asset.approve(chain, tx, token, args[0].ToAddress, status, value,
-                              procedure
+                            asset.approve(chain, tx, token, args[0].ToAddress, status, value, procedure(allow, _: Boolean)
+                            begin
+                              if allow then
                               begin
                                 FApproved := FApproved + [TApproval.Create(chain, token.Address, from, args[0].ToAddress)];
-                                next(prompted, nil);
-                              end,
-                              procedure(allow: Boolean)
-                              begin
-                                if allow then
-                                begin
-                                  FApproved := FApproved + [TApproval.Create(chain, token.Address, from, args[0].ToAddress)];
-                                  next(prompted + [TWarning.Approve], nil);
-                                end else
-                                  block(prompted);
-                              end, log);
+                                next(prompted + [TWarning.Approve], nil);
+                              end else
+                                block(prompted);
+                            end, log);
                           end);
                     end);
                 end);
@@ -507,22 +501,17 @@ begin
                   else begin
                     const index = changes.IndexOf(tx.&To);
                     if (index > -1) and (changes.Item(index).Amount > 0) then
-                      asset.transfer(chain, tx, changes.Item(index),
-                        procedure
-                        begin
-                          next(prompted, nil);
-                        end,
-                        procedure(allow: Boolean)
-                        begin
-                          if allow then
-                            next(prompted + [TWarning.TransferOut], nil)
-                          else
-                            block(prompted);
-                        end, log)
+                      asset.transfer(chain, tx, changes.Item(index), procedure(allow, _: Boolean)
+                      begin
+                        if allow then
+                          next(prompted + [TWarning.TransferOut], nil)
+                        else
+                          block(prompted);
+                      end, log)
                     else
                       thread.synchronize(procedure
                       begin
-                        honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow: Boolean)
+                        honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow, _: Boolean)
                         begin
                           if allow then
                             next(prompted + [TWarning.Other], nil)
@@ -571,7 +560,7 @@ begin
               else
                 thread.synchronize(procedure
                 begin
-                  setApprovalForAll.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow: Boolean)
+                  setApprovalForAll.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow, _: Boolean)
                   begin
                     if allow then
                       next(prompted + [TWarning.Other], nil)
@@ -600,18 +589,13 @@ begin
         else if src <> '' then
           next(prompted, nil)
         else
-          unverified.show(chain, tx, tx.&To,
-            procedure
-            begin
-              next(prompted, nil);
-            end,
-            procedure(allow: Boolean)
-            begin
-              if allow then
-                next(prompted + [TWarning.Other], nil)
-              else
-                block(prompted);
-            end, log);
+          unverified.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
+          begin
+            if allow then
+              next(prompted + [TWarning.Other], nil)
+            else
+              block(prompted);
+          end, log);
       end);
   end);
 end;
@@ -658,7 +642,7 @@ begin
                         else
                           thread.synchronize(procedure
                           begin
-                            limit.show(chain, tx, symbol, args[0].ToAddress, amount, procedure(allow: Boolean)
+                            limit.show(chain, tx, symbol, args[0].ToAddress, amount, procedure(allow, _: Boolean)
                             begin
                               if allow then
                                 next(prompted + [TWarning.Other], nil)
@@ -691,7 +675,7 @@ begin
         else
           thread.synchronize(procedure
           begin
-            limit.show(chain, tx, string(chain.Symbol), tx.&To, amount, procedure(allow: Boolean)
+            limit.show(chain, tx, string(chain.Symbol), tx.&To, amount, procedure(allow, _: Boolean)
             begin
               if allow then
                 next(prompted + [TWarning.Other], nil)
@@ -715,7 +699,7 @@ begin
     else
       thread.synchronize(procedure
       begin
-        phisher.show(chain, tx, tx.&To, procedure(allow: Boolean)
+        phisher.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
         begin
           if allow then
             next(prompted + [TWarning.Other], nil)
@@ -769,22 +753,17 @@ begin
                 next(prompted, error.wrap(err, Self.Step8))
               else case contractType of
                 TContractType.Airdrop: // probably an unwarranted airdrop (most of the owners are honeypots)
-                  airdrop.show(contracts[index].Action, chain, tx, contracts[index].Address,
-                    procedure
-                    begin
-                      step(index + 1, prompted);
-                    end,
-                    procedure(allow: Boolean)
-                    begin
-                      if allow then
-                        step(index + 1, prompted + [TWarning.Other])
-                      else
-                        block(prompted);
-                    end, log);
+                  airdrop.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
+                  begin
+                    if allow then
+                      step(index + 1, prompted + [TWarning.Other])
+                    else
+                      block(prompted);
+                  end, log);
                 TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
                   thread.synchronize(procedure
                   begin
-                    spam.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                    spam.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                     begin
                       if allow then
                         step(index + 1, prompted + [TWarning.Other])
@@ -824,7 +803,7 @@ begin
           else
             thread.synchronize(procedure
             begin
-              firsttime.show(chain, tx, tx.&To, procedure(allow: Boolean)
+              firsttime.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
               begin
                 if allow then
                   next(prompted + [TWarning.Other], nil)
@@ -864,7 +843,7 @@ begin
           else
             thread.synchronize(procedure
             begin
-              unsupported.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+              unsupported.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
               begin
                 if allow then
                   step(index + 1, prompted + [TWarning.Other])
@@ -889,7 +868,7 @@ begin
     else
       thread.synchronize(procedure
       begin
-        sanctioned.show(chain, tx, tx.&To, procedure(allow: Boolean)
+        sanctioned.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
         begin
           if allow then
             next(prompted + [TWarning.Other], nil)
@@ -946,7 +925,7 @@ begin
             else
               thread.synchronize(procedure
               begin
-                lowDexScore.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                lowDexScore.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                 begin
                   if allow then
                     step(index + 1, prompted + [TWarning.Other])
@@ -1002,7 +981,7 @@ begin
                   else
                     thread.synchronize(procedure
                     begin
-                      noDexPair.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                      noDexPair.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                       begin
                         if allow then
                           step(index + 1, prompted + [TWarning.Other])
@@ -1049,7 +1028,7 @@ begin
             end)(abi) then
               thread.synchronize(procedure
               begin
-                censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
+                censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow, _: Boolean)
                 begin
                   if allow then
                     step(index + 1, prompted + [TWarning.Other])
@@ -1070,7 +1049,7 @@ begin
               end)(abi) then
                 thread.synchronize(procedure
                 begin
-                  pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow: Boolean)
+                  pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow, _: Boolean)
                   begin
                     if allow then
                       step(index + 1, prompted + [TWarning.Other])
@@ -1118,10 +1097,10 @@ begin
                 else
                   thread.synchronize(procedure
                   begin
-                    honeypot.show(chain, tx, honeypots.Item(index).Contract, TCannot.Sell, procedure(allow: Boolean)
+                    honeypot.show(chain, tx, honeypots.Item(index).Contract, TCannot.Sell, procedure(allow, _: Boolean)
                     begin
                       if allow then
-                        step(index + 1, prompted)
+                        step(index + 1, prompted + [TWarning.Other])
                       else
                         block(prompted);
                     end, log);
@@ -1161,7 +1140,7 @@ begin
               begin
                 thread.synchronize(procedure
                 begin
-                  dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow: Boolean)
+                  dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow, _: Boolean)
                   begin
                     if allow then
                       step(index + 1, prompted + [TWarning.Other])
@@ -1218,7 +1197,7 @@ begin
                   else
                     thread.synchronize(procedure
                     begin
-                      unlock.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow: Boolean)
+                      unlock.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                       begin
                         if allow then
                           step(index + 1, prompted + [TWarning.Other])
@@ -1257,7 +1236,7 @@ begin
           else
             thread.synchronize(procedure
             begin
-              exploit.show(chain, tx, spenders[index], exp.Name, exp.URL(chain), procedure(allow: Boolean)
+              exploit.show(chain, tx, spenders[index], exp.Name, exp.URL(chain), procedure(allow, _: Boolean)
               begin
                 if allow then
                   step(index + 1, prompted + [TWarning.Other])
@@ -1288,21 +1267,16 @@ begin
         else if not Assigned(other) then
           next(prompted, nil)
         else
-          vault.show(chain, tx, tx.&To, other.Asset.Symbol,
-            procedure
-            begin
-              next(prompted, nil);
-            end,
-            procedure(allow: Boolean)
-            begin
-              if allow then
-                next(prompted + [TWarning.Other], nil)
-              else try
-                common.Open(other.URL);
-              finally
-                block(prompted);
-              end;
-            end, log);
+          vault.show(chain, tx, tx.&To, other.Asset.Symbol, procedure(allow, _: Boolean)
+          begin
+            if allow then
+              next(prompted + [TWarning.Other], nil)
+            else try
+              common.Open(other.URL);
+            finally
+              block(prompted);
+            end;
+          end, log);
       end);
   end);
 end;
@@ -1323,7 +1297,7 @@ begin
         else
           thread.synchronize(procedure
           begin
-            fundedBy.show(chain, tx, tx.&To, procedure(allow: Boolean)
+            fundedBy.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
             begin
               if allow then
                 next(prompted + [TWarning.Other], nil)
@@ -1356,18 +1330,13 @@ begin
     else if not frozen then
       next(prompted, nil)
     else
-      blacklisted.show(chain, tx, tx.&To,
-        procedure
-        begin
-          next(prompted, nil);
-        end,
-        procedure(allow: Boolean)
-        begin
-          if allow then
-            next(prompted + [TWarning.Other], nil)
-          else
-            block(prompted);
-        end, log);
+      blacklisted.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
+      begin
+        if allow then
+          next(prompted + [TWarning.Other], nil)
+        else
+          block(prompted);
+      end, log);
   end);
 end;
 
@@ -1413,7 +1382,7 @@ begin
             else
               thread.synchronize(procedure
               begin
-                delegator.show(chain, tx, addresses[index], procedure(allow: Boolean)
+                delegator.show(chain, tx, addresses[index], procedure(allow, _: Boolean)
                 begin
                   if allow then
                     next(prompted + [TWarning.Other], nil)
@@ -1444,7 +1413,7 @@ begin
         else
           thread.synchronize(procedure
           begin
-            metamorphic.show(chain, tx, tx.&To, procedure(allow: Boolean)
+            metamorphic.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
             begin
               if allow then
                 next(prompted + [TWarning.Other], nil)
@@ -1501,39 +1470,28 @@ begin
                   step(index + 1, prompted)
                 else
                   if changes.Item(index).Change <> TChangeType.Approve then
-                    asset.transfer(chain, tx, changes.Item(index),
-                      procedure
-                      begin
-                        step(index + 1, prompted);
-                      end,
-                      procedure(allow: Boolean)
-                      begin
-                        if allow then
-                          step(index + 1, prompted + [TWarning.TransferOut])
-                        else
-                          block(prompted);
-                      end, log)
+                    asset.transfer(chain, tx, changes.Item(index), procedure(allow, _: Boolean)
+                    begin
+                      if allow then
+                        step(index + 1, prompted + [TWarning.TransferOut])
+                      else
+                        block(prompted);
+                    end, log)
                   else
                     getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
                     begin
                       if Assigned(err) then
                         next(prompted, error.wrap(err, Self.Step24))
                       else
-                        asset.approve(chain, tx, changes.Item(index), status,
-                          procedure
+                        asset.approve(chain, tx, changes.Item(index), status, procedure(allow, _: Boolean)
+                        begin
+                          if allow then
                           begin
                             FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
-                            step(index + 1, prompted);
-                          end,
-                          procedure(allow: Boolean)
-                          begin
-                            if allow then
-                            begin
-                              FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
-                              step(index + 1, prompted + [TWarning.Approve]);
-                            end else
-                              block(prompted);
-                          end, log);
+                            step(index + 1, prompted + [TWarning.Approve]);
+                          end else
+                            block(prompted);
+                        end, log);
                     end);
           end;
           step(0, prompted);

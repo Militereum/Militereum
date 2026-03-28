@@ -64,16 +64,14 @@ procedure approve(
   const spender : TAddress;
   const status  : TSpenderStatus;
   const quantity: BigInteger;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc); overload;
 
 procedure transfer(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 
 procedure approve(
@@ -81,8 +79,7 @@ procedure approve(
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
   const status  : TSpenderStatus;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc); overload;
 
 implementation
@@ -104,13 +101,12 @@ procedure approve(
   const spender : TAddress;
   const status  : TSpenderStatus;
   const quantity: BigInteger;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 begin
   if whitelisted(TFrmAsset) or whitelisted(TFrmAsset, spender) then
   begin
-    allowed;
+    callback(True, False);
     EXIT;
   end;
   thread.synchronize(procedure
@@ -130,13 +126,12 @@ procedure transfer(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 begin
   if whitelisted(TFrmAsset) or whitelisted(TFrmAsset, change.&To) then
   begin
-    allowed;
+    callback(True, False);
     EXIT;
   end;
   thread.synchronize(procedure
@@ -152,13 +147,12 @@ procedure approve(
   const tx      : transaction.ITransaction;
   const change  : IAssetChange;
   const status  : TSpenderStatus;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 begin
   if whitelisted(TFrmAsset) or whitelisted(TFrmAsset, change.&To) then
   begin
-    allowed;
+    callback(True, False);
     EXIT;
   end;
   thread.synchronize(procedure

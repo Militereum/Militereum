@@ -38,8 +38,7 @@ procedure show(
   const tx      : transaction.ITransaction;
   const vault   : TAddress;
   const symbol  : string;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 
 implementation
@@ -55,13 +54,12 @@ procedure show(
   const tx      : transaction.ITransaction;
   const vault   : TAddress;
   const symbol  : string;
-  const allowed : TProc;
-  const callback: TProc<Boolean>;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const log     : TLogProc);
 begin
   if whitelisted(TFrmVault) or whitelisted(TFrmVault, vault) then
   begin
-    allowed;
+    callback(True, False);
     EXIT;
   end;
   thread.synchronize(procedure

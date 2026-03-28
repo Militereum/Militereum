@@ -4,19 +4,19 @@ interface
 
 uses
   // Delphi
-  System.Classes,
-  System.SysUtils,
+  System.Classes, System.SysUtils,
   // FireMonkey
   FMX.Controls,
   FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
   // web3
   web3,
   // project
-  base,
-  transaction;
+  base, transaction;
 
 type
   TFrmPausable = class(TFrmBase)
@@ -34,21 +34,33 @@ type
     property IsERC20: Boolean write SetIsERC20;
   end;
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const action  : TTokenAction;
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const contract: TAddress;
+  const isERC20 : Boolean;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 
 implementation
 
 uses
   // project
-  cache,
-  common,
-  thread;
+  cache, common, thread;
 
 {$R *.fmx}
 
-procedure show(const action: TTokenAction; const chain: TChain; const tx: transaction.ITransaction; const contract: TAddress; const isERC20: Boolean; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const action  : TTokenAction;
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const contract: TAddress;
+  const isERC20 : Boolean;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 begin
-  const frmPausable = TFrmPausable.Create(chain, tx, callback, log);
+  const frmPausable = TFrmPausable.Create(chain, tx, callback, logProc);
   frmPausable.Action   := action;
   frmPausable.Contract := contract;
   frmPausable.IsERC20  := isERC20;

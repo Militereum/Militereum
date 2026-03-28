@@ -6,7 +6,13 @@ uses
   // Delphi
   System.Classes, System.SysUtils,
   // FireMonkey
-  FMX.Controls, FMX.Controls.Presentation, FMX.Objects, FMX.StdCtrls, FMX.Types,
+  FMX.Controls,
+  FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types,
   // web3
   web3,
   // project
@@ -24,7 +30,12 @@ type
     property Address: TAddress write SetAddress;
   end;
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const address : TAddress;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 
 implementation
 
@@ -34,9 +45,14 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const address: TAddress; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const address : TAddress;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 begin
-  const frmMetamorphic = TFrmMetamorphic.Create(chain, tx, callback, log);
+  const frmMetamorphic = TFrmMetamorphic.Create(chain, tx, callback, logProc);
   frmMetamorphic.Address := address;
   frmMetamorphic.Show;
 end;

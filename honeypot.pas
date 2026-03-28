@@ -6,7 +6,13 @@ uses
   // Delphi
   System.Classes, System.SysUtils,
   // FireMonkey
-  FMX.Controls, FMX.Controls.Presentation, FMX.Objects, FMX.StdCtrls, FMX.Types,
+  FMX.Controls,
+  FMX.Controls.Presentation,
+  FMX.Edit,
+  FMX.Menus,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types,
   // web3
   web3,
   // project
@@ -28,7 +34,13 @@ type
 type
   TCannot = (Transfer, Sell);
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const token   : TAddress;
+  const cannot  : TCannot;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 
 implementation
 
@@ -38,14 +50,19 @@ uses
 
 {$R *.fmx}
 
-procedure show(const chain: TChain; const tx: transaction.ITransaction; const token: TAddress; const cannot: TCannot; const callback: TProc<Boolean>; const log: TLogProc);
+procedure show(
+  const chain   : TChain;
+  const tx      : transaction.ITransaction;
+  const token   : TAddress;
+  const cannot  : TCannot;
+  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
+  const logProc : TLogProc);
 const
   CannotString: array[TCannot] of string = (
     'You cannot transfer this token',
-    'You are about to receive a token you cannot sell'
-  );
+    'You are about to receive a token you cannot sell');
 begin
-  const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, log);
+  const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, logProc);
   frmHoneypot.Token := token;
   frmHoneypot.lblHeader.Text := CannotString[cannot];
   frmHoneypot.Show;
