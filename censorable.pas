@@ -25,9 +25,14 @@ type
     lblFooter: TLabel;
     procedure lblTokenClick(Sender: TObject);
   strict private
-    procedure SetAction(value: TTokenAction);
-    procedure SetContract(value: TAddress);
-    procedure SetIsERC20(value: Boolean);
+    FContract: TAddress;
+    FIsERC20 : Boolean;
+    function  What: string; inline;
+    procedure SetAction(const value: TTokenAction);
+    procedure SetContract(const value: TAddress);
+    procedure SetIsERC20(const value: Boolean);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Action: TTokenAction write SetAction;
     property Contract: TAddress write SetContract;
@@ -60,25 +65,47 @@ procedure show(
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmCensorable = TFrmCensorable.Create(chain, tx, callback, logProc);
-  frmCensorable.Action   := action;
-  frmCensorable.Contract := contract;
-  frmCensorable.IsERC20  := isERC20;
-  frmCensorable.Show;
+  if whitelisted(TFrmCensorable) or whitelisted(TFrmCensorable, contract) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmCensorable = TFrmCensorable.Create(chain, tx, callback, logProc);
+    frmCensorable.Action   := action;
+    frmCensorable.Contract := contract;
+    frmCensorable.IsERC20  := isERC20;
+    frmCensorable.Show;
+  end);
 end;
 
-{ TFrmCensorable }
+{------------------------------- TFrmCensorable -------------------------------}
 
-procedure TFrmCensorable.SetAction(value: TTokenAction);
+function TFrmCensorable.Bypass: TBypass;
+begin
+  Result := TBypass.Create(Self.What, procedure
+  begin
+    whitelist(TFrmCensorable, FContract);
+  end);
+end;
+
+function TFrmCensorable.What: string;
+begin
+  if FIsERC20 then Result := 'token' else Result := 'contract';
+end;
+
+procedure TFrmCensorable.SetAction(const value: TTokenAction);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value], '%s']);
 end;
 
-procedure TFrmCensorable.SetContract(value: TAddress);
+procedure TFrmCensorable.SetContract(const value: TAddress);
 begin
-  lblToken.Text := string(value);
+  FContract := value;
+  lblToken.Text := string(FContract);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -87,23 +114,15 @@ begin
     end);
 end;
 
-procedure TFrmCensorable.SetIsERC20(value: Boolean);
+procedure TFrmCensorable.SetIsERC20(const value: Boolean);
 begin
-  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [(function: string
-  begin
-    if value then Result := 'token' else Result := 'contract'
-  end)()]);
+  FIsERC20 := value;
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [Self.What]);
 end;
 
 procedure TFrmCensorable.lblTokenClick(Sender: TObject);
 begin
-  cache.fromName(lblToken.Text, procedure(address: TAddress; err: IError)
-  begin
-    if Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + lblToken.Text)
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + string(address));
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FContract));
 end;
 
 end.
