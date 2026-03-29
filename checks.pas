@@ -1377,16 +1377,13 @@ begin
             end)(addresses[index]) then
               step(index + 1, prompted)
             else
-              thread.synchronize(procedure
+              delegator.show(chain, tx, addresses[index], procedure(allow, _: Boolean)
               begin
-                delegator.show(chain, tx, addresses[index], procedure(allow, _: Boolean)
-                begin
-                  if allow then
-                    next(prompted + [TWarning.Other], nil)
-                  else
-                    block(prompted);
-                end, log);
-              end);
+                if allow then
+                  next(prompted + [TWarning.Other], nil)
+                else
+                  block(prompted);
+              end, log);
         end;
         step(0, prompted);
       end);

@@ -25,7 +25,10 @@ type
     lblFooter: TLabel;
     procedure lblAddressClick(Sender: TObject);
   strict private
+    FContract: TAddress;
     procedure SetContract(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Contract: TAddress write SetContract;
   end;
@@ -52,18 +55,35 @@ procedure show(
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmDelegator = TFrmDelegator.Create(chain, tx, callback, logProc);
-  frmDelegator.Contract := contract;
-  frmDelegator.Show;
+  if whitelisted(TFrmDelegator) or whitelisted(TFrmDelegator, contract) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmDelegator = TFrmDelegator.Create(chain, tx, callback, logProc);
+    frmDelegator.Contract := contract;
+    frmDelegator.Show;
+  end);
 end;
 
-{ TFrmDelegator }
+{------------------------------- TFrmDelegator --------------------------------}
+
+function TFrmDelegator.Bypass: TBypass;
+begin
+  Result := TBypass.Create('contract', procedure
+  begin
+    whitelist(TFrmDelegator, FContract);
+  end);
+end;
 
 procedure TFrmDelegator.SetContract(const value: TAddress);
 begin
-  lblAddress.Text := string(value);
+  FContract := value;
+  lblAddress.Text := string(FContract);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -74,13 +94,7 @@ end;
 
 procedure TFrmDelegator.lblAddressClick(Sender: TObject);
 begin
-  cache.fromName(lblAddress.Text, procedure(address: TAddress; err: IError)
-  begin
-    if Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + lblAddress.Text)
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + string(address));
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FContract));
 end;
 
 end.
