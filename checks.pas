@@ -1228,16 +1228,13 @@ begin
           else if not Assigned(exp) then
             step(index + 1, prompted)
           else
-            thread.synchronize(procedure
+            exploit.show(chain, tx, spenders[index], exp.Name, exp.URL(chain), procedure(allow, _: Boolean)
             begin
-              exploit.show(chain, tx, spenders[index], exp.Name, exp.URL(chain), procedure(allow, _: Boolean)
-              begin
-                if allow then
-                  step(index + 1, prompted + [TWarning.Other])
-                else
-                  block(prompted);
-              end, log);
-            end);
+              if allow then
+                step(index + 1, prompted + [TWarning.Other])
+              else
+                block(prompted);
+            end, log);
         end);
     end;
     step(0, prompted);

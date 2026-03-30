@@ -329,6 +329,7 @@ begin
   imgWarning.Visible := not value;
   // Allow button is disabled at first, but the user can click it after a 5 sec wait
   btnAllow.Enabled := not value;
+  btnShowThisWarning.Enabled := not Value;
   if value then
   begin
     var counter := 5;
@@ -343,6 +344,7 @@ begin
       begin
         AForm.btnAllow.Text := 'Allow';
         AForm.btnAllow.Enabled := True;
+        AForm.btnShowThisWarning.Enabled := True;
       end;
     end);
   end;
