@@ -1135,16 +1135,13 @@ begin
             else
               contracts[index].IsERC20(procedure(isERC20: Boolean; err: IError)
               begin
-                thread.synchronize(procedure
+                dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow, _: Boolean)
                 begin
-                  dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow, _: Boolean)
-                  begin
-                    if allow then
-                      step(index + 1, prompted + [TWarning.Other])
-                    else
-                      block(prompted);
-                  end, log);
-                end)
+                  if allow then
+                    step(index + 1, prompted + [TWarning.Other])
+                  else
+                    block(prompted);
+                end, log);
               end)
         end);
     end;

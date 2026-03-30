@@ -25,9 +25,14 @@ type
     lblFooter: TLabel;
     procedure lblTokenClick(Sender: TObject);
   strict private
-    procedure SetAction(value: TTokenAction);
-    procedure SetContract(value: TAddress);
-    procedure SetIsERC20(value: Boolean);
+    FContract: TAddress;
+    FIsERC20 : Boolean;
+    function  What: string; inline;
+    procedure SetAction(const value: TTokenAction);
+    procedure SetContract(const value: TAddress);
+    procedure SetIsERC20(Const value: Boolean);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Action: TTokenAction write SetAction;
     property Contract: TAddress write SetContract;
@@ -60,25 +65,47 @@ procedure show(
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmDormant = TFrmDormant.Create(chain, tx, callback, logProc);
-  frmDormant.Action   := action;
-  frmDormant.Contract := contract;
-  frmDormant.IsERC20  := isERC20;
-  frmDormant.Show;
+  if whitelisted(TFrmDormant) or whitelisted(TFrmDormant, contract) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmDormant = TFrmDormant.Create(chain, tx, callback, logProc);
+    frmDormant.Action   := action;
+    frmDormant.Contract := contract;
+    frmDormant.IsERC20  := isERC20;
+    frmDormant.Show;
+  end);
 end;
 
-{ TFrmDormant }
+{-------------------------------- TFrmDormant ---------------------------------}
 
-procedure TFrmDormant.SetAction(value: TTokenAction);
+function TFrmDormant.Bypass: TBypass;
+begin
+  Result := TBypass.Create(Self.What, procedure
+  begin
+    whitelist(TFrmDormant, FContract);
+  end);
+end;
+
+function TFrmDormant.What: string;
+begin
+  if FIsERC20 then Result := 'token' else Result := 'contract';
+end;
+
+procedure TFrmDormant.SetAction(const value: TTokenAction);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value], '%s']);
 end;
 
-procedure TFrmDormant.SetContract(value: TAddress);
+procedure TFrmDormant.SetContract(const value: TAddress);
 begin
-  lblToken.Text := string(value);
+  FContract := value;
+  lblToken.Text := string(FContract);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -87,23 +114,15 @@ begin
     end);
 end;
 
-procedure TFrmDormant.SetIsERC20(value: Boolean);
+procedure TFrmDormant.SetIsERC20(const value: Boolean);
 begin
-  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [(function: string
-  begin
-    if value then Result := 'token' else Result := 'contract'
-  end)()]);
+  FIsERC20 := value;
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [Self.What]);
 end;
 
 procedure TFrmDormant.lblTokenClick(Sender: TObject);
 begin
-  cache.fromName(lblToken.Text, procedure(address: TAddress; err: IError)
-  begin
-    if Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + lblToken.Text)
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + string(address));
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FContract));
 end;
 
 end.
