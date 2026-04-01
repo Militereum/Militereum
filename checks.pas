@@ -801,16 +801,13 @@ begin
           if txs.Count > 0 then
             next(prompted, nil)
           else
-            thread.synchronize(procedure
+            firsttime.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
             begin
-              firsttime.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
-              begin
-                if allow then
-                  next(prompted + [TWarning.Other], nil)
-                else
-                  block(prompted);
-              end, log);
-            end);
+              if allow then
+                next(prompted + [TWarning.Other], nil)
+              else
+                block(prompted);
+            end, log);
         end;
       end);
     end);
