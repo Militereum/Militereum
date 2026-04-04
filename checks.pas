@@ -222,7 +222,13 @@ begin
     if bad or Assigned(err) then
       callback(bad, err)
     else
-      web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+      revoke.cash.exploit(chain, address, procedure(exp: IExploit; err: IError)
+      begin
+        if Assigned(exp) or Assigned(err) then
+          callback(exp <> nil, err)
+        else
+          web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+      end);
   end);
 end;
 
@@ -1283,16 +1289,13 @@ begin
         else if not bad then
           next(prompted, nil)
         else
-          thread.synchronize(procedure
+          fundedBy. show(chain, tx, tx.&To, procedure(allow, _: Boolean)
           begin
-            fundedBy.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
-            begin
-              if allow then
-                next(prompted + [TWarning.Other], nil)
-              else
-                block(prompted);
-            end, log);
-          end);
+            if allow then
+              next(prompted + [TWarning.Other], nil)
+            else
+              block(prompted);
+          end, log);
       end);
   end);
 end;
