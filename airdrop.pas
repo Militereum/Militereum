@@ -83,19 +83,16 @@ end;
 
 procedure TFrmAirdrop.SetToken(value: TAddress);
 begin
-  if value <> FToken then
-  begin
-    FToken := value;
-    lblTokenText.Text := string(FToken);
-    if not common.Demo then
-      cache.getFriendlyName(Self.Chain, FToken, procedure(friendly: string; err: IError)
+  FToken := value;
+  lblTokenText.Text := string(FToken);
+  if not common.Demo then
+    cache.getFriendlyName(Self.Chain, FToken, procedure(friendly: string; err: IError)
+    begin
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
-        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
-        begin
-          lblTokenText.Text := friendly;
-        end);
+        lblTokenText.Text := friendly;
       end);
-  end;
+    end);
 end;
 
 function TFrmAirdrop.Bypass: TBypass;

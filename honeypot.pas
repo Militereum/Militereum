@@ -26,7 +26,9 @@ type
     procedure lblTokenClick(Sender: TObject);
   strict private
     FToken: TAddress;
-    procedure SetToken(value: TAddress);
+    procedure SetToken(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Token: TAddress write SetToken;
   end;
@@ -62,20 +64,28 @@ const
     'You cannot transfer this token',
     'You are about to receive a token you cannot sell');
 begin
-  const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, logProc);
-  frmHoneypot.Token := token;
-  frmHoneypot.lblHeader.Text := CannotString[cannot];
-  frmHoneypot.Show;
+  if whitelisted(TFrmHoneypot) or whitelisted(TFrmHoneypot, token) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, logProc);
+    frmHoneypot.Token          := token;
+    frmHoneypot.Blocked        := cannot = TCannot.Sell;
+    frmHoneypot.lblHeader.Text := CannotString[cannot];
+    frmHoneypot.Show;
+  end);
 end;
 
-{ TFrmHoneypot }
+{-------------------------------- TFrmHoneypot --------------------------------}
 
-procedure TFrmHoneypot.SetToken(value: TAddress);
+procedure TFrmHoneypot.SetToken(const value: TAddress);
 begin
   FToken := value;
-  if common.Demo then
-    lblToken.Text := string(value)
-  else
+  lblToken.Text := string(FToken);
+  if not common.Demo then
     cache.getSymbol(Self.Chain, FToken, procedure(symbol: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
@@ -83,6 +93,14 @@ begin
         lblToken.Text := symbol;
       end);
     end);
+end;
+
+function TFrmHoneypot.Bypass: TBypass;
+begin
+  Result := TBypass.Create('token', procedure
+  begin
+    whitelist(TFrmHoneypot, FToken);
+  end);
 end;
 
 procedure TFrmHoneypot.lblTokenClick(Sender: TObject);

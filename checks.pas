@@ -515,16 +515,13 @@ begin
                           block(prompted);
                       end, log)
                     else
-                      thread.synchronize(procedure
+                      honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow, _: Boolean)
                       begin
-                        honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow, _: Boolean)
-                        begin
-                          if allow then
-                            next(prompted + [TWarning.Other], nil)
-                          else
-                            block(prompted);
-                        end, log);
-                      end);
+                        if allow then
+                          next(prompted + [TWarning.Other], nil)
+                        else
+                          block(prompted);
+                      end, log);
                   end;
                 end);
             end;
@@ -1095,16 +1092,13 @@ begin
                 if index >= honeypots.Count then
                   next(prompted, nil)
                 else
-                  thread.synchronize(procedure
+                  honeypot.show(chain, tx, honeypots.Item(index).Contract, TCannot.Sell, procedure(allow, _: Boolean)
                   begin
-                    honeypot.show(chain, tx, honeypots.Item(index).Contract, TCannot.Sell, procedure(allow, _: Boolean)
-                    begin
-                      if allow then
-                        step(index + 1, prompted + [TWarning.Other])
-                      else
-                        block(prompted);
-                    end, log);
-                  end);
+                    if allow then
+                      step(index + 1, prompted + [TWarning.Other])
+                    else
+                      block(prompted);
+                  end, log);
               end;
               step(0, prompted);
             end;
