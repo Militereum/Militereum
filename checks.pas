@@ -841,16 +841,13 @@ begin
           if tokens.IndexOf(contracts[index].Address) = -1 then
             step(index + 1, prompted)
           else
-            thread.synchronize(procedure
+            unsupported.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
             begin
-              unsupported.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
-              begin
-                if allow then
-                  step(index + 1, prompted + [TWarning.Other])
-                else
-                  block(prompted);
-              end, log);
-            end);
+              if allow then
+                step(index + 1, prompted + [TWarning.Other])
+              else
+                block(prompted);
+            end, log);
       end;
       step(0, prompted);
     end);

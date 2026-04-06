@@ -26,8 +26,11 @@ type
     Label2: TLabel;
     procedure lblTokenTextClick(Sender: TObject);
   strict private
-    procedure SetAction(value: TTokenAction);
-    procedure SetToken(value: TAddress);
+    FToken: TAddress;
+    procedure SetAction(const value: TTokenAction);
+    procedure SetToken(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Action: TTokenAction write SetAction;
     property Token: TAddress write SetToken;
@@ -57,24 +60,33 @@ procedure show(
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmUnsupported = TFrmUnsupported.Create(chain, tx, callback, logProc);
-  frmUnsupported.Action := action;
-  frmUnsupported.Token  := token;
-  frmUnsupported.Show;
+  if whitelisted(TFrmUnsupported) or whitelisted(TFrmUnsupported, token) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmUnsupported = TFrmUnsupported.Create(chain, tx, callback, logProc);
+    frmUnsupported.Action := action;
+    frmUnsupported.Token  := token;
+    frmUnsupported.Show;
+  end);
 end;
 
-{ TFrmUnsupported }
+{------------------------------ TFrmUnsupported -------------------------------}
 
-procedure TFrmUnsupported.SetAction(value: TTokenAction);
+procedure TFrmUnsupported.SetAction(const value: TTokenAction);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value]]);
 end;
 
-procedure TFrmUnsupported.SetToken(value: TAddress);
+procedure TFrmUnsupported.SetToken(const value: TAddress);
 begin
-  lblTokenText.Text := string(value);
+  FToken := value;
+  lblTokenText.Text := string(FToken);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FToken, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -83,15 +95,17 @@ begin
     end);
 end;
 
+function TFrmUnsupported.Bypass: TBypass;
+begin
+  Result := TBypass.Create('token', procedure
+  begin
+    whitelist(TFrmUnsupported, FToken);
+  end);
+end;
+
 procedure TFrmUnsupported.lblTokenTextClick(Sender: TObject);
 begin
-  cache.fromName(lblTokenText.Text, procedure(address: TAddress; err: IError)
-  begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/token/' + string(address))
-    else
-      common.Open(Self.Chain.Explorer + '/token/' + lblTokenText.Text);
-  end);
+  common.Open(Self.Chain.Explorer + '/token/' + string(FToken));
 end;
 
 end.
