@@ -914,16 +914,13 @@ begin
             if (score = 0) or (score >= 50) then
               step(index + 1, prompted)
             else
-              thread.synchronize(procedure
+              lowDexScore.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
               begin
-                lowDexScore.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
-                begin
-                  if allow then
-                    step(index + 1, prompted + [TWarning.Other])
-                  else
-                    block(prompted);
-                end, log);
-              end);
+                if allow then
+                  step(index + 1, prompted + [TWarning.Other])
+                else
+                  block(prompted);
+              end, log);
         end);
     end;
     step(0, prompted);
