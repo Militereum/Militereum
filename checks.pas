@@ -1237,7 +1237,7 @@ end;
 
 procedure TChecks.Step19(const prompted: TPrompted; const next: TNext);
 begin
-  tx.ToIsVault(chain, procedure(isVault: Boolean; err: IError)
+  tx.ToIsDeposit(chain, procedure(isVault: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step19))
@@ -1376,7 +1376,7 @@ end;
 
 procedure TChecks.Step23(const prompted: TPrompted; const next: TNext);
 begin
-  tx.ToIsVault(chain, procedure(isVault: Boolean; err: IError)
+  tx.ToIsDeposit(chain, procedure(isVault: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step23))

@@ -26,6 +26,7 @@ type
     function  GetAuth: IResult<TArray<TAddress>>; // get the EIP-7702 authorizations
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
+    procedure ToIsDeposit(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
@@ -62,20 +63,20 @@ type
   TTransaction = class(TInterfacedObject, ITransaction)
   private
     type
-      TIsEOA   = (eoaUnknown, eoaYes, eoaNo);
-      TIsVault = (vaultUnknown, vaultNo, vaultMaybe, vaultERC4626);
+      TTriState = (Unknown, Yes, No);
     var
-      FRaw      : TBytes;
-      FType     : TTransactionType;
-      FNonce    : BigInteger;
-      FTo       : TAddress;
-      FToIsEOA  : TIsEOA;
-      FToIsVault: TIsVault;
-      FValue    : TWei;
-      FData     : TBytes;
-      FAuth     : TBytes;
-      FEstimated: BigInteger;
-      FSimulated: IAssetChanges;
+      FRaw        : TBytes;
+      FType       : TTransactionType;
+      FNonce      : BigInteger;
+      FTo         : TAddress;
+      FToIsEOA    : TTriState;
+      FToIsVault  : TTriState;
+      FToIsDeposit: TTriState;
+      FValue      : TWei;
+      FData       : TBytes;
+      FAuth       : TBytes;
+      FEstimated  : BigInteger;
+      FSimulated  : IAssetChanges;
   public
     constructor Create(const raw: TBytes; const &type: TTransactionType; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data, auth: TBytes);
     function &Type: TTransactionType;
@@ -87,23 +88,25 @@ type
     function  GetAuth: IResult<TArray<TAddress>>;
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
+    procedure ToIsDeposit(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
 constructor TTransaction.Create(const raw: TBytes; const &type: TTransactionType; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data, auth: TBytes);
 begin
-  Self.FRaw       := raw;
-  Self.FType      := &type;
-  Self.FNonce     := nonce;
-  Self.FTo        := &to;
-  Self.FToIsEOA   := eoaUnknown;
-  Self.FToIsVault := vaultUnknown;
-  Self.FValue     := value;
-  Self.FData      := data;
-  Self.FAuth      := auth;
-  Self.FEstimated := BigInteger.Zero;
-  Self.FSimulated := nil;
+  Self.FRaw         := raw;
+  Self.FType        := &type;
+  Self.FNonce       := nonce;
+  Self.FTo          := &to;
+  Self.FToIsEOA     := Unknown;
+  Self.FToIsVault   := Unknown;
+  Self.FToIsDeposit := Unknown;
+  Self.FValue       := value;
+  Self.FData        := data;
+  Self.FAuth        := auth;
+  Self.FEstimated   := BigInteger.Zero;
+  Self.FSimulated   := nil;
 end;
 
 function TTransaction.&Type: TTransactionType;
@@ -175,85 +178,106 @@ end;
 
 procedure TTransaction.ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
 begin
-  if FToIsEOA = eoaUnknown then
+  if FToIsEOA = Unknown then
   begin
     Self.&To.IsEOA(TWeb3.Create(chain), procedure(isEOA: Boolean; err: IError)
     begin
-      if err = nil then if isEOA then Self.FToIsEOA := eoaYes else Self.FToIsEOA := eoaNo;
+      if err = nil then if isEOA then Self.FToIsEOA := Yes else Self.FToIsEOA := No;
       callback(isEOA, err);
     end);
     EXIT;
   end;
-  callback(FToIsEOA = eoaYes, nil);
+  callback(FToIsEOA = Yes, nil);
 end;
 
 procedure TTransaction.ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
-
-  procedure getToIsVault(const chain: TChain; const callback: TProc<TIsVault, IError>);
+begin
+  if FToIsVault = Unknown then
   begin
     // step 1: are we transacting with an EOA? if yes, we cannot be transacting with a vault
     Self.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
     begin
       if isEOA or Assigned(err) then
       begin
-        callback(vaultNo, err);
-        EXIT;
-      end;
-      const isERC4626 = procedure(callback: TProc<Boolean, IError>)
-      begin
-        cache.getContractABI(chain, Self.&To, procedure(abi: IContractABI; err: IError)
+        if not Assigned(err) then Self.FToIsVault := No;
+        callback(not isEOA, err);
+      end
+      else
+        // step 2: is this transaction calling a deposit() function? if yes, we are probably transacting with a vault
+        Self.ToIsDeposit(chain, procedure(deposit: Boolean; err: IError)
         begin
-          callback(Assigned(abi) and abi.IsERC4626, err);
-        end);
-      end;
-      // step 2: get the function signature and compare it with a few hard-coded signatures we know about
-      getTransactionFourBytes(Self.Data)
-        .ifErr(procedure(_: IError)
-        begin
-          // step 3: are we transacting with an ERC-4626-compatible contract? if yes, we are transacting with a vault
-          isERC4626(procedure(isERC4626: Boolean; err: IError)
+          if deposit or Assigned(err) then
           begin
-            if isERC4626 then callback(vaultERC4626, err) else callback(vaultNo, err);
-          end);
-        end)
-        .&else(procedure(func: TFourBytes)
-        begin
-          // returns the first 4 (hex-encoded) bytes of a function signature after hashing
-          const getSelector = function(const signature: string): string
-          begin
-            Result := web3.utils.toHex(Copy(web3.utils.sha3(web3.utils.toHex(signature)), 0, 4));
-          end;
-          // returns True if any of the function signatures match the function selector, otherwise False
-          const isSelector = function(const selector: TFourBytes; const signatures: TArray<string>): Boolean
-          begin
-            Result := False; for var sig in signatures do if SameText(fourBytestoHex(selector), getSelector(sig)) then EXIT(True);
-          end;
-          // if the function signature equals one of the below hard-coded signatures, we are probably transacting with a vault
-          if isSelector(func, [
-          'deposit(address)', 'deposit(address,address)', 'deposit(address,uint256)', 'deposit(address,address,uint256)', 'deposit(address,uint256,address)',
-          'deposit(uint256)', 'deposit(uint256,uint256)', 'deposit(uint256,address)', 'deposit(uint256,uint256,address)', 'deposit(uint256,address,uint256)']) then
-            callback(vaultMaybe, nil)
+            if not Assigned(err) then Self.FToIsVault := Yes;
+            callback(deposit, err);
+          end
           else
-            // step 3: are we transacting with an ERC-4626-compatible contract? if yes, we are definately transacting with a vault
-            isERC4626(procedure(isERC4626: Boolean; err: IError)
+            // step 3: get the contract ABI and determine if it is ERC4626 (a tokenized vaults standard) or not
+            cache.getContractABI(chain, Self.&To, procedure(abi: IContractABI; err: IError)
             begin
-              if isERC4626 then callback(vaultERC4626, err) else callback(vaultNo, err);
+              if not Assigned(err) then
+                if Assigned(abi) and abi.IsERC4626 then
+                  Self.FToIsVault := Yes
+                else
+                  Self.FToIsVault := No;
+              callback(Assigned(abi) and abi.IsERC4626, err);
             end);
         end);
+    end);
+    EXIT;
+  end;
+  callback(FToIsVault = Yes, nil);
+end;
+
+procedure TTransaction.ToIsDeposit(const chain: TChain; const callback: TProc<Boolean, IError>);
+
+  procedure GetToIsDeposit(const chain: TChain; const callback: TProc<Boolean, IError>);
+  begin
+    // step 1: are we transacting with an EOA? if yes, we cannot be depositing into a contract
+    Self.ToIsEOA(chain, procedure(isEOA: Boolean; err: IError)
+    begin
+      if isEOA or Assigned(err) then
+      begin
+        callback(False, err);
+        EXIT;
+      end;
+      // step 2: get the function signature and compare it with a few hard-coded signatures we know about
+      getTransactionFourBytes(Self.Data).into(procedure(func: TFourBytes; err: IError)
+      begin
+        if Assigned(err) then
+        begin
+          callback(False, err);
+          EXIT;
+        end;
+        // returns the first 4 (hex-encoded) bytes of a function signature after hashing
+        const getSelector = function(const signature: string): string
+        begin
+          Result := web3.utils.toHex(Copy(web3.utils.sha3(web3.utils.toHex(signature)), 0, 4));
+        end;
+        // returns True if any of the function signatures match the function selector, otherwise False
+        const isSelector = function(const func: TFourBytes; const signatures: TArray<string>): Boolean
+        begin
+          Result := False; for var sig in signatures do if SameText(fourBytestoHex(func), getSelector(sig)) then EXIT(True);
+        end;
+        // if the function signature equals one of the below hard-coded signatures, we are depositing into a contract
+        callback(isSelector(func, [
+          'deposit(address)', 'deposit(address,address)', 'deposit(address,uint256)', 'deposit(address,address,uint256)', 'deposit(address,uint256,address)',
+          'deposit(uint256)', 'deposit(uint256,uint256)', 'deposit(uint256,address)', 'deposit(uint256,uint256,address)', 'deposit(uint256,address,uint256)']), nil);
+      end);
     end);
   end;
 
 begin
-  if FToIsVault = vaultUnknown then
+  if FToIsDeposit = Unknown then
   begin
-    getToIsVault(chain, procedure(isVault: TIsVault; err: IError)
+    GetToIsDeposit(chain, procedure(deposit: Boolean; err: IError)
     begin
-      if err = nil then Self.FToIsVault := isVault;
-      callback(isVault in [vaultMaybe, vaultERC4626], err);
+      if err = nil then if deposit then Self.FToIsDeposit := Yes else Self.FToIsDeposit := No;
+      callback(deposit, err);
     end);
     EXIT;
   end;
-  callback(FToIsVault <> vaultNo, nil);
+  callback(FToIsDeposit = Yes, nil);
 end;
 
 procedure TTransaction.EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
