@@ -643,16 +643,13 @@ begin
                         if Assigned(err) then
                           next(prompted, error.wrap(err, Self.Step5))
                         else
-                          thread.synchronize(procedure
+                          limit.show(chain, tx, symbol, args[0].ToAddress, amount, procedure(allow, _: Boolean)
                           begin
-                            limit.show(chain, tx, symbol, args[0].ToAddress, amount, procedure(allow, _: Boolean)
-                            begin
-                              if allow then
-                                next(prompted + [TWarning.Other], nil)
-                              else
-                                block(prompted);
-                            end, log);
-                          end);
+                            if allow then
+                              next(prompted + [TWarning.Other], nil)
+                            else
+                              block(prompted);
+                          end, log);
                       end);
                   end;
                 end);
@@ -676,16 +673,13 @@ begin
         if amount < common.LIMIT then
           next(prompted, nil)
         else
-          thread.synchronize(procedure
+          limit.show(chain, tx, string(chain.Symbol), tx.&To, amount, procedure(allow, _: Boolean)
           begin
-            limit.show(chain, tx, string(chain.Symbol), tx.&To, amount, procedure(allow, _: Boolean)
-            begin
-              if allow then
-                next(prompted + [TWarning.Other], nil)
-              else
-                block(prompted);
-            end, log);
-          end);
+            if allow then
+              next(prompted + [TWarning.Other], nil)
+            else
+              block(prompted);
+          end, log);
       end;
     end);
   end;

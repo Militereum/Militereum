@@ -29,18 +29,18 @@ type
     lblAmountText: TLabel;
     procedure lblRecipientTextClick(Sender: TObject);
   strict private
+    FRecipient: TAddress;
+    procedure SetLimit(const value: Integer);
     procedure SetSymbol(const value: string);
-    procedure SetRecipient(value: TAddress);
-    procedure SetAmount(value: Double);
+    procedure SetRecipient(const value: TAddress);
+    procedure SetAmount(const value: Double);
+  strict protected
+    function Bypass: TBypass; override;
   public
-    constructor Create(
-      const chain   : TChain;
-      const tx      : transaction.ITransaction;
-      const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
-      const logProc : TLogProc); override;
-    property Symbol: string write SetSymbol;
+    property Limit    : Integer  write SetLimit;
+    property Symbol   : string   write SetSymbol;
     property Recipient: TAddress write SetRecipient;
-    property Amount: Double write SetAmount;
+    property Amount   : Double   write SetAmount;
   end;
 
 procedure show(
@@ -69,23 +69,27 @@ procedure show(
   const callback : TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc  : TLogProc);
 begin
-  const frmLimit = TFrmLimit.Create(chain, tx, callback, logProc);
-  frmLimit.Symbol    := symbol;
-  frmLimit.Recipient := recipient;
-  frmLimit.Amount    := amount;
-  frmLimit.Show;
+  if whitelisted(TFrmLimit) or whitelisted(TFrmLimit, recipient) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmLimit = TFrmLimit.Create(chain, tx, callback, logProc);
+    frmLimit.Limit     := common.LIMIT;
+    frmLimit.Symbol    := symbol;
+    frmLimit.Recipient := recipient;
+    frmLimit.Amount    := amount;
+    frmLimit.Show;
+  end);
 end;
 
-{ TFrmLimit }
+{--------------------------------- TFrmLimit ----------------------------------}
 
-constructor TFrmLimit.Create(
-  const chain   : TChain;
-  const tx      : transaction.ITransaction;
-  const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
-  const logProc : TLogProc);
+procedure TFrmLimit.SetLimit(const value: Integer);
 begin
-  inherited Create(chain, tx, callback, logProc);
-  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [common.LIMIT]);
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [value]);
 end;
 
 procedure TFrmLimit.SetSymbol(const value: string);
@@ -93,11 +97,12 @@ begin
   lblAssetText.Text := value;
 end;
 
-procedure TFrmLimit.SetRecipient(value: TAddress);
+procedure TFrmLimit.SetRecipient(const value: TAddress);
 begin
-  lblRecipientText.Text := string(value);
+  FRecipient := value;
+  lblRecipientText.Text := string(FRecipient);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FRecipient, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -106,20 +111,22 @@ begin
     end);
 end;
 
-procedure TFrmLimit.SetAmount(value: Double);
+procedure TFrmLimit.SetAmount(const value: Double);
 begin
   lblAmountText.Text := System.SysUtils.Format('$ %.2f', [value]);
 end;
 
+function TFrmLimit.Bypass: TBypass;
+begin
+  Result := TBypass.Create('recipient', procedure
+  begin
+    whitelist(TFrmLimit, FRecipient);
+  end);
+end;
+
 procedure TFrmLimit.lblRecipientTextClick(Sender: TObject);
 begin
-  cache.fromName(lblRecipientText.Text, procedure(address: TAddress; err: IError)
-  begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + string(address))
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + lblRecipientText.Text);
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FRecipient));
 end;
 
 end.
