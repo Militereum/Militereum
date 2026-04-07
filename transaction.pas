@@ -8,9 +8,7 @@ uses
   // Velthuis' BigNumbers
   Velthuis.BigIntegers,
   // web3
-  web3,
-  web3.eth.simulate,
-  web3.eth.types;
+  web3, web3.eth.simulate, web3.eth.types;
 
 type
   TTransactionType = (Legacy, eip1559, eip7702);
@@ -27,7 +25,6 @@ type
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsDeposit(const chain: TChain; const callback: TProc<Boolean, IError>);
-    procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
@@ -54,10 +51,9 @@ uses
   web3.rlp,
   web3.utils,
   // project
-  cache,
-  common;
+  cache, common;
 
-{ TTransaction }
+{-------------------------------- TTransaction --------------------------------}
 
 type
   TTransaction = class(TInterfacedObject, ITransaction)
@@ -75,7 +71,6 @@ type
       FValue      : TWei;
       FData       : TBytes;
       FAuth       : TBytes;
-      FEstimated  : BigInteger;
       FSimulated  : IAssetChanges;
   public
     constructor Create(const raw: TBytes; const &type: TTransactionType; const nonce: BigInteger; const &to: TAddress; const value: TWei; const data, auth: TBytes);
@@ -89,7 +84,6 @@ type
     procedure ToIsEOA(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsVault(const chain: TChain; const callback: TProc<Boolean, IError>);
     procedure ToIsDeposit(const chain: TChain; const callback: TProc<Boolean, IError>);
-    procedure EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
     procedure Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
   end;
 
@@ -105,7 +99,6 @@ begin
   Self.FValue       := value;
   Self.FData        := data;
   Self.FAuth        := auth;
-  Self.FEstimated   := BigInteger.Zero;
   Self.FSimulated   := nil;
 end;
 
@@ -280,26 +273,6 @@ begin
   callback(FToIsDeposit = Yes, nil);
 end;
 
-procedure TTransaction.EstimateGas(const chain: TChain; const callback: TProc<BigInteger, IError>);
-begin
-  if FEstimated > BigInteger.Zero then
-    callback(FEstimated, nil)
-  else
-    Self.From
-      .ifErr(procedure(err: IError)
-      begin
-        callback(BigInteger.Zero, err)
-      end)
-      .&else(procedure(from: TAddress)
-      begin
-        web3.eth.gas.estimateGas(TWeb3.Create(chain), from, Self.&To, web3.utils.toHex(Self.Data), procedure(qty: BigInteger; err: IError)
-        begin
-          if (err = nil) then Self.FEstimated := qty;
-          callback(qty, err);
-        end);
-      end)
-end;
-
 procedure TTransaction.Simulate(const chain: TChain; const callback: TProc<IAssetChanges, IError>);
 {$I keys/tenderly.api.key}
 begin
@@ -328,6 +301,8 @@ begin
           end);
       end);
 end;
+
+{------------------------------ helper functions ------------------------------}
 
 // input the JSON-RPC "params", returns the transaction
 function decodeRawTransaction(const encoded: TBytes): IResult<ITransaction>;
