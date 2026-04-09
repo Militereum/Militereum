@@ -25,15 +25,18 @@ type
     lblFooter: TLabel;
     procedure lblAddressClick(Sender: TObject);
   strict private
-    procedure SetAddress(const value: TAddress);
+    FContract: TAddress;
+    procedure SetContract(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
-    property Address: TAddress write SetAddress;
+    property Contract: TAddress write SetContract;
   end;
 
 procedure show(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
-  const address : TAddress;
+  const contract: TAddress;
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 
@@ -48,22 +51,31 @@ uses
 procedure show(
   const chain   : TChain;
   const tx      : transaction.ITransaction;
-  const address : TAddress;
+  const contract: TAddress;
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmMetamorphic = TFrmMetamorphic.Create(chain, tx, callback, logProc);
-  frmMetamorphic.Address := address;
-  frmMetamorphic.Show;
+  if whitelisted(TFrmMetamorphic) or whitelisted(TFrmMetamorphic, contract) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmMetamorphic = TFrmMetamorphic.Create(chain, tx, callback, logProc);
+    frmMetamorphic.Contract := contract;
+    frmMetamorphic.Show;
+  end);
 end;
 
-{ TFrmMetamorphic }
+{------------------------------ TFrmMetamorphic -------------------------------}
 
-procedure TFrmMetamorphic.SetAddress(const value: TAddress);
+procedure TFrmMetamorphic.SetContract(const value: TAddress);
 begin
-  lblAddress.Text := string(value);
+  FContract := value;
+  lblAddress.Text := string(FContract);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -72,15 +84,17 @@ begin
     end);
 end;
 
+function TFrmMetamorphic.Bypass: TBypass;
+begin
+  Result := TBypass.Create('contract', procedure
+  begin
+    whitelist(TFrmMetamorphic, FContract);
+  end);
+end;
+
 procedure TFrmMetamorphic.lblAddressClick(Sender: TObject);
 begin
-  cache.fromName(lblAddress.Text, procedure(address: TAddress; err: IError)
-  begin
-    if Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + lblAddress.Text)
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + string(address));
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FContract));
 end;
 
 end.

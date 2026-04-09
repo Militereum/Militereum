@@ -73,19 +73,16 @@ end;
 
 procedure TFrmUnverified.SetContract(value: TAddress);
 begin
-  if value <> FContract then
-  begin
-    FContract := value;
-    lblContractText.Text := string(FContract);
-    if not common.Demo then
-      cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
+  FContract := value;
+  lblContractText.Text := string(FContract);
+  if not common.Demo then
+    cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
+    begin
+      if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
-        if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
-        begin
-          lblContractText.Text := friendly;
-        end);
+        lblContractText.Text := friendly;
       end);
-  end;
+    end);
 end;
 
 function TFrmUnverified.Bypass: TBypass;

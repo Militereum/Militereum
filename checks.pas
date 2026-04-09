@@ -1228,11 +1228,11 @@ end;
 
 procedure TChecks.Step19(const prompted: TPrompted; const next: TNext);
 begin
-  tx.ToIsDeposit(chain, procedure(isVault: Boolean; err: IError)
+  tx.ToIsDeposit(chain, procedure(deposit: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step19))
-    else if not isVault then
+    else if not deposit then
       next(prompted, nil)
     else
       // if another vault provides for a higher APY while holding the same TVL (or more), display a warning
@@ -1367,11 +1367,11 @@ end;
 
 procedure TChecks.Step23(const prompted: TPrompted; const next: TNext);
 begin
-  tx.ToIsDeposit(chain, procedure(isVault: Boolean; err: IError)
+  tx.ToIsDeposit(chain, procedure(deposit: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step23))
-    else if not isVault then
+    else if not deposit then
       next(prompted, nil)
     else
       web3.eth.etherscan.contractIsProxy(common.Etherscan(chain), tx.&To, procedure(proxy: Boolean; err: IError)
@@ -1381,16 +1381,13 @@ begin
         else if not proxy then
           next(prompted, nil)
         else
-          thread.synchronize(procedure
+          metamorphic.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
           begin
-            metamorphic.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
-            begin
-              if allow then
-                next(prompted + [TWarning.Other], nil)
-              else
-                block(prompted);
-            end, log);
-          end);
+            if allow then
+              next(prompted + [TWarning.Other], nil)
+            else
+              block(prompted);
+          end, log);
       end);
   end);
 end;
