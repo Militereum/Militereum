@@ -967,16 +967,13 @@ begin
                   if Assigned(arr) and (arr.Count > 0) then
                     step(index + 1, prompted)
                   else
-                    thread.synchronize(procedure
+                    noDexPair.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                     begin
-                      noDexPair.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
-                      begin
-                        if allow then
-                          step(index + 1, prompted + [TWarning.Other])
-                        else
-                          block(prompted);
-                      end, log);
-                    end);
+                      if allow then
+                        step(index + 1, prompted + [TWarning.Other])
+                      else
+                        block(prompted);
+                    end, log);
               end);
         end);
     end;
