@@ -291,32 +291,28 @@ type
   TContract = record
   private
     Action : TTokenAction;
-    Address: TAddress;
     Chain  : TChain;
+    Address: TAddress;
   public
-    constructor Create(const aAction: TTokenAction; const aAddress: TAddress; const aChain: TChain);
+    constructor Create(const aAction: TTokenAction; const aChain: TChain; const aAddress: TAddress);
     procedure IsERC20(const callback: TProc<Boolean, IError>);
   end;
 
-constructor TContract.Create(const aAction: TTokenAction; const aAddress: TAddress; const aChain: TChain);
+constructor TContract.Create(const aAction: TTokenAction; const aChain: TChain; const aAddress: TAddress);
 begin
   Self.Action  := aAction;
-  Self.Address := aAddress;
   Self.Chain   := aChain;
+  Self.Address := aAddress;
 end;
 
 procedure TContract.IsERC20(const callback: TProc<Boolean, IError>);
 begin
-  const address = Self.Address;
   if Self.Action = taReceive then
     callback(True, nil)
   else
-    cache.getContractABI(Self.Chain, address, procedure(abi: IContractABI; err: IError)
+    cache.getContractABI(Self.Chain, Self.Address, procedure(abi: IContractABI; err: IError)
     begin
-      if Assigned(err) then
-        callback(False, err)
-      else
-        callback(abi.IsERC20, nil);
+      callback(Assigned(abi) and abi.IsERC20, err);
     end);
 end;
 
@@ -334,7 +330,7 @@ begin
       EXIT;
     end;
     if not isEOA then
-      contracts := contracts + [TContract.Create(taTransact, tx.&To, chain)];
+      contracts := contracts + [TContract.Create(taTransact, chain, tx.&To)];
     // step #2: incoming tokens
     tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
     begin
@@ -356,7 +352,7 @@ begin
                 else if incoming.Item(I).Contract.SameAs(tx.&To) then
                   // ignore tx.To
                 else
-                  contracts := contracts + [TContract.Create(taReceive, incoming.Item(I).Contract, chain)];
+                  contracts := contracts + [TContract.Create(taReceive, chain, incoming.Item(I).Contract)];
             finally
               callback(contracts, nil);
             end;
@@ -1011,7 +1007,7 @@ begin
                 end;
               Result := False;
             end)(abi) then
-              censorable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow, _: Boolean)
+              censorable.show(TContractInfo.Create(contracts[index].Action, abi.IsERC20), chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
               begin
                 if allow then
                   step(index + 1, prompted + [TWarning.Other])
@@ -1029,7 +1025,7 @@ begin
                   end;
                 Result := False;
               end)(abi) then
-                pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow, _: Boolean)
+                pausable.show(TContractInfo.Create(contracts[index].Action, abi.IsERC20), chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                 begin
                   if allow then
                     step(index + 1, prompted + [TWarning.Other])
@@ -1114,7 +1110,7 @@ begin
             else
               contracts[index].IsERC20(procedure(isERC20: Boolean; err: IError)
               begin
-                dormant.show(contracts[index].Action, chain, tx, contracts[index].Address, isERC20, procedure(allow, _: Boolean)
+                dormant.show(TContractInfo.Create(contracts[index].Action, isERC20), chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                 begin
                   if allow then
                     step(index + 1, prompted + [TWarning.Other])

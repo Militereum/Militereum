@@ -24,6 +24,17 @@ type
 const
   ActionText: array[TTokenAction] of string = ('receive', 'transact with');
 
+type
+  TContractInfo = record
+  strict private
+    FAction : TTokenAction;
+    FIsERC20: Boolean;
+  public
+    constructor Create(const tokenAction: TTokenAction; const isERC20: Boolean = True);
+    function TargetText: string;
+    property Action: TTokenAction read FAction;
+  end;
+
 // 1. Labels with HorzAlign=Center are automatically enlarged until there are no more ellipsis
 // 2. The form is automatically enlarged after (1)
 // 3. The block/allow buttons automatically re-align after (2)
@@ -144,6 +155,19 @@ begin
   const R = TRectF.Create(display.WorkAreaRect.TopLeft, display.WorkAreaRect.Width, display.WorkAreaRect.Height);
   const N = TRectF.Create(TPointF.Create(R.Left + (R.Width - F.Width) / 2, R.Top + (R.Height - F.Height) / 2), F.Bounds.Width, F.Bounds.Height);
   F.SetBoundsF(FitInRect(N, Screen.DesktopRect));
+end;
+
+{------------------------------- TContractInfo --------------------------------}
+
+constructor TContractInfo.Create(const tokenAction: TTokenAction; const isERC20: Boolean);
+begin
+  FAction  := tokenAction;
+  FIsERC20 := (tokenAction = taReceive) or isERC20;
+end;
+
+function TContractInfo.TargetText: string;
+begin
+  if FIsERC20 then Result := 'token' else Result := 'contract';
 end;
 
 {---------------------------------- TBypass -----------------------------------}

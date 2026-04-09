@@ -129,7 +129,7 @@ end;
 
 procedure TdmDemo.actCensorableExecute(Sender: TObject);
 begin
-  censorable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, callback, nil);
+  censorable.show(TContractInfo.Create(taReceive), common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', callback, nil);
 end;
 
 procedure TdmDemo.actDelegatorExecute(Sender: TObject);
@@ -139,7 +139,7 @@ end;
 
 procedure TdmDemo.actDormantExecute(Sender: TObject);
 begin
-  dormant.show(taTransact, common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', False, callback, nil);
+  dormant.show(TContractInfo.Create(taTransact, False), common.Ethereum, nil, '0x5031eD87bd69fB164f2BA5e1b156603216574197', callback, nil);
 end;
 
 procedure TdmDemo.actExploitExecute(Sender: TObject);
@@ -184,7 +184,7 @@ end;
 
 procedure TdmDemo.actPausableExecute(Sender: TObject);
 begin
-  pausable.show(taReceive, common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', True, callback, nil);
+  pausable.show(TContractInfo.Create(taReceive), common.Ethereum, nil, '0xdAC17F958D2ee523a2206206994597C13D831ec7', callback, nil);
 end;
 
 procedure TdmDemo.actPhisherExecute(Sender: TObject);

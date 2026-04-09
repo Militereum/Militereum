@@ -26,25 +26,21 @@ type
     procedure lblTokenClick(Sender: TObject);
   strict private
     FContract: TAddress;
-    FIsERC20 : Boolean;
-    function  What: string; inline;
-    procedure SetAction(const value: TTokenAction);
+    FInfo: TContractInfo;
+    procedure SetInfo(const value: TContractInfo);
     procedure SetContract(const value: TAddress);
-    procedure SetIsERC20(Const value: Boolean);
   strict protected
     function Bypass: TBypass; override;
   public
-    property Action: TTokenAction write SetAction;
+    property Info: TContractInfo write SetInfo;
     property Contract: TAddress write SetContract;
-    property IsERC20: Boolean write SetIsERC20;
   end;
 
 procedure show(
-  const action  : TTokenAction;
+  const info    : TContractInfo;
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const contract: TAddress;
-  const isERC20 : Boolean;
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 
@@ -57,11 +53,10 @@ uses
 {$R *.fmx}
 
 procedure show(
-  const action  : TTokenAction;
+  const info    : TContractInfo;
   const chain   : TChain;
   const tx      : transaction.ITransaction;
   const contract: TAddress;
-  const isERC20 : Boolean;
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
@@ -73,9 +68,8 @@ begin
   thread.synchronize(procedure
   begin
     const frmDormant = TFrmDormant.Create(chain, tx, callback, logProc);
-    frmDormant.Action   := action;
+    frmDormant.Info     := info;
     frmDormant.Contract := contract;
-    frmDormant.IsERC20  := isERC20;
     frmDormant.Show;
   end);
 end;
@@ -84,20 +78,16 @@ end;
 
 function TFrmDormant.Bypass: TBypass;
 begin
-  Result := TBypass.Create(Self.What, procedure
+  Result := TBypass.Create(FInfo.TargetText, procedure
   begin
     whitelist(TFrmDormant, FContract);
   end);
 end;
 
-function TFrmDormant.What: string;
+procedure TFrmDormant.SetInfo(const value: TContractInfo);
 begin
-  if FIsERC20 then Result := 'token' else Result := 'contract';
-end;
-
-procedure TFrmDormant.SetAction(const value: TTokenAction);
-begin
-  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value], '%s']);
+  FInfo := value;
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value.Action], value.TargetText]);
 end;
 
 procedure TFrmDormant.SetContract(const value: TAddress);
@@ -112,12 +102,6 @@ begin
         lblToken.Text := friendly;
       end);
     end);
-end;
-
-procedure TFrmDormant.SetIsERC20(const value: Boolean);
-begin
-  FIsERC20 := value;
-  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [Self.What]);
 end;
 
 procedure TFrmDormant.lblTokenClick(Sender: TObject);
