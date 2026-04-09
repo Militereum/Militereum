@@ -25,9 +25,14 @@ type
     lblFooter: TLabel;
     procedure lblTokenClick(Sender: TObject);
   strict private
-    procedure SetAction(value: TTokenAction);
-    procedure SetContract(value: TAddress);
-    procedure SetIsERC20(value: Boolean);
+    FContract: TAddress;
+    FIsERC20 : Boolean;
+    function  What: string; inline;
+    procedure SetAction(const value: TTokenAction);
+    procedure SetContract(const value: TAddress);
+    procedure SetIsERC20(const value: Boolean);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Action: TTokenAction write SetAction;
     property Contract: TAddress write SetContract;
@@ -60,25 +65,39 @@ procedure show(
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmPausable = TFrmPausable.Create(chain, tx, callback, logProc);
-  frmPausable.Action   := action;
-  frmPausable.Contract := contract;
-  frmPausable.IsERC20  := isERC20;
-  frmPausable.Show;
+  if whitelisted(TFrmPausable) or whitelisted(TFrmPausable, contract) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmPausable = TFrmPausable.Create(chain, tx, callback, logProc);
+    frmPausable.Action   := action;
+    frmPausable.Contract := contract;
+    frmPausable.IsERC20  := isERC20;
+    frmPausable.Show;
+  end);
 end;
 
-{ TFrmPausable }
+{-------------------------------- TFrmPausable --------------------------------}
 
-procedure TFrmPausable.SetAction(value: TTokenAction);
+function TFrmPausable.What: string;
+begin
+  if FIsERC20 then Result := 'token' else Result := 'contract';
+end;
+
+procedure TFrmPausable.SetAction(const value: TTokenAction);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value], '%s']);
 end;
 
-procedure TFrmPausable.SetContract(value: TAddress);
+procedure TFrmPausable.SetContract(const value: TAddress);
 begin
-  lblToken.Text := string(value);
+  FContract := value;
+  lblToken.Text := string(FContract);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FContract, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -87,23 +106,23 @@ begin
     end);
 end;
 
-procedure TFrmPausable.SetIsERC20(value: Boolean);
+procedure TFrmPausable.SetIsERC20(const value: Boolean);
 begin
-  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [(function: string
+  FIsERC20 := value;
+  lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [Self.What]);
+end;
+
+function TFrmPausable.Bypass: TBypass;
+begin
+  Result := TBypass.Create(Self.What, procedure
   begin
-    if value then Result := 'token' else Result := 'contract'
-  end)()]);
+    whitelist(TFrmPausable, FContract);
+  end);
 end;
 
 procedure TFrmPausable.lblTokenClick(Sender: TObject);
 begin
-  cache.fromName(lblToken.Text, procedure(address: TAddress; err: IError)
-  begin
-    if Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + lblToken.Text)
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + string(address));
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FContract));
 end;
 
 end.

@@ -1029,16 +1029,13 @@ begin
                   end;
                 Result := False;
               end)(abi) then
-                thread.synchronize(procedure
+                pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow, _: Boolean)
                 begin
-                  pausable.show(contracts[index].Action, chain, tx, contracts[index].Address, abi.IsERC20, procedure(allow, _: Boolean)
-                  begin
-                    if allow then
-                      step(index + 1, prompted + [TWarning.Other])
-                    else
-                      block(prompted);
-                  end, log);
-                end)
+                  if allow then
+                    step(index + 1, prompted + [TWarning.Other])
+                  else
+                    block(prompted);
+                end, log)
               else
                 step(index + 1, prompted);
         end);
