@@ -26,7 +26,10 @@ type
     Label2: TLabel;
     procedure lblAddressTextClick(Sender: TObject);
   strict private
-    procedure SetAddress(value: TAddress);
+    FAddress: Taddress;
+    procedure SetAddress(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Address: TAddress write SetAddress;
   end;
@@ -53,18 +56,27 @@ procedure show(
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmSanctioned = TFrmSanctioned.Create(chain, tx, callback, logProc);
-  frmSanctioned.Address := address;
-  frmSanctioned.Show;
+  if whitelisted(TFrmSanctioned) or whitelisted(TFrmSanctioned, address) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmSanctioned = TFrmSanctioned.Create(chain, tx, callback, logProc);
+    frmSanctioned.Address := address;
+    frmSanctioned.Show;
+  end);
 end;
 
-{ TFrmSanctioned }
+{------------------------------- TFrmSanctioned -------------------------------}
 
-procedure TFrmSanctioned.SetAddress(value: TAddress);
+procedure TFrmSanctioned.SetAddress(const value: TAddress);
 begin
-  lblAddressText.Text := string(value);
+  FAddress := value;
+  lblAddressText.Text := string(FAddress);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FAddress, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
@@ -73,15 +85,17 @@ begin
     end);
 end;
 
+function TFrmSanctioned.Bypass: TBypass;
+begin
+  Result := TBypass.Create('address', procedure
+  begin
+    whitelist(TFrmSanctioned, FAddress);
+  end);
+end;
+
 procedure TFrmSanctioned.lblAddressTextClick(Sender: TObject);
 begin
-  cache.fromName(lblAddressText.Text, procedure(address: TAddress; err: IError)
-  begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + string(address))
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + lblAddressText.Text);
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FAddress));
 end;
 
 end.

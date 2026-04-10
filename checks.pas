@@ -850,16 +850,13 @@ begin
     else if not value then
       next(prompted, nil)
     else
-      thread.synchronize(procedure
+      sanctioned.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
       begin
-        sanctioned.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
-        begin
-          if allow then
-            next(prompted + [TWarning.Other], nil)
-          else
-            block(prompted);
-        end, log);
-      end);
+        if allow then
+          next(prompted + [TWarning.Other], nil)
+        else
+          block(prompted);
+      end, log);
   end);
 end;
 
