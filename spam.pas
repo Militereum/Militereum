@@ -21,23 +21,26 @@ uses
 type
   TFrmSpam = class(TFrmBase)
     lblTitle: TLabel;
-    lblContractText: TLabel;
+    lblTokenText: TLabel;
     Label1: TLabel;
     Label2: TLabel;
-    procedure lblContractTextClick(Sender: TObject);
+    procedure lblTokenTextClick(Sender: TObject);
   strict private
-    procedure SetAction(value: TTokenAction);
-    procedure SetContract(value: TAddress);
+    FToken: TAddress;
+    procedure SetAction(const value: TTokenAction);
+    procedure SetToken(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Action: TTokenAction write SetAction;
-    property Contract: TAddress write SetContract;
+    property Token: TAddress write SetToken;
   end;
 
 procedure show(
   const action  : TTokenAction;
   const chain   : TChain;
   const tx      : transaction.ITransaction;
-  const contract: TAddress;
+  const token   : TAddress;
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 
@@ -53,45 +56,56 @@ procedure show(
   const action  : TTokenAction;
   const chain   : TChain;
   const tx      : transaction.ITransaction;
-  const contract: TAddress;
+  const token   : TAddress;
   const callback: TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc : TLogProc);
 begin
-  const frmSpam = TFrmSpam.Create(chain, tx, callback, logProc);
-  frmSpam.Action   := action;
-  frmSpam.Contract := contract;
-  frmSpam.Show;
+  if whitelisted(TFrmSpam) or whitelisted(TFrmSpam, token) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmSpam = TFrmSpam.Create(chain, tx, callback, logProc);
+    frmSpam.Action := action;
+    frmSpam.Token  := token;
+    frmSpam.Show;
+  end);
 end;
 
-{ TFrmSpam }
+{---------------------------------- TFrmSpam ----------------------------------}
 
-procedure TFrmSpam.SetAction(value: TTokenAction);
+procedure TFrmSpam.SetAction(const value: TTokenAction);
 begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [ActionText[value]]);
 end;
 
-procedure TFrmSpam.SetContract(value: TAddress);
+procedure TFrmSpam.SetToken(const value: TAddress);
 begin
-  lblContractText.Text := string(value);
+  FToken := value;
+  lblTokenText.Text := string(FToken);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FToken, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
-        lblContractText.Text := friendly;
+        lblTokenText.Text := friendly;
       end);
     end);
 end;
 
-procedure TFrmSpam.lblContractTextClick(Sender: TObject);
+function TFrmSpam.Bypass: TBypass;
 begin
-  cache.fromName(lblContractText.Text, procedure(address: TAddress; err: IError)
+  Result := TBypass.Create('token', procedure
   begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + string(address))
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + lblContractText.Text);
+    whitelist(TFrmSpam, FToken);
   end);
+end;
+
+procedure TFrmSpam.lblTokenTextClick(Sender: TObject);
+begin
+  common.Open(Self.Chain.Explorer + '/token/' + string(FToken));
 end;
 
 end.

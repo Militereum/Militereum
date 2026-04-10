@@ -704,7 +704,7 @@ begin
     begin
       next(prompted, error.wrap(err, Self.Step8))
     end)
-    .&else(procedure(alchemyApiKey: string)
+    .&else(procedure(ALCHEMY_API_KEY: string)
     begin
       getEachContract(server, port, chain, tx, procedure(contracts: TArray<TContract>; err: IError)
       begin
@@ -721,7 +721,7 @@ begin
           else ( // call Alchemy's API or Moralis API
             procedure(const token: TAddress; const callback: TProc<TContractType, IError>)
             begin
-              web3.eth.alchemy.api.detect(alchemyApiKey, chain, token, [TContractType.Airdrop, TContractType.Spam], procedure(contractType: TContractType; err: IError)
+              web3.eth.alchemy.api.detect(ALCHEMY_API_KEY, chain, token, [TContractType.Airdrop, TContractType.Spam], procedure(contractType: TContractType; err: IError)
               begin
                 if not Assigned(err) then
                   callback(contractType, nil)
@@ -748,16 +748,13 @@ begin
                       block(prompted);
                   end, log);
                 TContractType.Spam: // probably spam (contains duplicate NFTs, or lies about its own token supply)
-                  thread.synchronize(procedure
+                  spam.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                   begin
-                    spam.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
-                    begin
-                      if allow then
-                        step(index + 1, prompted + [TWarning.Other])
-                      else
-                        block(prompted);
-                    end, log);
-                  end);
+                    if allow then
+                      step(index + 1, prompted + [TWarning.Other])
+                    else
+                      block(prompted);
+                  end, log);
               else
                 step(index + 1, prompted);
               end;

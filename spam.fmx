@@ -14,7 +14,7 @@ inherited FrmSpam: TFrmSpam
     Text = 'You are about to %s a suspicious token'
     TabOrder = 0
   end
-  object lblContractText: TLabel
+  object lblTokenText: TLabel
     Cursor = crHandPoint
     StyledSettings = [Family, Size]
     HitTest = True
@@ -29,7 +29,7 @@ inherited FrmSpam: TFrmSpam
     TextSettings.WordWrap = False
     Text = '0x0000000000000000000000000000000000000000'
     TabOrder = 1
-    OnClick = lblContractTextClick
+    OnClick = lblTokenTextClick
   end
   object Label1: TLabel
     Position.X = 24.000000000000000000
