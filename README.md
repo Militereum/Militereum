@@ -70,7 +70,7 @@ Besides token allowances, Militereum will block...
 19. you transacting with an [address that got funded by a bad actor](assets/fundedBy.png)
 20. you delegating your wallet [to an unknown smart contract](assets/eip7702.png) (not a known EIP-7702 delegator)
 21. you transacting with an address that got [blacklisted by USDC or USDT](assets/blacklisted.png)
-22. you depositing money into a [metamorphic smart contract](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e) that could be updated to divert your money elsewhere.
+22. you depositing money into a [metamorphic smart contract](assets/metamorphic.png) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
 
