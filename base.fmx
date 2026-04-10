@@ -332,9 +332,9 @@ object FrmBase: TFrmBase
   object rctShowThisWarning: TRectangle
     Anchors = [akTop, akRight]
     Fill.Kind = None
-    Position.X = 352.000000000000000000
+    Position.X = 336.000000000000000000
     Position.Y = 16.000000000000000000
-    Size.Width = 132.000000000000000000
+    Size.Width = 148.000000000000000000
     Size.Height = 25.000000000000000000
     Size.PlatformDefault = False
     XRadius = 5.000000000000000000
@@ -345,9 +345,10 @@ object FrmBase: TFrmBase
       TabOrder = 0
       CanFocus = False
       ReadOnly = True
-      Text = ' Show this warning'
+      Text = 'Show this warning'
+      TextSettings.HorzAlign = Center
       HitTest = False
-      Size.Width = 132.000000000000000000
+      Size.Width = 148.000000000000000000
       Size.Height = 25.000000000000000000
       Size.PlatformDefault = False
       object btnShowThisWarning: TEditButton

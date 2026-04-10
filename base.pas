@@ -335,6 +335,10 @@ constructor TFrmBase.Create(
     const bg = edit.FindStyleResource('background');
     if Assigned(bg) and (bg is TControl) then TControl(bg).Visible := False;
     rect.Stroke.Color := TAlphaColors.LightGray;
+  {$IFDEF MACOS}
+    rect.XRadius := 0;
+    rect.YRadius := 0;
+  {$ENDIF MACOS}
   end;
 
 begin
