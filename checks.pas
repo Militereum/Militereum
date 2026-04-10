@@ -1152,16 +1152,13 @@ begin
                   if (&then = 0) or (MonthsBetween(System.SysUtils.Now, &then) > 3) then
                     step(index + 1, prompted)
                   else
-                    thread.synchronize(procedure
+                    unlock.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
                     begin
-                      unlock.show(contracts[index].Action, chain, tx, contracts[index].Address, procedure(allow, _: Boolean)
-                      begin
-                        if allow then
-                          step(index + 1, prompted + [TWarning.Other])
-                        else
-                          block(prompted);
-                      end, log);
-                    end);
+                      if allow then
+                        step(index + 1, prompted + [TWarning.Other])
+                      else
+                        block(prompted);
+                    end, log);
               end);
         end);
     end;
