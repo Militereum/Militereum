@@ -557,16 +557,13 @@ begin
               if not approved then
                 next(prompted, nil)
               else
-                thread.synchronize(procedure
+                setApprovalForAll.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow, _: Boolean)
                 begin
-                  setApprovalForAll.show(chain, tx, tx.&To, args[0].ToAddress, procedure(allow, _: Boolean)
-                  begin
-                    if allow then
-                      next(prompted + [TWarning.Other], nil)
-                    else
-                      block(prompted);
-                  end, log);
-                end);
+                  if allow then
+                    next(prompted + [TWarning.Other], nil)
+                  else
+                    block(prompted);
+                end, log);
             end;
           end);
     end);

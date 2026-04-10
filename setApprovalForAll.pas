@@ -32,9 +32,12 @@ type
     procedure lblTokenTextClick(Sender: TObject);
     procedure lblSpenderTextClick(Sender: TObject);
   strict private
-    FToken: TAddress;
-    procedure SetToken(value: TAddress);
-    procedure SetSpender(value: TAddress);
+    FToken  : TAddress;
+    FSpender: TAddress;
+    procedure SetToken(const value: TAddress);
+    procedure SetSpender(const value: TAddress);
+  strict protected
+    function Bypass: TBypass; override;
   public
     property Token: TAddress write SetToken;
     property Spender: TAddress write SetSpender;
@@ -64,39 +67,57 @@ procedure show(
   const callback      : TProc<Boolean, Boolean>; // -> (allow, shown)
   const logProc       : TLogProc);
 begin
-  const frmSetApprovalForAll = TFrmSetApprovalForAll.Create(chain, tx, callback, logProc);
-  frmSetApprovalForAll.Token   := token;
-  frmSetApprovalForAll.Spender := spender;
-  frmSetApprovalForAll.Show;
+  if whitelisted(TFrmSetApprovalForAll) or whitelisted(TFrmSetApprovalForAll, spender) then
+  begin
+    callback(True, False);
+    EXIT;
+  end;
+  thread.synchronize(procedure
+  begin
+    const frmSetApprovalForAll = TFrmSetApprovalForAll.Create(chain, tx, callback, logProc);
+    frmSetApprovalForAll.Token   := token;
+    frmSetApprovalForAll.Spender := spender;
+    frmSetApprovalForAll.Show;
+  end);
 end;
 
-{ TFrmSetApprovalForAll }
+{--------------------------- TFrmSetApprovalForAll ----------------------------}
 
-procedure TFrmSetApprovalForAll.SetToken(value: TAddress);
+procedure TFrmSetApprovalForAll.SetToken(const value: TAddress);
 begin
   FToken := value;
   web3.eth.erc721.create(TWeb3.Create(Chain), FToken).Name(procedure(name: string; err: IError)
   begin
-    if Assigned(err) then
-      Self.Log(err)
-    else if name.IsEmpty then
-      lblTokenText.Text := string(value)
-    else
-      lblTokenText.Text := name;
+    if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
+    begin
+      if name.IsEmpty then
+        lblTokenText.Text := string(FToken)
+      else
+        lblTokenText.Text := name;
+    end);
   end);
 end;
 
-procedure TFrmSetApprovalForAll.SetSpender(value: TAddress);
+procedure TFrmSetApprovalForAll.SetSpender(const value: TAddress);
 begin
-  lblSpenderText.Text := string(value);
+  FSpender := value;
+  lblSpenderText.Text := string(FSpender);
   if not common.Demo then
-    cache.getFriendlyName(Self.Chain, value, procedure(friendly: string; err: IError)
+    cache.getFriendlyName(Self.Chain, FSpender, procedure(friendly: string; err: IError)
     begin
       if Assigned(err) then Self.Log(err) else thread.synchronize(procedure
       begin
         lblSpenderText.Text := friendly;
       end);
     end);
+end;
+
+function TFrmSetApprovalForAll.Bypass: TBypass;
+begin
+  Result := TBypass.Create('spender', procedure
+  begin
+    whitelist(TFrmSetApprovalForAll, FSpender);
+  end);
 end;
 
 procedure TFrmSetApprovalForAll.lblTokenTextClick(Sender: TObject);
@@ -106,13 +127,7 @@ end;
 
 procedure TFrmSetApprovalForAll.lblSpenderTextClick(Sender: TObject);
 begin
-  cache.fromName(lblSpenderText.Text, procedure(address: TAddress; err: IError)
-  begin
-    if not Assigned(err) then
-      common.Open(Self.Chain.Explorer + '/address/' + string(address))
-    else
-      common.Open(Self.Chain.Explorer + '/address/' + lblSpenderText.Text);
-  end);
+  common.Open(Self.Chain.Explorer + '/address/' + string(FSpender));
 end;
 
 end.
