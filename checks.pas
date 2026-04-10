@@ -690,16 +690,13 @@ begin
     else if not result then
       next(prompted, nil)
     else
-      thread.synchronize(procedure
+      phisher.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
       begin
-        phisher.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
-        begin
-          if allow then
-            next(prompted + [TWarning.Other], nil)
-          else
-            block(prompted);
-        end, log);
-      end);
+        if allow then
+          next(prompted + [TWarning.Other], nil)
+        else
+          block(prompted);
+      end, log);
   end);
 end;
 
