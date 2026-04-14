@@ -122,8 +122,17 @@ begin
 end;
 
 procedure disableDarkMode;
+
+  function GetMacStyle: string;
+  begin
+    if TOSVersion.Check(10, 10) then
+      Result := 'osxstyle'
+    else
+      Result := 'lionstyle';
+  end;
+
 begin
-  TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, 'osxstyle', PChar(10)));
+  TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, GetMacStyle, PChar(10)));
 end;
 
 function appVersion: string;

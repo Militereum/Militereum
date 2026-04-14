@@ -57,7 +57,8 @@ uses
   unverified in 'unverified.pas' {FrmUnverified},
 //  update in 'update.pas' {FrmUpdate},
   vault in 'vault.pas' {FrmVault},
-  vaults.fyi in 'vaults.fyi.pas';
+  vaults.fyi in 'vaults.fyi.pas',
+  yourLastWarning in 'yourLastWarning.pas' {FrmLastWarning};
 
 {$R *.res}
 

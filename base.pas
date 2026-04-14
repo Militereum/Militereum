@@ -95,6 +95,7 @@ type
     FChain   : TChain;
     FCallback: TProc<Boolean, Boolean>; // -> (allow, shown)
     FLogProc : TLogProc;
+    function GetBlocked: Boolean;
     procedure SetBlocked(value: Boolean);
   protected
     procedure DoShow; override;
@@ -102,7 +103,7 @@ type
     procedure Log(const err: IError);
     function Bypass: TBypass; virtual;
     property Chain: TChain read FChain;
-    property Blocked: Boolean write SetBlocked;
+    property Blocked: Boolean read GetBlocked write SetBlocked;
   public
     constructor Create(
       const chain   : TChain;
@@ -133,7 +134,7 @@ uses
   // web3
   web3.eth.gas, web3.eth.types, web3.eth.utils,
   // project
-  common, thread;
+  common, thread, yourLastWarning;
 
 procedure centerOnDisplayUnderMouseCursor(const F: TCommonCustomForm);
 
@@ -351,30 +352,38 @@ begin
   InitShowThisWarning(rctShowThisWarning, edtShowThisWarning);
 end;
 
+function TFrmBase.GetBlocked: Boolean;
+begin
+  Result := imgError.Visible;
+end;
+
 procedure TFrmBase.SetBlocked(value: Boolean);
 begin
-  imgError.Visible   := value;
-  imgWarning.Visible := not value;
-  // Allow button is disabled at first, but the user can click it after a 5 sec wait
-  btnAllow.Enabled := not value;
-  btnShowThisWarning.Enabled := not Value;
-  if value then
+  if value <> Self.Blocked then
   begin
-    var counter := 5;
-    btnAllow.Text := IntToStr(counter);
-    TFormTimer<TFrmBase>.Create(Self).Start(1000, procedure(const AForm: TFrmBase; var AContinue: Boolean)
+    imgError.Visible   := value;
+    imgWarning.Visible := not value;
+    // Allow button is disabled at first, but the user can click it after a 5 sec wait
+    btnAllow.Enabled           := not value;
+    btnShowThisWarning.Enabled := not Value;
+    if value then
     begin
-      Dec(counter);
-      AContinue := counter > 0;
-      if AContinue then
-        AForm.btnAllow.Text := IntToStr(counter)
-      else
+      var counter := 5;
+      btnAllow.Text := IntToStr(counter);
+      TFormTimer<TFrmBase>.Create(Self).Start(1000, procedure(const AForm: TFrmBase; var AContinue: Boolean)
       begin
-        AForm.btnAllow.Text := 'Allow';
-        AForm.btnAllow.Enabled := True;
-        AForm.btnShowThisWarning.Enabled := True;
-      end;
-    end);
+        Dec(counter);
+        AContinue := counter > 0;
+        if AContinue then
+          AForm.btnAllow.Text := IntToStr(counter)
+        else
+        begin
+          AForm.btnAllow.Text              := 'Allow';
+          AForm.btnAllow.Enabled           := True;
+          AForm.btnShowThisWarning.Enabled := True;
+        end;
+      end);
+    end;
   end;
 end;
 
@@ -446,6 +455,16 @@ end;
 
 procedure TFrmBase.btnAllowClick(Sender: TObject);
 begin
+  if Blocked then
+  begin
+    const frmYourLastWarning = TFrmLastWarning.Create(Self);
+    try
+      if frmYourLastWarning.ShowModal <> mrOK then
+        EXIT;
+    finally
+      frmYourLastWarning.Free;
+    end;
+  end;
   if Assigned(Self.FCallback) then Self.FCallback(True, True);
   Self.Close;
 end;

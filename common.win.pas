@@ -119,8 +119,21 @@ begin
 end;
 
 procedure disableDarkMode;
+
+  function GetWinStyle: string;
+  begin
+    if TOSVersion.Check(10, 0) and (TOSVersion.Build >= 22000) then
+      Result := 'win11style'
+    else if TOSVersion.Check(10) then
+      Result := 'win10style'
+    else if TOSVersion.Check(6, 2) then
+      Result := 'win8style'
+    else
+      Result := 'win7style';
+  end;
+
 begin
-  TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, 'win10style', RT_RCDATA));
+  TStyleManager.SetStyle(TStyleStreaming.LoadFromResource(hInstance, GetWinStyle, RT_RCDATA));
 end;
 
 function appVersion: string;

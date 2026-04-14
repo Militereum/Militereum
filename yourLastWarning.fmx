@@ -1,0 +1,71 @@
+object FrmLastWarning: TFrmLastWarning
+  Left = 0
+  Top = 0
+  ActiveControl = edit
+  BorderIcons = [biSystemMenu]
+  BorderStyle = Single
+  Caption = 'Militereum'
+  ClientHeight = 170
+  ClientWidth = 640
+  Position = ScreenCenter
+  FormStyle = StayOnTop
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object label1: TLabel
+    StyledSettings = [Family, Style, FontColor]
+    Position.X = 16.000000000000000000
+    Position.Y = 16.000000000000000000
+    Size.Width = 608.000000000000000000
+    Size.Height = 18.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 14.000000000000000000
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 
+      'You are about to allow a high-risk transaction that could result' +
+      ' in a significant loss'
+    TabOrder = 0
+  end
+  object label2: TLabel
+    Position.X = 16.000000000000000000
+    Position.Y = 49.000000000000000000
+    Size.Width = 608.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    Text = 'Type "I will lose money" to continue'
+    TabOrder = 1
+  end
+  object edit: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 2
+    Position.X = 223.000000000000000000
+    Position.Y = 82.000000000000000000
+    Size.Width = 193.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    OnTyping = editTyping
+  end
+  object btnContinue: TButton
+    Enabled = False
+    ModalResult = 1
+    Position.X = 232.000000000000000000
+    Position.Y = 128.000000000000000000
+    TabOrder = 3
+    Text = 'Continue'
+    TextSettings.Trimming = None
+  end
+  object btnCancel: TButton
+    Cancel = True
+    Default = True
+    ModalResult = 2
+    Position.X = 328.000000000000000000
+    Position.Y = 128.000000000000000000
+    TabOrder = 4
+    Text = 'Cancel'
+    TextSettings.Trimming = None
+  end
+end
