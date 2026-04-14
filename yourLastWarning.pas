@@ -10,6 +10,7 @@ uses
   FMX.Controls.Presentation,
   FMX.Edit,
   FMX.Forms,
+  FMX.Objects,
   FMX.StdCtrls,
   FMX.Types;
 
@@ -20,7 +21,9 @@ type
     edit: TEdit;
     btnContinue: TButton;
     btnCancel: TButton;
+    imgError: TImage;
     procedure editTyping(Sender: TObject);
+    procedure editKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
   protected
     procedure DoShow; override;
   end;
@@ -31,7 +34,7 @@ implementation
 
 uses
   // Delphi
-  System.SysUtils,
+  System.SysUtils, System.UITypes,
   // project
   base;
 
@@ -44,6 +47,16 @@ end;
 procedure TFrmLastWarning.editTyping(Sender: TObject);
 begin
   btnContinue.Enabled := SameText(Trim(edit.Text), 'I will lose money');
+end;
+
+procedure TFrmLastWarning.editKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
+begin
+  if (Key = vkReturn) and btnContinue.Enabled then
+  begin
+    Key         := 0;
+    KeyChar     := #0;
+    ModalResult := btnContinue.ModalResult;
+  end;
 end;
 
 end.
