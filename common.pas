@@ -43,10 +43,15 @@ function Debug: Boolean;
 function Demo: Boolean;
 function Simulate: Boolean;
 
+function Ethereum: TChain;
+function Sepolia: TChain;
+function Polygon: TChain;
+function Arbitrum: TChain;
+function Optimism: TChain;
+function Base: TChain;
+
 function AlchemyApiKey(const chain: TChain): IResult<string>;
 function AppVersion: string;
-function Base: TChain;
-function Ethereum: TChain;
 function Etherscan(const chain: TChain): TEtherscan;
 function Format(const value: Double): string;
 function GetTempFileName: string;
@@ -94,19 +99,19 @@ uses
 function TEthereumRPCServerHelper.chain(const port: TIdPort): IResult<TChain>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
-    Result := TResult<TChain>.Ok(web3.Ethereum)
+    Result := TResult<TChain>.Ok(common.Ethereum)
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
     Result := TResult<TChain>.Err('Holesky testnet has been retired. Please switch to another testnet.')
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-    Result := TResult<TChain>.Ok(web3.Sepolia)
+    Result := TResult<TChain>.Ok(common.Sepolia)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-    Result := TResult<TChain>.Ok(web3.Polygon)
+    Result := TResult<TChain>.Ok(common.Polygon)
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
-    Result := TResult<TChain>.Ok(web3.Arbitrum)
+    Result := TResult<TChain>.Ok(common.Arbitrum)
   else if (Self.Bindings.Count > 5) and (port = Self.Bindings[5].Port) then
-    Result := TResult<TChain>.Ok(web3.Optimism)
+    Result := TResult<TChain>.Ok(common.Optimism)
   else if (Self.Bindings.Count > 6) and (port = Self.Bindings[6].Port) then
-    Result := TResult<TChain>.Ok(web3.Base)
+    Result := TResult<TChain>.Ok(common.Base)
   else
     Result := TResult<TChain>.Err(System.SysUtils.Format('invalid port: %d', [port]));
   if Result.isOk then
@@ -119,19 +124,19 @@ end;
 
 function TEthereumRPCServerHelper.port(const chain: TChain): IResult<TIdPort>;
 begin
-  if (chain = web3.Ethereum) and (Self.Bindings.Count > 0) then
+  if (chain = common.Ethereum) and (Self.Bindings.Count > 0) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[0].Port)
-//  else if (chain = web3.Holesky) and (Self.Bindings.Count > 1) then
+//  else if (chain = common.Holesky) and (Self.Bindings.Count > 1) then
 //    Result := TResult<TIdPort>.Ok(Self.Bindings[1].Port)
-  else if (chain = web3.Sepolia) and (Self.Bindings.Count > 2) then
+  else if (chain = common.Sepolia) and (Self.Bindings.Count > 2) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[2].Port)
-  else if (chain = web3.Polygon) and (Self.Bindings.Count > 3) then
+  else if (chain = common.Polygon) and (Self.Bindings.Count > 3) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[3].Port)
-  else if (chain = web3.Arbitrum) and (Self.Bindings.Count > 4) then
+  else if (chain = common.Arbitrum) and (Self.Bindings.Count > 4) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[4].Port)
-  else if (chain = web3.Optimism) and (Self.Bindings.Count > 5) then
+  else if (chain = common.Optimism) and (Self.Bindings.Count > 5) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[5].Port)
-  else if (chain = web3.Base) and (Self.Bindings.Count > 6) then
+  else if (chain = common.Base) and (Self.Bindings.Count > 6) then
     Result := TResult<TIdPort>.Ok(Self.Bindings[6].Port)
   else
     Result := TResult<TIdPort>.Err(System.SysUtils.Format('invalid chain: %s', [chain.Name]));
@@ -175,6 +180,36 @@ begin
   Result := FindCmdLineSwitch('simulate');
 end;
 
+function Ethereum: TChain;
+begin
+  Result := web3.Ethereum.SetRPC('https://1rpc.io/eth');
+end;
+
+function Sepolia: TChain;
+begin
+  Result := web3.Sepolia.SetRPC('https://1rpc.io/sepolia');
+end;
+
+function Polygon: TChain;
+begin
+  Result := web3.Polygon.SetRPC('https://1rpc.io/matic');
+end;
+
+function Arbitrum: TChain;
+begin
+  Result := web3.Arbitrum.SetRPC('https://1rpc.io/arb');
+end;
+
+function Optimism: TChain;
+begin
+  Result := web3.Optimism.SetRPC('https://1rpc.io/op');
+end;
+
+function Base: TChain;
+begin
+  Result := web3.Base.SetRPC('https://1rpc.io/base');
+end;
+
 constructor TSemVer.Create(const aMajor, aMinor, aPatch: Integer);
 begin
   Self.Major := aMajor;
@@ -202,17 +237,17 @@ end;
 function AlchemyApiKey(const chain: TChain): IResult<string>;
 {$I keys/alchemy.api.key}
 begin
-  if chain = web3.Ethereum then
+  if chain = common.Ethereum then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_ETHEREUM)
-  else if chain = web3.Sepolia then
+  else if chain = common.Sepolia then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_SEPOLIA)
-  else if chain = web3.Polygon then
+  else if chain = common.Polygon then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_POLYGON)
-  else if chain = web3.Arbitrum then
+  else if chain = common.Arbitrum then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_ARBITRUM)
-  else if chain = web3.Optimism then
+  else if chain = common.Optimism then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_OPTIMISM)
-  else if chain = web3.Base then
+  else if chain = common.Base then
     Result := TResult<string>.Ok(ALCHEMY_API_KEY_BASE)
   else
     Result := TResult<string>.Err(System.SysUtils.Format('unsupported chain: %s', [chain.Name]));
@@ -226,16 +261,6 @@ begin
 {$IFDEF MSWINDOWS}
   Result := common.win.appVersion;
 {$ENDIF MSWINDOWS}
-end;
-
-function Base: TChain;
-begin
-  Result := web3.Base.SetRPC('https://1rpc.io/base');
-end;
-
-function Ethereum: TChain;
-begin
-  Result := web3.Ethereum.SetRPC('https://1rpc.io/eth');
 end;
 
 function Etherscan(const chain: TChain): TEtherscan;

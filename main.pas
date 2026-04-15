@@ -309,19 +309,19 @@ end;
 function TfrmMain.GetChain: IResult<TChain>;
 begin
   if btnEthereum.IsPressed then
-    Result := TResult<TChain>.Ok(web3.Ethereum)
+    Result := TResult<TChain>.Ok(common.Ethereum)
   else if btnHolesky.IsPressed then
     Result := TResult<TChain>.Err('Holesky testnet has been retired. Please switch to another testnet.')
   else if btnSepolia.IsPressed then
-    Result := TResult<TChain>.Ok(web3.Sepolia)
+    Result := TResult<TChain>.Ok(common.Sepolia)
   else if btnPolygon.IsPressed then
-    Result := TResult<TChain>.Ok(web3.Polygon)
+    Result := TResult<TChain>.Ok(common.Polygon)
   else if btnArbitrum.IsPressed then
-    Result := TResult<TChain>.Ok(web3.Arbitrum)
+    Result := TResult<TChain>.Ok(common.Arbitrum)
   else if btnOptimism.IsPressed then
-    Result := TResult<TChain>.Ok(web3.Optimism)
+    Result := TResult<TChain>.Ok(common.Optimism)
   else if btnBase.IsPressed then
-    Result := TResult<TChain>.Ok(web3.Base)
+    Result := TResult<TChain>.Ok(common.Base)
   else
     Result := TResult<TChain>.Err('No chain has been selected');
 end;
