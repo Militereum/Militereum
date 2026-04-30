@@ -213,6 +213,19 @@ begin
   end);
 end;
 
+{- returns True if an address is blacklisted by USDC or USDT, otherwise False -}
+
+procedure isBlacklisted(const address: TAddress; const callback: TProc<Boolean, IError>);
+begin
+  thebannedlist.xyz.isBlacklistedByUSDC(address, procedure(frozen: Boolean; err: IError)
+  begin
+    if Assigned(err) or frozen then
+      callback(frozen, err)
+    else
+      thebannedlist.xyz.isBlacklistedByUSDT(address, callback);
+  end);
+end;
+
 {------------ returns False if an address is good, otherwise True -------------}
 
 procedure isBad(const chain: TChain; const address: TAddress; const callback: TProc<Boolean, IError>);
@@ -227,7 +240,13 @@ begin
         if Assigned(exp) or Assigned(err) then
           callback(exp <> nil, err)
         else
-          web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+          isBlacklisted(address, procedure(frozen: Boolean; err: IError)
+          begin
+            if frozen or Assigned(err) then
+              callback(frozen, err)
+            else
+              web3.eth.breadcrumbs.sanctioned({$I keys/breadcrumbs.api.key}, chain, address, callback);
+          end);
       end);
   end);
 end;
@@ -1246,7 +1265,7 @@ begin
         else if not bad then
           next(prompted, nil)
         else
-          fundedBy. show(chain, tx, tx.&To, procedure(allow, _: Boolean)
+          fundedBy.show(chain, tx, tx.&To, procedure(allow, _: Boolean)
           begin
             if allow then
               next(prompted + [TWarning.Other], nil)
@@ -1258,20 +1277,8 @@ begin
 end;
 
 procedure TChecks.Step21(const prompted: TPrompted; const next: TNext);
-
-  procedure isBlacklisted(const callback: TProc<Boolean, IError>);
-  begin
-    thebannedlist.xyz.isBlacklistedByUSDC(tx.&To, procedure(frozen: Boolean; err: IError)
-    begin
-      if Assigned(err) or frozen then
-        callback(frozen, err)
-      else
-        thebannedlist.xyz.isBlacklistedByUSDT(tx.&To, callback);
-    end);
-  end;
-
 begin
-  isBlacklisted(procedure(frozen: Boolean; err: IError)
+  isBlacklisted(tx.&To, procedure(frozen: Boolean; err: IError)
   begin
     if Assigned(err) then
       next(prompted, error.wrap(err, Self.Step21))

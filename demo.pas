@@ -144,7 +144,7 @@ end;
 
 procedure TdmDemo.actExploitExecute(Sender: TObject);
 begin
-  exploit.show(common.Ethereum, nil, '0xA950974f64aA33f27F6C5e017eEE93BF7588ED07', 'Radiant Capital Hack', 'https://revoke.cash/exploits/radiant?chainId=1', callback, nil);
+  exploit.show(common.Ethereum, nil, '0xAfb2423F447D3e16931164C9970B9741aAb1723E', 'CoW Swap DNS Hijack', 'https://revoke.cash/exploits/cowswap?chainId=1', callback, nil);
 end;
 
 procedure TdmDemo.actFirsttimeExecute(Sender: TObject);
