@@ -122,7 +122,7 @@ end;
 
 procedure TdmDemo.actApproveExecute(Sender: TObject);
 begin
-  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.DAI, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', isGood, web3.Infinite, callback, nil);
+  asset.approve(common.Ethereum, nil, web3.eth.tokenlists.Tether, '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', isGood, web3.Infinite, callback, nil);
 end;
 
 procedure TdmDemo.actBlacklistedExecute(Sender: TObject);

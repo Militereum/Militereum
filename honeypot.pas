@@ -73,7 +73,7 @@ begin
   begin
     const frmHoneypot = TFrmHoneypot.Create(chain, tx, callback, logProc);
     frmHoneypot.Token          := token;
-    frmHoneypot.Blocked        := cannot = TCannot.Sell;
+    frmHoneypot.Critical       := cannot = TCannot.Sell;
     frmHoneypot.lblHeader.Text := CannotString[cannot];
     frmHoneypot.Show;
   end);

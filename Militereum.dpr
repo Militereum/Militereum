@@ -51,15 +51,14 @@ uses
   spam in 'spam.pas' {FrmSpam},
   thebannedlist.xyz in 'thebannedlist.xyz.pas',
   thread in 'thread.pas',
-  tokenTransferToContract in 'tokenTransferToContract.pas' {FrmTokenTransferToContract},  
+  tokenTransferToContract in 'tokenTransferToContract.pas' {FrmTokenTransferToContract},
   transaction in 'transaction.pas',
   unlock in 'unlock.pas' {FrmUnlock},
   unsupported in 'unsupported.pas' {FrmUnsupported},
   unverified in 'unverified.pas' {FrmUnverified},
 //  update in 'update.pas' {FrmUpdate},
   vault in 'vault.pas' {FrmVault},
-  vaults.fyi in 'vaults.fyi.pas',
-  yourLastWarning in 'yourLastWarning.pas' {FrmLastWarning};
+  vaults.fyi in 'vaults.fyi.pas';
 
 {$R *.res}
 

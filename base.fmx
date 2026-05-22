@@ -273,6 +273,7 @@ object FrmBase: TFrmBase
     OnClick = btnBlockClick
   end
   object btnAllow: TButton
+    Enabled = False
     Position.X = 254.000000000000000000
     Position.Y = 225.000000000000000000
     TabOrder = 1
@@ -354,6 +355,7 @@ object FrmBase: TFrmBase
       object btnShowThisWarning: TEditButton
         Touch.InteractiveGestures = [LongTap]
         Cursor = crArrow
+        Enabled = False
         TextSettings.Trimming = None
         Size.Width = 21.000000000000000000
         Size.Height = 21.000000000000000000

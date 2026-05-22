@@ -69,7 +69,7 @@ begin
   begin
     const frmTokenTransferToContract = TFrmTokenTransferToContract.Create(chain, tx, callback, logProc);
     frmTokenTransferToContract.Init(contract, quantity);
-    frmTokenTransferToContract.Blocked := True;
+    frmTokenTransferToContract.Critical := True;
     frmTokenTransferToContract.Show;
   end);
 end;

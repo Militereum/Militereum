@@ -48,7 +48,7 @@ type
   strict protected
     function Bypass: TBypass; override;
   public
-    procedure Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
+    procedure SetAmount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
     property &Type  : TChangeType    write SetType;
     property Token  : IToken         write SetToken;
     property Change : IAssetChange   write SetChange;
@@ -112,12 +112,12 @@ begin
   thread.synchronize(procedure
   begin
     const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
-    frmAsset.&Type   := TChangeType.Approve;
-    frmAsset.Token   := token;
-    frmAsset.Spender := spender;
-    frmAsset.Status  := status;
-    frmAsset.Amount(token.Symbol, quantity, token.Decimals);
-    frmAsset.Blocked := (status <> isGood) or (quantity = web3.Infinite);
+    frmAsset.&Type    := TChangeType.Approve;
+    frmAsset.Token    := token;
+    frmAsset.Spender  := spender;
+    frmAsset.Status   := status;
+    frmAsset.Critical := (status <> isGood) or (quantity = web3.Infinite);
+    frmAsset.SetAmount(token.Symbol, quantity, token.Decimals);
     frmAsset.Show;
   end);
 end;
@@ -158,9 +158,9 @@ begin
   thread.synchronize(procedure
   begin
     const frmAsset = TFrmAsset.Create(chain, tx, callback, log);
-    frmAsset.Change  := change;
-    frmAsset.Status  := status;
-    frmAsset.Blocked := (status <> isGood) or (change.Amount = web3.Infinite);
+    frmAsset.Change   := change;
+    frmAsset.Status   := status;
+    frmAsset.Critical := (status <> isGood) or (change.Amount = web3.Infinite);
     frmAsset.Show;
   end);
 end;
@@ -224,7 +224,7 @@ begin
 
   Self.Logo    := value.Logo.Value;
   Self.Spender := value.&To;
-  Self.Amount(value.Symbol.Value, value.Amount, value.Decimals.Value);
+  Self.SetAmount(value.Symbol.Value, value.Amount, value.Decimals.Value);
 end;
 
 procedure TFrmAsset.SetLogo(const value: TURL);
@@ -277,7 +277,7 @@ begin
   lblTitle.Text := System.SysUtils.Format(lblTitle.Text, [SpenderTitle[value]]);
 end;
 
-procedure TFrmAsset.Amount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
+procedure TFrmAsset.SetAmount(const symbol: string; const quantity: BigInteger; const decimals: Integer);
 begin
   if quantity = web3.Infinite then
   begin
