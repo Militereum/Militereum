@@ -42,9 +42,11 @@ type
 
 type
   TLabel = class(FMX.StdCtrls.TLabel)
-  protected
-    procedure ApplyStyle; override;
-    procedure Loaded; override;
+  strict private
+    procedure BeforeSetText;
+    procedure AfterSetText;
+  strict protected
+    procedure SetText(const Value: string); override;
   end;
 
   TLogProc = reference to procedure(const err: IError);
@@ -248,7 +250,17 @@ end;
 
 {----------------------------------- TLabel -----------------------------------}
 
-procedure TLabel.ApplyStyle;
+procedure TLabel.BeforeSetText;
+begin
+  if Self.TextSettings.HorzAlign = TTextAlign.Center then
+  begin
+    Self.Anchors  := [TAnchorKind.akLeft, TAnchorKind.akTop];
+    Self.WordWrap := False;
+    Self.AutoSize := True;
+  end;
+end;
+
+procedure TLabel.AfterSetText;
 
   function GetParentForm: TCommonCustomForm;
   begin
@@ -265,7 +277,6 @@ procedure TLabel.ApplyStyle;
   end;
 
 begin
-  inherited ApplyStyle;
   if Self.AutoSize then
   begin
     const F = GetParentForm;
@@ -274,19 +285,19 @@ begin
       Self.AutoSize := False;
       F.ClientWidth := Max(F.ClientWidth, Round((Self.Position.X * 2) + Self.Width));
       CenterParentForm;
-      Self.Width := F.ClientWidth - (Self.Position.X * 2);
+      Self.Width   := F.ClientWidth - (Self.Position.X * 2);
       Self.Anchors := [TAnchorKind.akLeft, TAnchorKind.akTop, TAnchorKind.akRight];
     end;
   end;
 end;
 
-procedure TLabel.Loaded;
+procedure TLabel.SetText(const value: string);
 begin
-  inherited Loaded;
-  if Self.TextSettings.HorzAlign = TTextAlign.Center then
-  begin
-    Self.WordWrap := False;
-    Self.AutoSize := True;
+  BeforeSetText;
+  try
+    inherited SetText(value);
+  finally
+    AfterSetText;
   end;
 end;
 
@@ -476,6 +487,5 @@ initialization
 finalization
   if Assigned(allow2) then allow2.Free;
   if Assigned(allow1) then allow1.Free;
-
 
 end.

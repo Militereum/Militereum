@@ -16,7 +16,7 @@ uses
   transaction;
 
 type
-  TWarning = (Approve, TransferOut, Other);
+  TWarning = (Approve, TransferOut, TransferToContract, Other);
 
 type
   TPrompted = set of TWarning;
@@ -176,6 +176,7 @@ uses
   spam,
   thebannedlist.xyz,
   thread,
+  tokenTransferToContract,
   unlock,
   unsupported,
   unverified,
@@ -506,39 +507,48 @@ begin
           end)
           .&else(procedure(args: TArray<TArg>)
           begin
-            if Length(args) = 0 then
+            if Length(args) < 2 then
               next(prompted, nil)
             else begin
               const quantity = args[1].toUInt256;
               if quantity = 0 then
                 next(prompted, nil)
               else
-                tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
-                begin
-                  if Assigned(err) then
-                    next(prompted, error.wrap(err, Self.Step2))
-                  else if not Assigned(changes) then
-                    next(prompted, nil)
-                  else begin
-                    const index = changes.IndexOf(tx.&To);
-                    if (index > -1) and (changes.Item(index).Amount > 0) then
-                      asset.transfer(chain, tx, changes.Item(index), procedure(allow, _: Boolean)
-                      begin
-                        if allow then
-                          next(prompted + [TWarning.TransferOut], nil)
-                        else
-                          block(prompted);
-                      end, log)
+                if args[0].toAddress.SameAs(tx.&To) then
+                  tokenTransferToContract.show(chain, tx, tx.&to, quantity, procedure(allow, _: Boolean)
+                  begin
+                    if allow then
+                      next(prompted + [TWarning.TransferToContract], nil)
                     else
-                      honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow, _: Boolean)
-                      begin
-                        if allow then
-                          next(prompted + [TWarning.Other], nil)
-                        else
-                          block(prompted);
-                      end, log);
-                  end;
-                end);
+                      block(prompted);
+                  end, log)
+                else
+                  tx.Simulate(chain, procedure(changes: IAssetChanges; err: IError)
+                  begin
+                    if Assigned(err) then
+                      next(prompted, error.wrap(err, Self.Step2))
+                    else if not Assigned(changes) then
+                      next(prompted, nil)
+                    else begin
+                      const index = changes.IndexOf(tx.&To);
+                      if (index > -1) and (changes.Item(index).Amount > 0) then
+                        asset.transfer(chain, tx, changes.Item(index), procedure(allow, _: Boolean)
+                        begin
+                          if allow then
+                            next(prompted + [TWarning.TransferOut], nil)
+                          else
+                            block(prompted);
+                        end, log)
+                      else
+                        honeypot.show(chain, tx, tx.&To, TCannot.Transfer, procedure(allow, _: Boolean)
+                        begin
+                          if allow then
+                            next(prompted + [TWarning.Other], nil)
+                          else
+                            block(prompted);
+                        end, log);
+                    end;
+                  end);
             end;
           end);
     end);
@@ -1415,33 +1425,46 @@ begin
                 // if we have prompted for this approval before in step 1
                 if ((changes.Item(index).Change = TChangeType.Approve) and (approvals = 1) and (TWarning.Approve in prompted))
                 // or we have prompted for this transfer before in step 2
-                or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (TWarning.TransferOut in prompted)) then
+                or ((changes.Item(index).Change = TChangeType.Transfer) and (transfers = 1) and (prompted * [TransferOut, TransferToContract] <> [])) then
                   step(index + 1, prompted)
                 else
-                  if changes.Item(index).Change <> TChangeType.Approve then
-                    asset.transfer(chain, tx, changes.Item(index), procedure(allow, _: Boolean)
-                    begin
-                      if allow then
-                        step(index + 1, prompted + [TWarning.TransferOut])
-                      else
-                        block(prompted);
-                    end, log)
-                  else
-                    getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
-                    begin
-                      if Assigned(err) then
-                        next(prompted, error.wrap(err, Self.Step24))
-                      else
-                        asset.approve(chain, tx, changes.Item(index), status, procedure(allow, _: Boolean)
+                  case changes.Item(Index).Change of
+                    TChangeType.Transfer:
+                      if changes.Item(index).&To.SameAs(tx.&To) then
+                        tokenTransferToContract.show(chain, tx, tx.&to, changes.Item(index).Amount, procedure(allow, _: Boolean)
                         begin
                           if allow then
-                          begin
-                            FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
-                            step(index + 1, prompted + [TWarning.Approve]);
-                          end else
+                            next(prompted + [TWarning.TransferToContract], nil)
+                          else
+                            block(prompted);
+                        end, log)
+                      else
+                        asset.transfer(chain, tx, changes.Item(index), procedure(allow, _: Boolean)
+                        begin
+                          if allow then
+                            step(index + 1, prompted + [TWarning.TransferOut])
+                          else
                             block(prompted);
                         end, log);
-                    end);
+                    TChangeType.Approve:
+                      getSpenderStatus(chain, changes.Item(index).&To, procedure(status: TSpenderStatus; err: IError)
+                      begin
+                        if Assigned(err) then
+                          next(prompted, error.wrap(err, Self.Step24))
+                        else
+                          asset.approve(chain, tx, changes.Item(index), status, procedure(allow, _: Boolean)
+                          begin
+                            if allow then
+                            begin
+                              FApproved := FApproved + [TApproval.Create(chain, changes.Item(index).Contract, from, changes.Item(index).&To)];
+                              step(index + 1, prompted + [TWarning.Approve]);
+                            end else
+                              block(prompted);
+                          end, log);
+                      end);
+                  else
+                    step(index + 1, prompted);
+                  end;
           end;
           step(0, prompted);
         end;

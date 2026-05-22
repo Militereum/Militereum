@@ -51,6 +51,7 @@ uses
   spam in 'spam.pas' {FrmSpam},
   thebannedlist.xyz in 'thebannedlist.xyz.pas',
   thread in 'thread.pas',
+  tokenTransferToContract in 'tokenTransferToContract.pas' {FrmTokenTransferToContract},  
   transaction in 'transaction.pas',
   unlock in 'unlock.pas' {FrmUnlock},
   unsupported in 'unsupported.pas' {FrmUnsupported},

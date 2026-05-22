@@ -91,6 +91,7 @@ type
     mnuDelegator: TMenuItem;
     mnuBlacklisted: TMenuItem;
     mnuMetamorphic: TMenuItem;
+    mnuTokenTransferToContract: TMenuItem;
     procedure btnDismissClick(Sender: TObject);
     procedure NCPermissionRequestResult(Sender: TObject; const aIsGranted: Boolean);
     procedure btnNetworkClick(Sender: TObject);

@@ -30,6 +30,7 @@ type
     actSanctioned: TAction;
     actSetApprovalForAll: TAction;
     actSpam: TAction;
+    actTokenTransferToContract: TAction;
     actUnlock: TAction;
     actUnsupported: TAction;
     actUnverified: TAction;
@@ -53,6 +54,7 @@ type
     procedure actSanctionedExecute(Sender: TObject);
     procedure actSetApprovalForAllExecute(Sender: TObject);
     procedure actSpamExecute(Sender: TObject);
+    procedure actTokenTransferToContractExecute(Sender: TObject);
     procedure actUnlockExecute(Sender: TObject);
     procedure actUnsupportedExecute(Sender: TObject);
     procedure actUnverifiedExecute(Sender: TObject);
@@ -104,6 +106,7 @@ uses
   setApprovalForAll,
   spam,
   thread,
+  tokenTransferToContract,
   unlock,
   unsupported,
   unverified,
@@ -205,6 +208,11 @@ end;
 procedure TdmDemo.actSpamExecute(Sender: TObject);
 begin
   spam.show(taReceive, common.Ethereum, nil, '0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3', callback, nil);
+end;
+
+procedure TdmDemo.actTokenTransferToContractExecute(Sender: TObject);
+begin
+  tokenTransferToContract.show(common.Ethereum, nil, '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 149950000, callback, nil);
 end;
 
 procedure TdmDemo.actUnlockExecute(Sender: TObject);

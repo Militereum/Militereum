@@ -143,5 +143,10 @@ object dmDemo: TdmDemo
       OnExecute = actMetamorphicExecute
       OnUpdate = actUpdate
     end
+    object actTokenTransferToContract: TAction
+      Text = 'You mistakenly transferring a token to its smart contract'
+      OnExecute = actTokenTransferToContractExecute
+      OnUpdate = actUpdate
+    end
   end
 end
