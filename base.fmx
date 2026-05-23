@@ -378,4 +378,14 @@ object FrmBase: TFrmBase
       OnClick = mnuNeverForThisClick
     end
   end
+  object imgChain: TImage
+    MultiResBitmap = <
+      item
+      end>
+    Position.X = 16.000000000000000000
+    Position.Y = 16.000000000000000000
+    Size.Width = 32.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+  end
 end

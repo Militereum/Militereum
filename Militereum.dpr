@@ -1,5 +1,7 @@
 program Militereum;
 
+{$R 'chains.res' 'assets\chains.rc'}
+
 uses
   System.StartUpCopy,
   FMX.Forms,

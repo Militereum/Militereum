@@ -76,17 +76,18 @@ type
   end;
 
   TFrmBase = class(TForm)
+    btnAllow: TButton;
+    btnBlock: TButton;
+    btnShowThisWarning: TEditButton;
+    edtShowThisWarning: TEdit;
+    imgChain: TImage;
+    imgError: TImage;
     imgMilitereum: TImage;
     imgWarning: TImage;
-    btnBlock: TButton;
-    btnAllow: TButton;
-    imgError: TImage;
-    rctShowThisWarning: TRectangle;
-    edtShowThisWarning: TEdit;
-    btnShowThisWarning: TEditButton;
-    pmShowThisWarning: TPopupMenu;
     mnuNeverAgain: TMenuItem;
     mnuNeverForThis: TMenuItem;
+    pmShowThisWarning: TPopupMenu;
+    rctShowThisWarning: TRectangle;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnShowThisWarningClick(Sender: TObject);
     procedure mnuNeverAgainClick(Sender: TObject);
@@ -359,6 +360,16 @@ begin
   FChain    := chain;
   FCallback := callback;
   FLogProc  := log;
+
+  if FindResource(hInstance, PChar(FChain.Name), RT_RCDATA) > 0 then
+  begin
+    const RS = TResourceStream.Create(hInstance, FChain.Name, RT_RCDATA);
+    try
+      imgChain.Bitmap.LoadFromStream(RS);
+    finally
+      RS.Free;
+    end;
+  end;
 
   InitShowThisWarning(rctShowThisWarning, edtShowThisWarning);
 end;
