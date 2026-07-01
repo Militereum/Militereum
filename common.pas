@@ -97,7 +97,7 @@ uses
   docker;
 
 const
-  RPC_URL_ETHEREUM = 'https://public.1rpc.io/eth';
+  RPC_URL_ETHEREUM = 'https://rpc.mevblocker.io';
   RPC_URL_SEPOLIA  = 'https://public.1rpc.io/sepolia';
   RPC_URL_POLYGON  = 'https://public.1rpc.io/matic';
   RPC_URL_ARBITRUM = 'https://public.1rpc.io/arb';
