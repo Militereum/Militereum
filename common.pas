@@ -96,6 +96,14 @@ uses
   // project
   docker;
 
+const
+  RPC_URL_ETHEREUM = 'https://public.1rpc.io/eth';
+  RPC_URL_SEPOLIA  = 'https://public.1rpc.io/sepolia';
+  RPC_URL_POLYGON  = 'https://public.1rpc.io/matic';
+  RPC_URL_ARBITRUM = 'https://public.1rpc.io/arb';
+  RPC_URL_OPTIMISM = 'https://public.1rpc.io/op';
+  RPC_URL_BASE     = 'https://public.1rpc.io/base';
+
 function TEthereumRPCServerHelper.chain(const port: TIdPort): IResult<TChain>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
@@ -145,19 +153,19 @@ end;
 function TEthereumRPCServerHelper.endpoint(const port: TIdPort): IResult<string>;
 begin
   if (Self.Bindings.Count > 0) and (port = Self.Bindings[0].Port) then
-    Result := TResult<string>.Ok('https://1rpc.io/eth')
+    Result := TResult<string>.Ok(RPC_URL_ETHEREUM)
   else if (Self.Bindings.Count > 1) and (port = Self.Bindings[1].Port) then
     Result := TResult<string>.Err('Holesky testnet has been retired. Please switch to another testnet.')
   else if (Self.Bindings.Count > 2) and (port = Self.Bindings[2].Port) then
-    Result := TResult<string>.Ok('https://1rpc.io/sepolia')
+    Result := TResult<string>.Ok(RPC_URL_SEPOLIA)
   else if (Self.Bindings.Count > 3) and (port = Self.Bindings[3].Port) then
-    Result := TResult<string>.Ok('https://1rpc.io/matic')
+    Result := TResult<string>.Ok(RPC_URL_POLYGON)
   else if (Self.Bindings.Count > 4) and (port = Self.Bindings[4].Port) then
-    Result := TResult<string>.Ok('https://1rpc.io/arb')
+    Result := TResult<string>.Ok(RPC_URL_ARBITRUM)
   else if (Self.Bindings.Count > 5) and (port = Self.Bindings[5].Port) then
-    Result := TResult<string>.Ok('https://1rpc.io/op')
+    Result := TResult<string>.Ok(RPC_URL_OPTIMISM)
   else if (Self.Bindings.Count> 6) and (port = Self.Bindings[6].Port) then
-    Result := TResult<string>.Ok('https://1rpc.io/base')
+    Result := TResult<string>.Ok(RPC_URL_BASE)
   else
     Result := TResult<string>.Err(System.SysUtils.Format('invalid port: %d', [port]));
   if Result.isOk then
@@ -182,32 +190,32 @@ end;
 
 function Ethereum: TChain;
 begin
-  Result := web3.Ethereum.SetRPC('https://1rpc.io/eth');
+  Result := web3.Ethereum.SetRPC(RPC_URL_ETHEREUM);
 end;
 
 function Sepolia: TChain;
 begin
-  Result := web3.Sepolia.SetRPC('https://1rpc.io/sepolia');
+  Result := web3.Sepolia.SetRPC(RPC_URL_SEPOLIA);
 end;
 
 function Polygon: TChain;
 begin
-  Result := web3.Polygon.SetRPC('https://1rpc.io/matic');
+  Result := web3.Polygon.SetRPC(RPC_URL_POLYGON);
 end;
 
 function Arbitrum: TChain;
 begin
-  Result := web3.Arbitrum.SetRPC('https://1rpc.io/arb');
+  Result := web3.Arbitrum.SetRPC(RPC_URL_ARBITRUM);
 end;
 
 function Optimism: TChain;
 begin
-  Result := web3.Optimism.SetRPC('https://1rpc.io/op');
+  Result := web3.Optimism.SetRPC(RPC_URL_OPTIMISM);
 end;
 
 function Base: TChain;
 begin
-  Result := web3.Base.SetRPC('https://1rpc.io/base');
+  Result := web3.Base.SetRPC(RPC_URL_BASE);
 end;
 
 constructor TSemVer.Create(const aMajor, aMinor, aPatch: Integer);
