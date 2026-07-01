@@ -1,4 +1,5 @@
 AppxManifest.template.xml
+chains.res
 Entitlement.TemplateOSX.xml
 info.plist.TemplateOSX.xml
 Militereum.deployproj

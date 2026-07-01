@@ -363,7 +363,7 @@ begin
 
   if FindResource(hInstance, PChar(FChain.Name), RT_RCDATA) > 0 then
   begin
-    const RS = TResourceStream.Create(hInstance, FChain.Name, RT_RCDATA);
+    const RS = TResourceStream.Create(hInstance, string(FChain.Name), RT_RCDATA);
     try
       imgChain.Bitmap.LoadFromStream(RS);
     finally
