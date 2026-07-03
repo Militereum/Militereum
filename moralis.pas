@@ -28,45 +28,30 @@ begin
 end;
 
 procedure pairs(const apiKey: string; const chain: TChain; const address: TAddress; const callback: TProc<TJsonArray, IError>);
-type
-  TDEX  = string;
-  TDEXs = TArray<TDEX>;
-  TDone = reference to procedure(const arr: TJsonArray);
-  TStep = reference to procedure(const DEXs: TDEXs; const index: Integer; const result: TJsonArray; const done: TDone);
 begin
-  if chain.WETH = '' then
-  begin
-    const empty = web3.json.unmarshal('[]') as TJsonArray;
-    try
-      callback(empty, nil);
-    finally
-      empty.Free;
-    end;
-    EXIT;
-  end;
-  var next: TStep;
-  next := procedure(const DEXs: TDEXs; const index: Integer; const result: TJsonArray; const done: TDone)
-  begin
-    if index >= Length(DEXs) then
-      done(result)
-    else
-      web3.http.get(MORALIS_API_BASE + Format('%s/%s/pairAddress?chain=%s&exchange=%s', [address, chain.WETH, network(chain), DEXs[index]]), [TNetHeader.Create('X-API-KEY', apiKey)],
-        procedure(response: TJsonValue; err: IError)
-        begin
-          if Assigned(err) and not err.Message.ToLower.Contains('no pairs found') then
-          begin
-            callback(nil, err);
-            EXIT;
-          end;
-          if getPropAsStr(response, 'pairAddress') <> '' then result.AddElement(TJsonString.Create(getPropAsStr(response, 'pairAddress')));
-          next(DEXs, index + 1, result, done);
-        end);
-  end;
-  next(['uniswapv2', 'uniswapv3', 'sushiswapv2', 'pancakeswapv1', 'pancakeswapv2', 'quickswap'], 0, TJsonArray.Create, procedure(const result: TJsonArray)
-  begin
-    callback(result, nil);
-    result.Free;
-  end);
+  web3.http.get(
+    MORALIS_API_BASE + Format('erc20/%s/pairs?chain=%s', [address, network(chain)]),
+    [TNetHeader.Create('X-API-KEY', apiKey)],
+    procedure(response: TJsonValue; err: IError)
+    begin
+      if Assigned(err) then
+      begin
+        callback(nil, err);
+        EXIT;
+      end;
+      const pairs = getPropAsArr(response, 'pairs');
+      if not Assigned(pairs) then
+      begin
+        callback(nil, TError.Create('pairs is null'));
+        EXIT;
+      end;
+      const clone = pairs.Clone as TJsonArray;
+      try
+        callback(clone, nil);
+      finally
+        clone.Free;
+      end;
+    end);
 end;
 
 procedure metadata(const apiKey: string; const chain: TChain; const address: TAddress; const NFT: Boolean; const callback: TProc<TJsonValue, IError>);
