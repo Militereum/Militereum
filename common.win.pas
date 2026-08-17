@@ -36,8 +36,26 @@ uses
   main,
   thread;
 
+function GetCurrentPackageFullName(
+  packageFullNameLength: PCardinal;
+  packageFullName: PWideChar): LongInt; stdcall; external 'kernel32.dll' name 'GetCurrentPackageFullName';
+
+function IsMicrosoftStoreApp: Boolean;
+const
+  APPMODEL_ERROR_NO_PACKAGE = 15700;
+begin
+  var len: Cardinal := 0;
+  Result := GetCurrentPackageFullName(@len, nil) <> APPMODEL_ERROR_NO_PACKAGE;
+end;
+
 function autoRunEnabled: Boolean;
 begin
+  if IsMicrosoftStoreApp  then
+  begin
+    // Auto-Run is enabled in AppxManifest.template.xml
+    Result := True;
+    EXIT;
+  end;
   const R = TRegistry.Create;
   try
     R.RootKey := HKEY_CURRENT_USER;
@@ -63,6 +81,8 @@ end;
 
 procedure enableAutoRun;
 begin
+  if IsMicrosoftStoreApp  then
+    EXIT;
   const R = TRegistry.Create;
   try
     R.RootKey := HKEY_CURRENT_USER;
@@ -79,6 +99,8 @@ end;
 
 procedure disableAutoRun;
 begin
+  if IsMicrosoftStoreApp  then
+    EXIT;
   const R = TRegistry.Create;
   try
     R.RootKey := HKEY_CURRENT_USER;
