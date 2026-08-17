@@ -97,12 +97,12 @@ uses
   docker;
 
 const
-  RPC_URL_ETHEREUM = 'https://rpc.mevblocker.io';
-  RPC_URL_SEPOLIA  = 'https://public.1rpc.io/sepolia';
-  RPC_URL_POLYGON  = 'https://public.1rpc.io/matic';
-  RPC_URL_ARBITRUM = 'https://public.1rpc.io/arb';
-  RPC_URL_OPTIMISM = 'https://public.1rpc.io/op';
-  RPC_URL_BASE     = 'https://public.1rpc.io/base';
+  RPC_URL_ETHEREUM = 'https://ethereum-rpc.publicnode.com';
+  RPC_URL_SEPOLIA  = 'https://ethereum-sepolia-rpc.publicnode.com';
+  RPC_URL_POLYGON  = 'https://polygon-bor-rpc.publicnode.com';
+  RPC_URL_ARBITRUM = 'https://arbitrum-one-rpc.publicnode.com';
+  RPC_URL_OPTIMISM = 'https://optimism-rpc.publicnode.com';
+  RPC_URL_BASE     = 'https://base-rpc.publicnode.com';
 
 function TEthereumRPCServerHelper.chain(const port: TIdPort): IResult<TChain>;
 begin

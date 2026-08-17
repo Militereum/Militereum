@@ -66,7 +66,6 @@ uses
   System.Classes,
   // Indy
   IdException,
-  IdGlobalProtocols,
   // web3
   web3.http,
   web3.json,
@@ -359,13 +358,7 @@ end;
 
 class function TEthereumRPCServer.URI(const port: TIdPort): string;
 begin
-  Result := System.SysUtils.Format('http://%s:%d', [(function: string
-  begin
-    if IndyComputerName <> '' then
-      Result := IndyComputerName.ToLower
-    else
-      Result := 'localhost';
-  end)(), port]);
+  Result := System.SysUtils.Format('http://localhost:%d', [port]);
 end;
 
 end.
