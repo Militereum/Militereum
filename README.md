@@ -22,7 +22,7 @@ Because Militereum is rooted into your operating system, the firewall can start 
 ## Setup
 
 1. Download Militereum for [Windows](https://apps.microsoft.com/detail/9nv0c48z57r4) or [macOS](https://apps.apple.com/app/militereum/id6446287995)
-2. Launch Militereum. The following window appears. Click on `Copy`
+2. Launch Militereum. The following window appears. Click on: `Copy`
 
 ![image](assets/main.png)
 
@@ -48,7 +48,7 @@ Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer]
 
 Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially phish you for an allowance and drain your tokens from your wallet.
 
-After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your device.
+After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your PC.
 
 ![image](assets/approve.png)
 
