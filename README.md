@@ -1,9 +1,9 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![macOS](https://img.shields.io/badge/os-macOS-green)](https://apps.apple.com/app/militereum/id6446287995) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/detail/9nv0c48z57r4) [![macOS](https://img.shields.io/twitter/follow/militereum)](https://x.com/militereum)
 
 * simulates your transactions
-* shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your device
+* shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your PC
 * blocks suspicious transactions
-* works with every EVM-compatible wallet, including browser-based (eg. [MetaMask](https://metamask.io/), [Trust](https://trustwallet.com/)) and native desktop (eg. [Frame](https://frame.sh/), [Zerion](https://link.zerion.io/a11o6IN0jqb)) wallets
+* works with every EVM-compatible wallet, including [MetaMask](https://metamask.io/) and [Rabby](https://rabby.io/) and [Ambire](https://www.ambire.com/) and [Brave](https://brave.com/wallet/).
 * non-custodial, 100% uptime. you do not depend on our servers because there aren't any
 * supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/) and [Base](https://base.org/)
 * available for [Windows](https://apps.microsoft.com/detail/9nv0c48z57r4) and [macOS](https://apps.apple.com/app/militereum/id6446287995)
@@ -11,13 +11,13 @@
 
 ## Reason to be
 
-Almost everybody in crypto — especially those who are in DeFi — has been phished, drained, hacked, or rugged. Wallets are keepers of keys, but they don’t necessarily keep you safe.
+Almost everybody in crypto — especially those who are in DeFi — has been phished, drained or rugged. Wallets are keepers of keys, but they don’t necessarily keep you safe.
 
-Militereum is a firewall that once installed secures your crypto wallets. Militereum is chain-agnostic and works with every crypto wallet, including browser-based and native desktop wallets. 
+Militereum is a firewall that once installed secures your crypto wallets. Militereum is chain-agnostic and works with every EVM-compatible crypto wallet, including [MetaMask](https://metamask.io/) and [Rabby](https://rabby.io/) and [Ambire](https://www.ambire.com/) and [Brave](https://brave.com/wallet/).
 
 Each and everyone of your transactions is simulated, compared to 20+ known attack vectors, and potentially blocked if Militereum thinks it is unsafe.
 
-Because Militereum is rooted into your operating system, the firewall can start automatically when you log into your device, the software sends you system-wide notifications that do not depend on the availability of a web browser, and wallets cannot bypass it.
+Because Militereum is rooted into your operating system, the firewall can start automatically when you log into your PC, the software sends you system-wide notifications that do not depend on the availability of a web browser, and wallets cannot bypass it.
 
 ## Setup
 
@@ -27,10 +27,14 @@ Because Militereum is rooted into your operating system, the firewall can start 
 ![image](assets/main.png)
 
 3. Unlock MetaMask in your web browser
-4. Navigate to _Settings_ > _Networks_ > _Add a network manually_
-5. The following tab appears. Paste Militereum's network URL in `New RPC URL`. Click on `Save`
-
-![image](assets/MetaMask.png)
+4. Click on the hamburger icon in the upper-right corner
+5. Click on: `Networks`
+6. Click on the ellipsis for the network you will want to secure
+7. Click on: `Edit`
+8. Open the RPC URL dropdown menu
+9. Click on: `Add RPC URL`
+10. Paste Militereum’s RPC URL
+11. Click on: `Add URL`
 
 Click [here](networks.md) for more info on how to configure Militereum.
 
@@ -38,7 +42,7 @@ Click [here](networks.md) for more info on how to configure Militereum.
 
 As soon as your wallet has connected to Militereum, the firewall gets minimized and keeps running in the background.
 
-Every raw transaction passes through Militereum and if it is suspicious, Militereum will block the transaction and prevent it from leaving your device.
+Every raw transaction passes through Militereum and if it is suspicious, Militereum will block the transaction and prevent it from leaving your PC.
 
 Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer](https://app.balancer.fi/). Initiate a swap from one of your tokens to another. Before Uniswap or Balancer can swap your token, you'll need to sign a so-called _token allowance_.
 
