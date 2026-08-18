@@ -3,9 +3,9 @@
 * simulates your transactions
 * shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your PC
 * blocks suspicious transactions
-* works with every EVM-compatible wallet, including [MetaMask](https://metamask.io/) and [Rabby](https://rabby.io/) and [Ambire](https://www.ambire.com/) and [Brave](https://brave.com/wallet/).
+* works with every EVM-compatible wallet, including [MetaMask](https://metamask.io/) and [Rabby](https://rabby.io/) and [Ambire](https://www.ambire.com/) and [Brave](https://brave.com/wallet/)
 * non-custodial, 100% uptime. you do not depend on our servers because there aren't any
-* supports Ethereum and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/) and [Base](https://base.org/)
+* supports [Ethereum](https://ethereum.org/) and many other chains, including [Polygon](https://polygon.technology/) and [Arbitrum](https://arbitrum.io/) and [Optimism](https://optimism.io/) and [Base](https://base.org/)
 * available for [Windows](https://apps.microsoft.com/detail/9nv0c48z57r4) and [macOS](https://apps.apple.com/app/militereum/id6446287995)
 * auditable open source code
 
