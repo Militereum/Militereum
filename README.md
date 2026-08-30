@@ -1,7 +1,7 @@
 # ![image](icon_150x150.png) Militereum&nbsp;&nbsp;[![macOS](https://img.shields.io/badge/os-macOS-green)](https://apps.apple.com/app/militereum/id6446287995) [![Windows](https://img.shields.io/badge/os-Windows-green)](https://apps.microsoft.com/detail/9nv0c48z57r4) [![macOS](https://img.shields.io/twitter/follow/militereum)](https://x.com/militereum)
 
 * simulates your transactions
-* shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your PC
+* shows you exactly what tokens are about to exit your wallet BEFORE a transaction leaves your computer
 * blocks suspicious transactions
 * works with every EVM-compatible wallet, including [MetaMask](https://metamask.io/) and [Rabby](https://rabby.io/) and [Ambire](https://www.ambire.com/) and [Brave](https://brave.com/wallet/)
 * non-custodial, 100% uptime. you do not depend on our servers because there aren't any
@@ -17,7 +17,7 @@ Militereum is a firewall that once installed secures your crypto wallets. Milite
 
 Each and everyone of your transactions is simulated, compared to 20+ known attack vectors, and potentially blocked if Militereum thinks it is unsafe.
 
-Because Militereum is rooted into your operating system, the firewall can start automatically when you log into your PC, the software sends you system-wide notifications that do not depend on the availability of a web browser, and wallets cannot bypass it.
+Because Militereum is rooted into your operating system, the firewall can start automatically when you log into your computer, the software sends you system-wide notifications that do not depend on the availability of a web browser, and dapps cannot bypass it.
 
 ## Setup
 
@@ -29,7 +29,7 @@ Because Militereum is rooted into your operating system, the firewall can start 
 3. Unlock MetaMask in your web browser
 4. Click on the hamburger icon in the upper-right corner
 5. Click on: `Networks`
-6. Click on the ellipsis for the network you will want to secure
+6. Click on the ellipsis for the network you will want to secure, for example: Ethereum
 7. Click on: `Edit`
 8. Open the RPC URL dropdown menu
 9. Click on: `Add RPC URL`
@@ -42,13 +42,13 @@ Click [here](networks.md) for more info on how to configure Militereum.
 
 As soon as your wallet has connected to Militereum, the firewall gets minimized and keeps running in the background.
 
-Every raw transaction passes through Militereum and if it is suspicious, Militereum will block the transaction and prevent it from leaving your PC.
+Every raw transaction passes through Militereum and if it is suspicious, Militereum will block the transaction and prevent it from leaving your computer.
 
 Here's an example. Navigate to [Uniswap](https://app.uniswap.org/) or [Balancer](https://app.balancer.fi/). Initiate a swap from one of your tokens to another. Before Uniswap or Balancer can swap your token, you'll need to sign a so-called _token allowance_.
 
 Every time you approve a token allowance, you are potentially exposing your wallet to an exploit. Uniswap and Balancer are very reputable, but any other dapp can potentially phish you for an allowance and drain your tokens from your wallet.
 
-After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your PC.
+After your crypto wallet has approved the allowance, Militereum will intercept the transaction and prompt you with this window. From here, you can allow the transaction to happen, or prevent it from leaving your computer.
 
 ![image](assets/approve.png)
 
