@@ -52,7 +52,7 @@ After your crypto wallet has approved the allowance, Militereum will intercept t
 
 ![image](assets/approve.png)
 
-Besides token allowances, Militereum will block...
+Besides unlimited token allowances, Militereum will block...
 1. you transferring [more than 5k in US dollars](assets/limit.png)
 2. you transacting with [a sanctioned address](assets/sanctioned.png)
 3. you transacting with [a smart contract that has not been verified](assets/unverified.png)
@@ -74,53 +74,14 @@ Besides token allowances, Militereum will block...
 19. you transacting with an [address that got funded by a bad actor](assets/fundedBy.png)
 20. you delegating your wallet [to an unknown smart contract](assets/eip7702.png) (not a known EIP-7702 delegator)
 21. you transacting with an address that got [blacklisted by USDC or USDT](assets/blacklisted.png)
-22. you depositing money into a [metamorphic smart contract](assets/metamorphic.png) that could be updated to divert your money elsewhere.
+22. you mistakenly [sending a token it its smart contract](assets/tokenTransferToContract.png), where it will get permanently stuck
+23. you depositing money into a [metamorphic smart contract](assets/metamorphic.png) that could be updated to divert your money elsewhere.
 
 Militereum's warnings are provided for informational purposes only and should not be taken as financial advice. Remember to always do your own research before interacting with tokens.
 
 ## License
 
 Distributed under the [GNU AGP v3.0](https://github.com/svanas/Militereum/blob/master/LICENSE) with [Commons Clause](https://commonsclause.com/) license.
-
-## Contributors
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/esterlus">
-        <img src="https://github.com/esterlus.png?size=48"><br>
-        Ronny Esterluss
-      </a><br>
-      <a href="https://hoprnet.org/">HOPR Network</a><br>
-      Code
-    </td>
-    <td align="center">
-      <a href="https://github.com/amadeobrands">
-        <img src="https://github.com/amadeobrands.png?size=48"><br>
-        Amadeo Brands
-      </a><br>
-      <a href="https://www.yieldnest.finance/">YieldNest</a><br>
-      Advisor
-    </td>
-    <td align="center">
-      <a href="https://github.com/rkalis">
-        <img src="https://github.com/rkalis.png?size=48"><br>
-        Rosco Kalis
-      </a><br>
-      <a href="https://revoke.cash/">revoke.cash</a><br>
-      Partnership
-    </td>
-    <td align="center">
-      <a href="https://github.com/Azamshaghaghi">
-        <img src="https://github.com/Azamshaghaghi.png?size=48"><br>
-        Azam Shaghaghi
-      </a><br>
-      Zeta Ltd<br>
-      Advisor
-    </td>
-  </tr>
-</table>
-<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## Sponsors
 
