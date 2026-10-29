@@ -154,6 +154,7 @@ begin
         else
         begin
           Result := TResult<TEthereumRPCServer>.Err(TError.Create(E.Message));
+          server.Free;
           EXIT;
         end;
       end;
@@ -179,6 +180,7 @@ begin
     on E: Exception do
     begin
       Result := TResult<TEthereumRPCServer>.Err(TError.Create(E.Message));
+      server.Free;
       EXIT;
     end;
   end;
@@ -205,6 +207,7 @@ begin
     on E: Exception do
     begin
       Result := TResult<TEthereumRPCServer>.Err(TError.Create(E.Message));
+      server.Free;
       EXIT;
     end;
   end;
