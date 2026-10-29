@@ -561,7 +561,7 @@ begin
     '--platform=linux/amd64 ' +
     '-e FORCE_ZERO_HOP=true ' +
     '-e CLIENT=' + {$I keys/hopr.api.key} + ' ' +
-    System.SysUtils.Format('-p %d:%d ', [RPCh_PORT_NUMBER, RPCh_PORT_NUMBER]) +
+    System.SysUtils.Format('-p 127.0.0.1:%d:%d ', [RPCh_PORT_NUMBER, RPCh_PORT_NUMBER]) +
     '--rm ' + RPCh_DOCKER_IMAGE) then
     repeat
       TThread.Sleep(100);
