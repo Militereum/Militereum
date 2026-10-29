@@ -77,6 +77,17 @@ const
   MAX_PORT_NO = 65535 - 1024;
   MIN_PORT_NO = 1024;
 
+procedure bind(
+  const aServer: TIdCustomHTTPServer;
+  const aPort  : TIdPort);
+begin
+  with aServer.Bindings.Add do
+  begin
+    IP := '127.0.0.1';
+    Port := aPort;
+  end;
+end;
+
 function ports(num: Integer): IResult<TArray<TIdPort>>;
 begin
   var output: TArray<TIdPort> := [];
@@ -86,6 +97,7 @@ begin
     const server = TIdCustomHTTPServer.Create;
     try
       server.DefaultPort := port;
+      bind(server, port);
       try
         server.Active := True;
       except
@@ -131,6 +143,7 @@ begin
   begin
     const server = TEthereumRPCServer.Create;
     server.DefaultPort := port;
+    bind(server, port);
     try
       server.Active := True;
     except
@@ -159,6 +172,7 @@ function start(const port: TIdPort): IResult<TEthereumRPCServer>;
 begin
   const server = TEthereumRPCServer.Create;
   server.DefaultPort := port;
+  bind(server, port);
   try
     server.Active := True;
   except
@@ -184,7 +198,7 @@ begin
     EXIT;
   end;
   const server = TEthereumRPCServer.Create;
-  for var I := 0 to High(ports) do server.Bindings.Add.Port := ports[I];
+  for var I := 0 to High(ports) do bind(server, ports[I]);
   try
     server.Active := True;
   except
